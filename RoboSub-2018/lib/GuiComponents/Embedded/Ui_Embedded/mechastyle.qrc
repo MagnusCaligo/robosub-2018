@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/">
+    <file>Mechatronics.png</file>
+  </qresource>
+</RCC>
