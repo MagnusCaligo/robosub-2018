@@ -1,0 +1,146 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'ui_mapWidget.ui'
+#
+# Created by: PyQt4 UI code generator 4.11.4
+#
+# WARNING! All changes made in this file will be lost!
+
+from PyQt4 import QtCore, QtGui
+
+try:
+    _fromUtf8 = QtCore.QString.fromUtf8
+except AttributeError:
+    def _fromUtf8(s):
+        return s
+
+try:
+    _encoding = QtGui.QApplication.UnicodeUTF8
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig, _encoding)
+except AttributeError:
+    def _translate(context, text, disambig):
+        return QtGui.QApplication.translate(context, text, disambig)
+
+class Ui_MapWidget(object):
+    def setupUi(self, MapWidget):
+        MapWidget.setObjectName(_fromUtf8("MapWidget"))
+        MapWidget.resize(829, 723)
+        self.horizontalLayout_2 = QtGui.QHBoxLayout(MapWidget)
+        self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
+        self.settingsTab = QtGui.QTabWidget(MapWidget)
+        self.settingsTab.setObjectName(_fromUtf8("settingsTab"))
+        self.tab = QtGui.QWidget()
+        self.tab.setObjectName(_fromUtf8("tab"))
+        self.verticalLayout_2 = QtGui.QVBoxLayout(self.tab)
+        self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
+        self.verticalLayout = QtGui.QVBoxLayout()
+        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.verticalLayout_2.addLayout(self.verticalLayout)
+        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
+        self.startButton = QtGui.QPushButton(self.tab)
+        self.startButton.setObjectName(_fromUtf8("startButton"))
+        self.horizontalLayout.addWidget(self.startButton)
+        self.startSimButton = QtGui.QPushButton(self.tab)
+        self.startSimButton.setObjectName(_fromUtf8("startSimButton"))
+        self.horizontalLayout.addWidget(self.startSimButton)
+        self.verticalLayout_2.addLayout(self.horizontalLayout)
+        self.settingsTab.addTab(self.tab, _fromUtf8(""))
+        self.tab_2 = QtGui.QWidget()
+        self.tab_2.setObjectName(_fromUtf8("tab_2"))
+        self.verticalLayout_3 = QtGui.QVBoxLayout(self.tab_2)
+        self.verticalLayout_3.setObjectName(_fromUtf8("verticalLayout_3"))
+        self.horizontalLayout_3 = QtGui.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
+        self.formLayout_3 = QtGui.QFormLayout()
+        self.formLayout_3.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
+        self.formLayout_3.setObjectName(_fromUtf8("formLayout_3"))
+        self.verticalLayout_4 = QtGui.QVBoxLayout()
+        self.verticalLayout_4.setObjectName(_fromUtf8("verticalLayout_4"))
+        self.showDesiredSubCB_2 = QtGui.QCheckBox(self.tab_2)
+        self.showDesiredSubCB_2.setObjectName(_fromUtf8("showDesiredSubCB_2"))
+        self.verticalLayout_4.addWidget(self.showDesiredSubCB_2)
+        self.formLayout_3.setLayout(0, QtGui.QFormLayout.FieldRole, self.verticalLayout_4)
+        self.aquaplexCB_2 = QtGui.QCheckBox(self.tab_2)
+        self.aquaplexCB_2.setObjectName(_fromUtf8("aquaplexCB_2"))
+        self.formLayout_3.setWidget(1, QtGui.QFormLayout.LabelRole, self.aquaplexCB_2)
+        self.transdec1CB_2 = QtGui.QCheckBox(self.tab_2)
+        self.transdec1CB_2.setObjectName(_fromUtf8("transdec1CB_2"))
+        self.formLayout_3.setWidget(1, QtGui.QFormLayout.FieldRole, self.transdec1CB_2)
+        self.transdec2CB_2 = QtGui.QCheckBox(self.tab_2)
+        self.transdec2CB_2.setObjectName(_fromUtf8("transdec2CB_2"))
+        self.formLayout_3.setWidget(2, QtGui.QFormLayout.LabelRole, self.transdec2CB_2)
+        self.transdec3CB_2 = QtGui.QCheckBox(self.tab_2)
+        self.transdec3CB_2.setObjectName(_fromUtf8("transdec3CB_2"))
+        self.formLayout_3.setWidget(2, QtGui.QFormLayout.FieldRole, self.transdec3CB_2)
+        self.moveItemsCB_2 = QtGui.QCheckBox(self.tab_2)
+        self.moveItemsCB_2.setObjectName(_fromUtf8("moveItemsCB_2"))
+        self.formLayout_3.setWidget(4, QtGui.QFormLayout.LabelRole, self.moveItemsCB_2)
+        self.saveMapButton_2 = QtGui.QPushButton(self.tab_2)
+        self.saveMapButton_2.setObjectName(_fromUtf8("saveMapButton_2"))
+        self.formLayout_3.setWidget(4, QtGui.QFormLayout.FieldRole, self.saveMapButton_2)
+        self.transdec4CB_2 = QtGui.QCheckBox(self.tab_2)
+        self.transdec4CB_2.setObjectName(_fromUtf8("transdec4CB_2"))
+        self.formLayout_3.setWidget(3, QtGui.QFormLayout.LabelRole, self.transdec4CB_2)
+        self.checkBox_9 = QtGui.QCheckBox(self.tab_2)
+        self.checkBox_9.setText(_fromUtf8(""))
+        self.checkBox_9.setObjectName(_fromUtf8("checkBox_9"))
+        self.formLayout_3.setWidget(3, QtGui.QFormLayout.FieldRole, self.checkBox_9)
+        self.horizontalLayout_3.addLayout(self.formLayout_3)
+        self.line = QtGui.QFrame(self.tab_2)
+        self.line.setFrameShape(QtGui.QFrame.HLine)
+        self.line.setFrameShadow(QtGui.QFrame.Sunken)
+        self.line.setObjectName(_fromUtf8("line"))
+        self.horizontalLayout_3.addWidget(self.line)
+        self.formLayout_4 = QtGui.QFormLayout()
+        self.formLayout_4.setObjectName(_fromUtf8("formLayout_4"))
+        self.selectSimButton_2 = QtGui.QPushButton(self.tab_2)
+        self.selectSimButton_2.setObjectName(_fromUtf8("selectSimButton_2"))
+        self.formLayout_4.setWidget(0, QtGui.QFormLayout.FieldRole, self.selectSimButton_2)
+        self.selectVoxelButton_2 = QtGui.QPushButton(self.tab_2)
+        self.selectVoxelButton_2.setObjectName(_fromUtf8("selectVoxelButton_2"))
+        self.formLayout_4.setWidget(1, QtGui.QFormLayout.FieldRole, self.selectVoxelButton_2)
+        self.label_2 = QtGui.QLabel(self.tab_2)
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        font.setBold(True)
+        font.setWeight(75)
+        self.label_2.setFont(font)
+        self.label_2.setObjectName(_fromUtf8("label_2"))
+        self.formLayout_4.setWidget(1, QtGui.QFormLayout.LabelRole, self.label_2)
+        self.showVoxelButton_2 = QtGui.QPushButton(self.tab_2)
+        self.showVoxelButton_2.setObjectName(_fromUtf8("showVoxelButton_2"))
+        self.formLayout_4.setWidget(2, QtGui.QFormLayout.FieldRole, self.showVoxelButton_2)
+        self.voxelResolutionLineEdit_2 = QtGui.QLineEdit(self.tab_2)
+        self.voxelResolutionLineEdit_2.setObjectName(_fromUtf8("voxelResolutionLineEdit_2"))
+        self.formLayout_4.setWidget(2, QtGui.QFormLayout.LabelRole, self.voxelResolutionLineEdit_2)
+        self.horizontalLayout_3.addLayout(self.formLayout_4)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_3)
+        self.settingsTab.addTab(self.tab_2, _fromUtf8(""))
+        self.horizontalLayout_2.addWidget(self.settingsTab)
+
+        self.retranslateUi(MapWidget)
+        self.settingsTab.setCurrentIndex(0)
+        QtCore.QMetaObject.connectSlotsByName(MapWidget)
+
+    def retranslateUi(self, MapWidget):
+        MapWidget.setWindowTitle(_translate("MapWidget", "Form", None))
+        self.startButton.setText(_translate("MapWidget", "Start", None))
+        self.startSimButton.setText(_translate("MapWidget", "Start Simulation", None))
+        self.settingsTab.setTabText(self.settingsTab.indexOf(self.tab), _translate("MapWidget", "Tab 1", None))
+        self.showDesiredSubCB_2.setText(_translate("MapWidget", "Show Desired Sub", None))
+        self.aquaplexCB_2.setText(_translate("MapWidget", "Aquaplex", None))
+        self.transdec1CB_2.setText(_translate("MapWidget", "Transdec 1", None))
+        self.transdec2CB_2.setText(_translate("MapWidget", "Transdec 2", None))
+        self.transdec3CB_2.setText(_translate("MapWidget", "Transdec 3", None))
+        self.moveItemsCB_2.setText(_translate("MapWidget", "Move Items", None))
+        self.saveMapButton_2.setText(_translate("MapWidget", "Save Map", None))
+        self.transdec4CB_2.setText(_translate("MapWidget", "Transdec 4", None))
+        self.selectSimButton_2.setText(_translate("MapWidget", "Select Simulation File", None))
+        self.selectVoxelButton_2.setText(_translate("MapWidget", "Select Voxel File", None))
+        self.label_2.setText(_translate("MapWidget", "Load Voxel Data:", None))
+        self.showVoxelButton_2.setText(_translate("MapWidget", "Show Voxel Data", None))
+        self.voxelResolutionLineEdit_2.setText(_translate("MapWidget", "Voxel Resolution", None))
+        self.settingsTab.setTabText(self.settingsTab.indexOf(self.tab_2), _translate("MapWidget", "Tab 2", None))
+

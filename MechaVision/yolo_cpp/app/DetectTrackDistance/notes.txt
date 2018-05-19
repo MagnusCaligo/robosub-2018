@@ -1,0 +1,3 @@
+- Detections are sent in (center X, center Y, width, height)
+- Look into dlib command line parser
+- Look into dlib config file parser

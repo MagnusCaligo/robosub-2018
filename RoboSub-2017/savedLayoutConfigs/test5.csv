@@ -1,0 +1,7 @@
+mainWindowWidget,0,0,510,470
+mapWidget,518,0,585,207
+embeddedWidget,1102,398,137,0
+computerVisionWidget,518,0,992,700
+manualControlWidget,518,241,193,210
+dataGraphingWidget,719,241,375,232
+controlSystemsWidget,619,518,796,532

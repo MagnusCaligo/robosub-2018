@@ -1,0 +1,9 @@
+*.pyc
+/build/
+*.swo
+*.swp
+*.swm
+*.swl
+*.swn
+/.ptp-sync/
+/data/
