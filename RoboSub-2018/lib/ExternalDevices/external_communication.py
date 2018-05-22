@@ -891,6 +891,7 @@ class ExternalCommThread(QtCore.QThread):
             
 	self.ahrsGuiData = self.ahrsData
 	self.orientation = self.ahrsData
+	self.emit(QtCore.SIGNAL("Data Updated"))
 
         '''
         # Send data to the arduino that controls display inside the sub

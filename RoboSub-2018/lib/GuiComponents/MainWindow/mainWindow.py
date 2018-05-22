@@ -118,9 +118,21 @@ class MainWindow(QtGui.QMainWindow):
         self.subwin_mainWidget.loadMissionsButton.clicked.connect(lambda: self.loadMissions())
         self.systemOutput = self.subwin_mainWidget.plainTextEdit;
 
-        #
+        
+        #Connect Data signal to update sensor info on Main Window Widget
+        self.connect(self.externalCommClass.externalCommThread, QtCore.SIGNAL("Data Updated"), lambda: self.updateSensorDisplay())
+		
         self.subwin_mainWidget.startButton.setText("Start Debug")
         self.subwin_mainWidget.stopButton.setText("Stop Debug")
+		
+    def updateSensorDisplay(self):
+        self.subwin_mainWidget.northLabel.setText("North: " + str(self.externalCommClass.externalCommThread.dvlData[0]))
+        self.subwin_mainWidget.eastLabel.setText("East: " + str(self.externalCommClass.externalCommThread.dvlData[1]))
+        self.subwin_mainWidget.upLabel.setText("Up: " + str(self.externalCommClass.externalCommThread.dvlData[2]))
+
+        self.subwin_mainWidget.yawLabel.setText("Yaw: " + str(self.externalCommClass.externalCommThread.ahrsData[0]))
+        self.subwin_mainWidget.pitchLabel.setText("Pitch: " + str(self.externalCommClass.externalCommThread.ahrsData[1]))
+        self.subwin_mainWidget.rollLabel.setText("Roll: " + str(self.externalCommClass.externalCommThread.ahrsData[2]))
 
     @QtCore.pyqtSlot()
     def loadMissions(self):
@@ -230,7 +242,7 @@ class MainWindow(QtGui.QMainWindow):
                 self.externalCommClass.externalCommThread.dvlResponseThread.clearDistanceTraveled()
             
             startTime = time.time()
-            while (time.time()-startTime) < 4:
+            while (time.time()-startTime) < 3:
 				pass
             self.startVehicle = True
             self.externalCommClass.externalCommThread.isDebug = False

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>657</width>
-    <height>428</height>
+    <width>700</width>
+    <height>839</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1091,6 +1091,60 @@
     <layout class="QVBoxLayout" name="verticalLayout_3">
      <item>
       <widget class="QPlainTextEdit" name="plainTextEdit"/>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <item>
+        <widget class="QLabel" name="northLabel">
+         <property name="text">
+          <string>North: 0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="eastLabel">
+         <property name="text">
+          <string>East: 0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="upLabel">
+         <property name="text">
+          <string>Up: 0</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QLabel" name="yawLabel">
+         <property name="text">
+          <string>Yaw: 0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="pitchLabel">
+         <property name="text">
+          <string>Pitch: 0</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="rollLabel">
+         <property name="text">
+          <string>Roll: 0</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
     </layout>
    </item>

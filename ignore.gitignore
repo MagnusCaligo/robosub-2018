@@ -1,4 +1,4 @@
-*.pyc
+**/*.pyc
 /build/
 *.swo
 *.swp
@@ -7,3 +7,4 @@
 *.swn
 /.ptp-sync/
 /data/
+RoboSub-2018/*.csv
