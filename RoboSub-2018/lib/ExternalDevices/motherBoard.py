@@ -415,7 +415,8 @@ class motherBoardResponse(threading.Thread):
                     elif idFrame == 320:# Weapon 13 on
                         message = [idFrame]
                     elif idFrame == 392:
-                         #print "111111111111111111"						
+                         #print "111111111111111111"
+                         print "Payloads are", payload 
                          extPress1 = (struct.unpack('H', struct.pack('H', payload[0] | ((payload[1] & (int('0x03', 0)) << 8))))[0])
                          #print "22222222222222222"
                          #print payload[0]

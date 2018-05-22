@@ -815,12 +815,10 @@ class ExternalCommThread(QtCore.QThread):
                 elif(self.motherMessage[0] == 320): # Weapon 13 on
                     self.weapon13On = True'''
                 if(self.motherMessage[0] == 392): # SIB Pressure
-                    print "Got Data"
                     depth = self.motherMessage[1]# Possibly include pressure2 and pressure3 in the future
-                    print "Depth value was", depth
                     if(depth > 550):
                         self.position[2] = (depth-600)/11.6 
-                    print "Updated Depth", self.position
+                    self.position[2] = 3
                 #print self.motherMessage
 
         if self.hydrasResponseThread1 != None:

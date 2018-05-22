@@ -42,7 +42,7 @@ class controllerResponse(threading.Thread):
         **Returns**: \n
         * **No Returns.**\n
         '''
-        UDP_IP = "192.168.1.25"
+        UDP_IP = "192.168.0.13"
         UDP_PORT = 5006
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
         sock.bind((UDP_IP, UDP_PORT))# bind local port for receive
