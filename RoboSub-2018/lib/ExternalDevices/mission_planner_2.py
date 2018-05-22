@@ -299,12 +299,14 @@ class MissionPlanner(QtCore.QThread):
             self.toggleLeftBumper = False
             self.toggleRightBumper = False
             self.quickButtonPressDepth = True
+            controllerInputTimer = time.time()
             while self.running:
+                if abs(time.time() - controllerInputTimer) > .5:
+                    self.killThrusters()
                 
                 while len(self.joystickController.getList) > 0:
+                                        controllerInputTimer = time.time()
 					controllerData = self.joystickController.getList.pop(0)
-                
-					print controllerData
                 
 					xPwm = 0
 					zPwm = 0
@@ -317,7 +319,8 @@ class MissionPlanner(QtCore.QThread):
               
 					if controllerData == None:
 						print "No Controller Data"
-						#continue
+                                                self.killAllThrusters()
+						continue
 					else:                
 						#print controllerData
 						joystickInput = controllerData[1]
