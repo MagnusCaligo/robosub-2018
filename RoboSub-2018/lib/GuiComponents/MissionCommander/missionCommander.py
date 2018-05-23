@@ -321,6 +321,7 @@ class MissionCommander(QtCore.QObject):
         # Create file widget
         fileWidget = QtGui.QWidget()
         fileWidget.resize(320, 240)
+        missionList = []
 
         # Sets dialog to open at a particular directory
         if len(filename) == 0:
@@ -332,8 +333,11 @@ class MissionCommander(QtCore.QObject):
         if filename == "":
             return
         
-        with open(filename, "r") as infile:
-            missionList = json.load(infile)
+        try:
+			with open(filename, "r") as infile:
+				missionList = json.load(infile)
+        except:
+			print "Couldn't Load Mission Commander Previous State"
         
         self.externalComm.guiDataToSend["missionList"] = []
         

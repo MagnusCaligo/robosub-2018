@@ -12,7 +12,7 @@ import dvl
 # import sparton_ahrs
 # import movement
 import math
-import numpy
+import numpy as np
 import copy
 import struct
 import previous_state_logging
@@ -498,7 +498,7 @@ class ExternalCommThread(QtCore.QThread):
         try:
             # AHRS initializing
             # Need to put the correct comm ports in 
-            self.spartonResponseThread1 = sparton_ahrs.SpartonAhrsResponse("/dev/ttyUSB3")
+            self.spartonResponseThread1 = sparton_ahrs.SpartonAhrsResponse("COM10")
             self.spartonResponseThread1.start()
             
         except:
@@ -749,7 +749,16 @@ class ExternalCommThread(QtCore.QThread):
                     
         if self.spartonResponseThread1 != None:
             while len(self.spartonResponseThread1.getList) > 0:
-                self.ahrsData1 = self.spartonResponseThread1.getList.pop(0)
+				self.ahrsData1 = self.spartonResponseThread1.getList.pop(0)
+				
+				#I'm rotating the output of the AHRS because the AHRS merger is facing the wrong way
+				'''Rotation Matrix = [[-1, 0, 0],
+				                      [ 0, 1, 0],
+									  [ 0, 0, 1]]'''
+				
+				self.ahrsData1[1] = -self.ahrsData1[1]
+				self.ahrsData1[2] = -self.ahrsData1[2]
+				self.ahrsData1[0] = (self.ahrsData1[0] + 180) %360
                 #self.ahrsData1[0] = (self.ahrsData1[0] + 169)%360
         if self.spartonResponseThread2 != None:
             while len(self.spartonResponseThread2.getList) > 0:
