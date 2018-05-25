@@ -14,15 +14,16 @@ import time
 import threading
 import data_packet_generator
 import struct
+import math
 
 class DVLDataPackets:
     def __init__(self, serialObject):
         '''
         Initializes the DVL object and sends commands to the DVL computer to set up the DVL.
-        
+
         **Parameters**: \n
         * **serialObject** - DVL serial object.
-        
+
         **Returns**: \n
         * **No Return.**\n
         '''
@@ -33,47 +34,52 @@ class DVLResponse(threading.Thread):
     def __init__(self, serialObject):
         '''
         Initializes the thread (starts thread process).
-        
+
         **Parameters**: \n
         * **No Input Parameters.**
-        
+
         **Returns**: \n
         * **No Return.**\n
         '''
         threading.Thread.__init__(self)
-        
+
         self.DVLCom = serialObject
-        
+
         self.runThread = True
-                
+
         self.alertList = []
         self.getList = []
-    
+        self.ahrs = 0
+        self.distanceToFloor = 0
+        self.velocitiesXYZ = [0,0,0] #Velocities for the DVL's coordinate system
+        self.velTimesXYZ = [0,0,0] #Time estimate for the velocities
+        self.positionA = [0,0,0] #North, East, Down
+
     def run(self):
         '''
         Obtains DVL data and appends it to the instance's list attribute.
-        
+
         **Parameters**: \n
-        * **No Input Parameters** 
-        
+        * **No Input Parameters**
+
         **Return**: \n
         * **No Return.**\n
         '''
         while self.runThread:
-            
+
             #time.sleep(0.01) #Slows down thread to save some power
-                
+
             dataPacket = self.unpack() #Reads in data packets
             if dataPacket != None and dataPacket != [0]:
                 self.getList.append(dataPacket)
-                    
+
     def unpack(self):
         '''
         Extracts the raw data from the transmission (collects all bytes into array).
-        
+
         **Parameters**: \n
         * **No Input Parameters.**
-         
+
         **Returns**: \n
         * **self.dataPacketIn** - The raw data transmission.\n
         '''
@@ -84,7 +90,7 @@ class DVLResponse(threading.Thread):
                 if SYNC == "0xa5":
                     print SYNC, "start"
                     ensemble = [] #Clear list
-                    
+
                     header = ord(self.DVLCom.read()) #Use ord when dealing with 1 byte
                     print hex(header), "header"
                     ID = ord(self.DVLCom.read()) #How many bytes in ensemble
@@ -102,24 +108,24 @@ class DVLResponse(threading.Thread):
                     #print hex(headerChecksum), "headerChecksum"
                     if hex(ID) == "0x1b":#If this is a Bottom Tracking Message
                         version = ord(self.DVLCom.read())
-                        print version, "version" 
+                        print version, "version"
                         offsetOfData = ord(self.DVLCom.read())
-                        print offsetOfData, "offsetOfData" 
+                        print offsetOfData, "offsetOfData"
                         serialNumber = self.DVLCom.read(4)
                         print struct.unpack('<I', serialNumber), "serialNumber"
-                        #print serialNumber, "serialNumber" 
+                        #print serialNumber, "serialNumber"
                         year = ord(self.DVLCom.read())
-                        print year, "year" 
+                        print year, "year"
                         month = ord(self.DVLCom.read())
-                        print month, "month" 
+                        print month, "month"
                         day = ord(self.DVLCom.read())
-                        print day, "day" 
+                        print day, "day"
                         hour = ord(self.DVLCom.read())
-                        print hour, "hour" 
+                        print hour, "hour"
                         minute = ord(self.DVLCom.read())
-                        print minute, "minute" 
+                        print minute, "minute"
                         seconds = ord(self.DVLCom.read())
-                        print seconds, "seconds" 
+                        print seconds, "seconds"
                         microSec = self.DVLCom.read(2)
                         print struct.unpack('<H', microSec), "microSec"
                         numberOfBeams = self.DVLCom.read(2)
@@ -143,13 +149,22 @@ class DVLResponse(threading.Thread):
                         velBeam3 = self.DVLCom.read(4)
                         print struct.unpack('<f', velBeam3), "velBeam3" #m/s
                         disBeam0 = self.DVLCom.read(4)
-                        print struct.unpack('<f', disBeam0), "disBeam0" #m Vertical Distance
+                        #print struct.unpack('<f', disBeam0), "disBeam0" #m Vertical Distance
+                        disBeam0 = struct.unpack('<f', disBeam0)
+                        print disBeam0, "disBeam0"
                         disBeam1 = self.DVLCom.read(4)
-                        print struct.unpack('<f', disBeam1), "disBeam1" #m Vertical Distance
+                        #print struct.unpack('<f', disBeam1), "disBeam1" #m Vertical Distance
+                        disBeam1 = struct.unpack('<f', disBeam1)
+                        print disBeam1, "disBeam1"
                         disBeam2 = self.DVLCom.read(4)
-                        print struct.unpack('<f', disBeam2), "disBeam2" #m Vertical Distance
+                        #print struct.unpack('<f', disBeam2), "disBeam2" #m Vertical Distance
+                        disBeam2 = struct.unpack('<f', disBeam2)
+                        print disBeam2, "disBeam2"
                         disBeam3 = self.DVLCom.read(4)
-                        print struct.unpack('<f', disBeam3), "disBeam3" #m Vertical Distance
+                        #print struct.unpack('<f', disBeam3), "disBeam3" #m Vertical Distance
+                        disBeam3 = struct.unpack('<f', disBeam3)
+                        print disBeam3, "disBeam3"
+                        self.distanceToFloor = (disBeam0[0]+disBeam1[0]+disBeam2[0]+disBeam3[0])/4
                         fomBeam0 = self.DVLCom.read(4)
                         print struct.unpack('<f', fomBeam0), "fomBeam0" #Figure of Merit
                         fomBeam1 = self.DVLCom.read(4)
@@ -183,11 +198,20 @@ class DVLResponse(threading.Thread):
                         timeVelEstBeam3 = self.DVLCom.read(4)
                         print struct.unpack('<f', timeVelEstBeam3), "timeVelEstBeam3" #
                         velX = self.DVLCom.read(4)
-                        print struct.unpack('<f', velX), "velX" #
+                        #print struct.unpack('<f', velX), "velX" #
+                        velX = struct.unpack('<f', velX)
+                        print velX[0], "velX" #
+                        self.velocitiesXYZ[0] = velX[0]
                         velY = self.DVLCom.read(4)
-                        print struct.unpack('<f', velY), "velY" #
+                        #print struct.unpack('<f', velY), "velY" #
+                        velY = struct.unpack('<f', velY)
+                        print velY[0], "velY" #
+                        self.velocitiesXYZ[1] = velY[0]
                         velZ1 = self.DVLCom.read(4)
-                        print struct.unpack('<f', velZ1), "velZ1" #
+                        #print struct.unpack('<f', velZ1), "velZ1" #
+                        velZ1 = struct.unpack('<f', velZ1)
+                        print velZ1[0], "velZ1" #
+                        self.velocitiesXYZ[2] = velZ1[0]
                         velZ2 = self.DVLCom.read(4)
                         print struct.unpack('<f', velZ2), "velZ2" #
                         fomX = self.DVLCom.read(4)
@@ -215,52 +239,111 @@ class DVLResponse(threading.Thread):
                         dt2Z2 = self.DVLCom.read(4)
                         print struct.unpack('<f', dt2Z2), "dt2Z2" #
                         timeVelEstX = self.DVLCom.read(4)
-                        print struct.unpack('<f', timeVelEstX), "timeVelEstX" #
+                        timeVelEstX = struct.unpack('<f', timeVelEstX) #
+                        print timeVelEstX[0], "timeVelEstX"
+                        self.velTimesXYZ[0] = timeVelEstX[0]
+                        #print struct.unpack('<f', timeVelEstX), "timeVelEstX" #
                         timeVelEstY = self.DVLCom.read(4)
-                        print struct.unpack('<f', timeVelEstY), "timeVelEstY" #
+                        timeVelEstY = struct.unpack('<f', timeVelEstY)
+                        print timeVelEstY[0], "timeVelEstY" #
+                        self.velTimesXYZ[1] = timeVelEstY[0]
+                        #print struct.unpack('<f', timeVelEstY), "timeVelEstY" #
                         timeVelEstZ1 = self.DVLCom.read(4)
-                        print struct.unpack('<f', timeVelEstZ1), "timeVelEstZ1" #
+                        timeVelEstZ1 = struct.unpack('<f', timeVelEstZ1)
+                        print timeVelEstZ1[0], "timeVelEstZ1" #
+                        self.velTimesXYZ[2] = timeVelEstZ1[0]
+                        #print struct.unpack('<f', timeVelEstZ1), "timeVelEstZ1" #
                         timeVelEstZ2 = self.DVLCom.read(4)
                         print struct.unpack('<f', timeVelEstZ2), "timeVelEstZ2" #
-                        
+                        self.getDistanceTraveled()
+
                     #ensemble = [ID, outputFormat, byteNumLSB, byteNumMSB]
                     #for x in range(byteNumMSB << 8 | byteNumLSB):
                     #    ensemble.append(ord(self.DVLCom.read()))
-                    
+
                     return None
                     #return ensemble
-                
+
                 else:
                     self.DVLCom.flushInput()
-                    
+
         except Exception as msg:
             print "Can't receive data from DVL:", msg
-        
-            
+
+
+    def getDistanceTraveled(self):
+        '''
+        Gets current NED position.
+
+        **Parameters**: \n
+        * **No Input Parameters.**
+
+        **Returns**: \n
+        * **No Return.**\n
+        '''
+        #if self.velocitiesXYZ[0] < -30:
+        if self.velocitiesXYZ[0] < -32:
+            print self.positionA, "Position Unchanged"
+            print self.velocitiesXYZ[0], "DVL Error"
+        else:
+            degToRad = 3.1415926535/180
+            velNcompX = self.velocitiesXYZ[0]*round(math.cos(self.ahrs*degToRad))
+            velNcompY = self.velocitiesXYZ[1]*round(math.cos((self.ahrs+90)*degToRad))
+
+            velEcompX = self.velocitiesXYZ[0]*round(math.sin(self.ahrs*degToRad))
+            velEcompY = self.velocitiesXYZ[1]*round(math.sin((self.ahrs+90)*degToRad))
+
+            lastDistanceTraveledN = (velNcompX * self.velTimesXYZ[0]) + (velNcompY * self.velTimesXYZ[1])*1000/1.74
+            lastDistanceTraveledE = (velEcompX * self.velTimesXYZ[0]) + (velEcompY * self.velTimesXYZ[1])*1000/1.74
+            lastDistanceTraveledD = self.velocitiesXYZ[2] * self.velTimesXYZ[2]
+
+            print "HERE"
+            print self.positionA
+            self.positionA[0] = self.positionA[0] + lastDistanceTraveledN
+            print "THERE"
+            self.positionA[1] = self.positionA[1] + lastDistanceTraveledE
+            self.positionA[2] = self.positionA[2] + lastDistanceTraveledD
+
+            print velNcompX, "m/s NX"
+            print velNcompY, "m/s NY"
+            print velNcompX+velNcompY, "m/s N Total"
+            print velEcompX, "m/s EX"
+            print velEcompY, "m/s EY"
+
+            print self.distanceToFloor, "m Up"
+            print lastDistanceTraveledN, "m North"
+            print lastDistanceTraveledE, "m East"
+            print lastDistanceTraveledD, "m Down"
+
+            print self.velTimesXYZ
+            print self.velocitiesXYZ
+            print self.positionA, "m North, East, Down"
+            print "NO ERROR"
+
     def clearDistanceTraveled(self):
         '''
         Resets the DVL's origin point to its current position.
-        
+
         **Parameters**: \n
         * **No Input Parameters.**
-        
+
         **Returns**: \n
         * **No Return.**\n
         '''
         pass
-        
-            
+
+
     def killThread(self):
         '''
-        Ends thread process. 
-        
+        Ends thread process.
+
         **Parameters**: \n
         * **No Input Parameters.**
-        
+
         **Returns**: \n
         * **No Return.**\n
         '''
-        self.runThread = False     
+        self.runThread = False
 
 if __name__=="__main__":
     #ser = serial.Serial("COM3", 115200) #Tried with and without the last 3 parameters, and also at 1Mbps, same happens.
@@ -275,43 +358,46 @@ if __name__=="__main__":
     #dvlDataPackets = self.DVLDataPackets(DVLComPort)
     dvlResponseThread = DVLResponse(DVLComPort)
     dvlResponseThread.start()
+
     while len(dvlResponseThread.getList) > 0:
         ensemble = dvlResponseThread.getList.pop(0)
-        
+
+        '''
         try:
             northPosition = (struct.unpack('i', struct.pack('I', ensemble[61] << 24 | ensemble[60] << 16 | ensemble[59] << 8 | ensemble[58]))[0])*0.00328084 #mm to feet
             eastPosition = (struct.unpack('i', struct.pack('I', ensemble[57] << 24 | ensemble[56] << 16 | ensemble[55] << 8 | ensemble[54]))[0])*0.00328084 #mm to feet
             upPosition = (struct.unpack('i', struct.pack('I', ensemble[65] << 24 | ensemble[64] << 16 | ensemble[63] << 8 | ensemble[62]))[0])*0.00328084 #mm to feet
             positionError = struct.unpack('i', struct.pack('I', ensemble[69] << 24 | ensemble[68] << 16 | ensemble[67] << 8 | ensemble[66]))[0]
             self.position = [northPosition, eastPosition, upPosition, positionError]
-            
+
             xVel = (struct.unpack('h', struct.pack('H', ensemble[6] << 8 | ensemble[5]))[0])*0.00328084 #mm/s to feet/s
             yVel = (struct.unpack('h', struct.pack('H', ensemble[8] << 8 | ensemble[7]))[0])*0.00328084 #mm/s to feet/s
             zVel = (struct.unpack('h', struct.pack('H', ensemble[10] << 8 | ensemble[9]))[0])*0.00328084 #mm/s to feet/s
             self.velocity = [xVel, yVel, zVel] #East, North, Up
-            
+
             heading = (ensemble[53] << 8 | ensemble[52])/100.0
             pitch = struct.unpack('h', struct.pack('H', ensemble[49] << 8 | ensemble[48]))[0]/100.0
             roll = struct.unpack('h', struct.pack('H', ensemble[51] << 8 | ensemble[50]))[0]/100.0
             depth = struct.unpack('h', struct.pack('H', ensemble[47] << 8 | ensemble[46]))[0]/100.0
             self.orientation = [heading, pitch, roll, depth]
-            
+
             elevation = struct.unpack('h', struct.pack('H', ensemble[12] << 8 | ensemble[11]))[0]
             speedOfSound = struct.unpack('h', struct.pack('H', ensemble[42] << 8 | ensemble[41]))[0]
             waterTemp = struct.unpack('h', struct.pack('H', ensemble[44] << 8 | ensemble[43]))[0]/100.0 #deg c
             self.dvlMiscData = [elevation, speedOfSound, waterTemp]
-            
+
         except:
             northPosition, eastPosition, upPosition, positionError = 0, 0, 0, 0
             xVel, yVel, zVel = 0, 0, 0
             heading, pitch, roll, depth = 0, 0, 0, 0
             elevation, speedOfSound, waterTemp = 0, 0, 0
-            
-        
+
+
         #print "Positions(ft) (North, East, Up, Error)", northPosition, eastPosition, upPosition, positionError
         #print "Velocities(ft/s) (X, Y, Z):", xVel, yVel, zVel
         #print "Yaw, Pitch, Roll, Depth (deg, deg, deg, m):", heading, pitch, roll, depth
         #print "Elevation Velocity, Speed Of Sound, Water Temp: (mm/s, m/s, deg C)", elevation, speedOfSound, waterTemp
         #print "\n"
-        
-        print [self.position, self.velocity, self.orientation, self.dvlMiscData]
+        '''
+
+        #print [self.position, self.velocity, self.orientation, self.dvlMiscData]
