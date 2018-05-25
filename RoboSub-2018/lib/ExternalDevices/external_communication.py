@@ -841,7 +841,7 @@ class ExternalCommThread(QtCore.QThread):
 	if self.dvlResponseThread != None:
 		fakeData = [self.ahrsData[0], self.ahrsData[1], self.ahrsData[2]]
 		#fakeData[0] = (fakeData[0]+270)%360
-		self.dvlAhrsDummyThread.updateAhrsValues(self.ahrsData)
+		#self.dvlAhrsDummyThread.updateAhrsValues(self.ahrsData)
 		self.getDVLData(self.ahrsData)
 		#print "Overwritting DVL data to prevent sub from \"pointing\" towards waypoint"
 	
@@ -919,42 +919,42 @@ class ExternalCommThread(QtCore.QThread):
             ensemble = self.dvlResponseThread.getList.pop(0)
 
             try:
-                #print "Start"				
-                northPosition = (struct.unpack('i', struct.pack('I', ensemble[61] << 24 | ensemble[60] << 16 | ensemble[59] << 8 | ensemble[58]))[0]) * 0.00328084  # mm to feet
-                eastPosition = (struct.unpack('i', struct.pack('I', ensemble[57] << 24 | ensemble[56] << 16 | ensemble[55] << 8 | ensemble[54]))[0]) * 0.00328084  # mm to feet
-                upPosition = (struct.unpack('i', struct.pack('I', ensemble[65] << 24 | ensemble[64] << 16 | ensemble[63] << 8 | ensemble[62]))[0]) * 0.00328084  # mm to feet
-                positionError = struct.unpack('i', struct.pack('I', ensemble[69] << 24 | ensemble[68] << 16 | ensemble[67] << 8 | ensemble[66]))[0]
-                if northPosition != 0.0 and eastPosition != 0.0:
-					self.position = [northPosition, eastPosition, self.position[2]]
+                xVel, yVel, zVel = ensemble[0]
+                self.velocity = [xVel, yVel, zVel]
+                heading = ahrsData[0]
+                timeVelEstX, timeVelEstY, timeVelEstZ = ensemble[1]
+                #Probably have to fix the following equations
+                if not(xVel < -32):# If no error in DVL, indicated by velocity being less than 32
+                    degToRad = 3.1415926535 / 180
+                    velNcompX = xVel * round(math.cos(heading * degToRad))
+                    velNcompY = yVel * round(math.cos((heading + 90) * degToRad))
 
-                xVel = (struct.unpack('h', struct.pack('H', ensemble[6] << 8 | ensemble[5]))[0]) * 0.00328084  # mm/s to feet/s
-                yVel = (struct.unpack('h', struct.pack('H', ensemble[8] << 8 | ensemble[7]))[0]) * 0.00328084  # mm/s to feet/s
-                zVel = (struct.unpack('h', struct.pack('H', ensemble[10] << 8 | ensemble[9]))[0]) * 0.00328084  # mm/s to feet/s
-                self.velocity = [xVel, yVel, zVel]  # East, North, Up
+                    velEcompX = xVel * round(math.sin(heading * degToRad))
+                    velEcompY = yVel * round(math.sin((heading + 90) * degToRad))
 
-                heading = (ensemble[53] << 8 | ensemble[52]) / 100.0
-                pitch = struct.unpack('h', struct.pack('H', ensemble[49] << 8 | ensemble[48]))[0] / 100.0
-                roll = struct.unpack('h', struct.pack('H', ensemble[51] << 8 | ensemble[50]))[0] / 100.0
-                depth = struct.unpack('h', struct.pack('H', ensemble[47] << 8 | ensemble[46]))[0] / 100.0
-                #self.orientation = [heading, pitch, roll]
+                    lastDistanceTraveledN = (velNcompX * timeVelEstX) + (
+                                velNcompY * timeVelEstY) * 1000 / 1.74
+                    lastDistanceTraveledE = (velEcompX * timeVelEstX) + (
+                                velEcompY * timeVelEstY) * 1000 / 1.74
+                    lastDistanceTraveledD = zVel * timeVelEstZ
 
-                elevation = struct.unpack('h', struct.pack('H', ensemble[12] << 8 | ensemble[11]))[0]
-                speedOfSound = struct.unpack('h', struct.pack('H', ensemble[42] << 8 | ensemble[41]))[0]
-                waterTemp = struct.unpack('h', struct.pack('H', ensemble[44] << 8 | ensemble[43]))[0] / 100.0  # deg c
-                self.dvlMiscData = [elevation, speedOfSound, waterTemp]
-                #print "END"
+                    #Add distance traveled to last known position
+                    #North
+                    self.position[0] = self.position[0] + lastDistanceTraveledN
+                    #East
+                    self.position[1] = self.position[1] + lastDistanceTraveledE
+
+                else:
+                    northPosition, eastPosition, upPosition, positionError = 0, 0, 0, 0
+                    xVel, yVel, zVel = 0, 0, 0
+                    heading, pitch, roll, depth = 0, 0, 0, 0
+                    elevation, speedOfSound, waterTemp = 0, 0, 0
+
             except:
                 northPosition, eastPosition, upPosition, positionError = 0, 0, 0, 0
                 xVel, yVel, zVel = 0, 0, 0
                 heading, pitch, roll, depth = 0, 0, 0, 0
                 elevation, speedOfSound, waterTemp = 0, 0, 0
-
-
-            # print "Positions(ft) (North, East, Up, Error)", northPosition, eastPosition, upPosition, positionError
-            # print "Velocities(ft/s) (X, Y, Z):", xVel, yVel, zVel
-            # print "Yaw, Pitch, Roll, Depth (deg, deg, deg, m):", heading, pitch, roll, depth
-            # print "Elevation Velocity, Speed Of Sound, Water Temp: (mm/s, m/s, deg C)", elevation, speedOfSound, waterTemp
-            # print "\n"
 
         return [self.position, self.velocity, self.orientation, self.dvlMiscData]
 
