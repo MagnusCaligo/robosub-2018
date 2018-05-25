@@ -139,6 +139,8 @@ class MissionCommander(QtCore.QObject):
         
         if filename == "":
             return
+        if not os.path.isfile(filename):
+            return
         
         def jdefault(o):
             return o.__dict__

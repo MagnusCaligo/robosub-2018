@@ -482,14 +482,14 @@ class ExternalCommThread(QtCore.QThread):
         # DVL initialization
         try:
 			
-            DVLComPort = serial.Serial("/dev/ttyUSB8", 115200)
+            DVLComPort = serial.Serial("/dev/ttyUSB5", 115200)
             self.dvlDataPackets = dvl.DVLDataPackets(DVLComPort)
             self.dvlResponseThread = dvl.DVLResponse(DVLComPort)
             self.dvlResponseThread.start()
             
-            dvlAhrsComPort = serial.Serial("/dev/ttyUSB6", 38400)
+            '''dvlAhrsComPort = serial.Serial("/dev/ttyUSB6", 38400)
             self.dvlAhrsDummyThread = dvl.AHRSDummyCommunicator(dvlAhrsComPort)
-            self.dvlAhrsDummyThread.start()
+            self.dvlAhrsDummyThread.start()'''
             
             
         except:
@@ -826,7 +826,6 @@ class ExternalCommThread(QtCore.QThread):
                 elif(self.motherMessage[0] == 320): # Weapon 13 on
                     self.weapon13On = True'''
                 if(self.motherMessage[0] == 392): # SIB Pressure
-                    print "Mother Message: ", self.motherMessage
                     depth1 = self.motherMessage[1]
                     depth2 = self.motherMessage[2]
                     depth3 = self.motherMessage[3]
@@ -939,11 +938,18 @@ class ExternalCommThread(QtCore.QThread):
                 #Probably have to fix the following equations
                 if not(xVel < -32):# If no error in DVL, indicated by velocity being less than 32
                     degToRad = 3.1415926535 / 180
-                    velNcompX = xVel * round(math.cos(heading * degToRad))
+                    '''velNcompX = xVel * round(math.cos(heading * degToRad))
                     velNcompY = yVel * round(math.cos((heading + 90) * degToRad))
 
                     velEcompX = xVel * round(math.sin(heading * degToRad))
-                    velEcompY = yVel * round(math.sin((heading + 90) * degToRad))
+                    velEcompY = yVel * round(math.sin((heading + 90) * degToRad))'''
+
+                    velNcompX = xVel * math.cos(heading * degToRad)
+                    velNcompY = yVel * math.sin(heading *degToRad)
+           
+                    velEcompX = xVel * math.sin(heading * degToRad)
+                    velECompY = yVel * math.cos(heading * degToRad)
+
 
                     lastDistanceTraveledN = (velNcompX * timeVelEstX) + (
                                 velNcompY * timeVelEstY) * 1000 / 1.74
