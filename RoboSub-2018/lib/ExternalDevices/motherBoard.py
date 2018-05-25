@@ -416,11 +416,11 @@ class motherBoardResponse(threading.Thread):
                         message = [idFrame]
                     elif idFrame == 392:
                          #print "111111111111111111"
-                         print "Payloads are", payload 
                          extPress1 = (struct.unpack('H', struct.pack('H', payload[0] | ((payload[1] & (int('0x03', 0)) << 8))))[0])
                          #print "22222222222222222"
                          #print payload[0]
-                         extPress2 = (struct.unpack('H', struct.pack('H', (payload[1] >> 2 | (payload[2] & int('0xF', 0)) << 6)))[0])
+                         #extPress2 = (struct.unpack('H', struct.pack('H', (payload[1] >> 2 | (payload[2] & int('0xF', 0)) << 6)))[0])
+                         extPress2 = (struct.unpack('H', struct.pack('H', (payload[1] | (payload[2] & int('0xF', 0)) >> 2)))[0])
                          #print "333333333333333333333"
                          extPress3 = (struct.unpack('H', struct.pack('H', (payload[2] >> 4) | (payload[3] & int('0x1F', 0)) << 4))[0])
                          #intPress1 = (struct.unpack('H', struct.pack('H', payload[4] | payload[5] << 8 | (int('0xf', 0) & payload[6]) << 16))[0])

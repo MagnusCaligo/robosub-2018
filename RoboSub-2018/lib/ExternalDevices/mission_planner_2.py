@@ -500,6 +500,7 @@ class MissionPlanner(QtCore.QThread):
 						#NORMAL OPERATION        
 						elif self.toggleRightBumper == False and self.toggleLeftBumper == False:
 							self.thrusterPWMs = self.MovementController.move(self.externalCommThread.position[2], axis0, self.desiredMoveDepth, -axis1, axis3, axis4, -axis2)
+							print "PWM", self.thrusterPWMs
 							self.desiredMoveYaw, self.desiredMovePitch, self.desiredMoveRoll = self.externalCommThread.orientation[0],self.externalCommThread.orientation[1],self.externalCommThread.orientation[2]
 							self.desiredMissionOrientation = [False, 0, 0, 0, 0, 0, 0, 0]
 							print "Under normal Operation, desired epth is: ", self.desiredMoveDepth

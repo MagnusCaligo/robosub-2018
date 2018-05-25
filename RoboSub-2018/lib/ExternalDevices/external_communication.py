@@ -482,7 +482,7 @@ class ExternalCommThread(QtCore.QThread):
         # DVL initialization
         try:
 			
-            DVLComPort = serial.Serial("/dev/ttyUSB5", 115200)
+            DVLComPort = serial.Serial("/dev/ttyUSB8", 115200)
             self.dvlDataPackets = dvl.DVLDataPackets(DVLComPort)
             self.dvlResponseThread = dvl.DVLResponse(DVLComPort)
             self.dvlResponseThread.start()
@@ -498,7 +498,7 @@ class ExternalCommThread(QtCore.QThread):
         try:
             # AHRS initializing
             # Need to put the correct comm ports in 
-            self.spartonResponseThread1 = sparton_ahrs.SpartonAhrsResponse("COM10")
+            self.spartonResponseThread1 = sparton_ahrs.SpartonAhrsResponse("/dev/ttyUSB1")
             self.spartonResponseThread1.start()
             
         except:
@@ -522,7 +522,7 @@ class ExternalCommThread(QtCore.QThread):
         
         try:
 			
-			self.motherSerial = serial.Serial("/dev/ttyUSB0", 9600)
+			self.motherSerial = serial.Serial("/dev/ttyUSB4", 9600)
 			self.motherPackets = motherboard.motherBoardDataPackets(self.motherSerial)
 			
 			self.motherResponseThread = motherboard.motherBoardResponse(self.motherSerial)
@@ -783,6 +783,8 @@ class ExternalCommThread(QtCore.QThread):
         if self.motherResponseThread != None:
             while len(self.motherResponseThread.getList) > 0:
                 self.motherMessage = self.motherResponseThread.getList.pop(0)
+                if len(self.motherMessage) == 0: 
+                    continue
                 '''if(self.motherMessage[0] == 8): # Kill Switch Interrupt
                     self.killSwitchInterrupt = True
                 elif(self.motherMessage[0] == 16): # Leak interrupt
@@ -824,10 +826,12 @@ class ExternalCommThread(QtCore.QThread):
                 elif(self.motherMessage[0] == 320): # Weapon 13 on
                     self.weapon13On = True'''
                 if(self.motherMessage[0] == 392): # SIB Pressure
-                    depth = self.motherMessage[1]# Possibly include pressure2 and pressure3 in the future
-                    if(depth > 550):
-                        self.position[2] = (depth-600)/11.6 
-                    self.position[2] = 3
+                    print "Mother Message: ", self.motherMessage
+                    depth1 = self.motherMessage[1]
+                    depth2 = self.motherMessage[2]
+                    depth3 = self.motherMessage[3]
+                    depth = np.median([depth1, depth2, depth3])
+                    self.position[2] = float((depth-602))/10
                 #print self.motherMessage
 
         if self.hydrasResponseThread1 != None:
