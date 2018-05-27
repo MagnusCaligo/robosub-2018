@@ -73,25 +73,19 @@ class PIDVisualizer(QtGui.QWidget):
 		self.yAxisCurrentValue = self.yAxisCurrentValue * self.currentValue
 		self.yAxisTargetValue = self.yAxisTargetValue * self.targetValue
 
-	def dummyTestData(self):
-		frequency = 0.5
-		noise = random.normalvariate(0., 1.)
-		currentValue = 10.*math.sin(time.time()*frequency*2*math.pi) + noise
-		return currentValue
-
 	def __updateGraph__(self):
+		
 		#Plot the current value and target value of sensor data
-		#self.updateValues(10, 10, 10, 0, self.dummyTestData())
 		self.curve1.setData(self.xAxisTimeFrame, self.yAxisCurrentValue)
 		self.curve2.setData(self.xAxisTimeFrame, self.yAxisTargetValue)
 
+if __name__ == "__main__": 
+	app = QtGui.QApplication(sys.argv)
+	w = QtGui.QWidget()
+	PIDPlotter = PIDVisualizer()
+	layout = QtGui.QGridLayout()
+	layout.addWidget(PIDPlotter.plt, 0, 1, 3, 1)
+	w.setLayout(layout)
+	w.show()
 
-app = QtGui.QApplication(sys.argv)
-w = QtGui.QWidget()
-PIDPlotter = PIDVisualizer()
-layout = QtGui.QGridLayout()
-layout.addWidget(PIDPlotter.plt, 0, 1, 3, 1)
-w.setLayout(layout)
-w.show()
-
-sys.exit(app.exec_())
+	sys.exit(app.exec_())
