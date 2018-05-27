@@ -7,13 +7,9 @@ import time
 import math
 
 class PIDVisualizer(QtGui.QWidget):
-	def __init__(self, Kp=0, Ki=0, Kd=0, targetValue=0, currentValue=2, timeWindow=10, sampleTimeInterval=.01):
+	def __init__(self, targetValue=0, currentValue=0, timeWindow=10, sampleTimeInterval=.01):
 		
 		QtGui.QWidget.__init__(self)
-		#PID Values
-		self.Kp = Kp
-		self.Ki = Ki
-		self.Kd = Kd
 
 		'''
 		Sensor Data Values:
@@ -56,20 +52,13 @@ class PIDVisualizer(QtGui.QWidget):
 		self.timer.timeout.connect(self.__updateGraph__)
 		self.timer.start(self.sampleTimeInterval)
 
-	def setPIDValues(self, Kp, Ki, Kd):
-		self.Kp = Kp
-		self.Ki = Ki
-		self.Kd = Kd
-		#update labels
-
 	def setTargetValue(self, targetValue, currentValue):
 		self.targetValue = targetValue
 		self.currentValue = currentValue
 		self.error = self.targetValue - self.currentValue
 		#update graph to show line at new target value
 
-	def updateValues(self, Kp, Ki, Kd, targetValue, currentValue):
-		self.setPIDValues(Kp, Ki, Kd)
+	def updateValues(self, targetValue, currentValue):
 		self.setTargetValue(targetValue, currentValue)
 
 		#running buffer where new data is inserted at the end and old data is truncated
@@ -79,6 +68,11 @@ class PIDVisualizer(QtGui.QWidget):
 		self.curve1.setData(self.xAxisTimeFrame, self.yAxisCurrentValue)
 		self.curve2.setData(self.xAxisTimeFrame, self.yAxisTargetValue)
 	
+	def clearYAxisData(self, targetValue=0, currentValue=0):
+		self.setTargetValue(targetValue, currentValue)
+		self.yAxisCurrentValue = self.yAxisCurrentValue * self.currentValue
+		self.yAxisTargetValue = self.yAxisTargetValue * self.targetValue
+
 	def dummyTestData(self):
 		frequency = 0.5
 		noise = random.normalvariate(0., 1.)
@@ -91,7 +85,7 @@ class PIDVisualizer(QtGui.QWidget):
 		self.curve1.setData(self.xAxisTimeFrame, self.yAxisCurrentValue)
 		self.curve2.setData(self.xAxisTimeFrame, self.yAxisTargetValue)
 
-'''
+
 app = QtGui.QApplication(sys.argv)
 w = QtGui.QWidget()
 PIDPlotter = PIDVisualizer()
@@ -101,5 +95,3 @@ w.setLayout(layout)
 w.show()
 
 sys.exit(app.exec_())
-'''
-
