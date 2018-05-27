@@ -17,11 +17,24 @@ class displayArduino:
         self.arduinoCom = serialObject
         
     
-    def sendToDisplay(self, depth, waypointN, waypointE, waypointUp, yaw, pitch, roll, mission):
-        # Send data to the arduino that controls display inside the sub
-            data = "" 
-            data = "00=0;01=0;02=0;03=" + thrusterValues + ";04=" + depth + ";05=" + waypointN + ";06=" + waypointE + ";07=" + waypointUp + ";08=" + yaw + ";09=" + pitch + ";10=" + roll + ";11=" + mission
-            self.arduinoCom.write(data)
+    def sendToDisplay(self, data):
+        '''
+        Send Sub data to dot matrix display using an indexing and comman-seprated-values structure of strings.
+        **Parametrs**:
+        * **data** - A list containing the sub data to display
+        **Returns**:
+        * **No Return.**
+        '''
+        #For each string of data in the data list, write the data to the arduino display
+        for index, dataString in enumerate(data):
+            #Note: The index for each piece of data is 2 bytes(this is how the arduino reads the index)
+            #Single integer indices needed to by augmented with a preceding '0' to be a 2byte string
+            if index < 10:
+                self.arduinoCom.write('0'+str(index)+dataString+',')
+            else:
+                self.arduinoCom.write(str(index)+dataString+',')
+        #Flush data sending buffer
+        self.arduinoCom.flush()
         
 
 class displayResponse(threading.Thread):

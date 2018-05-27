@@ -282,8 +282,10 @@ class ExternalCommThread(QtCore.QThread):
         self.maestroSerial = None
         self.arduinoSerial = None
         self.arduinoDisplaySerial = None
+        self.arduinoDisplayData = None
         self.pressureArduinoDataPackets = None
         self.arduinoDisplayDataPackets = None
+        self.startArduinoDisplay = time.time()
 
         self.isDebug = True
         self.runProcess = True
@@ -460,9 +462,9 @@ class ExternalCommThread(QtCore.QThread):
             self.maestroSerial = serial.Serial("/dev/ttyACM0", 9600)			                						     																		    
             print "Maestro was not found"
             
-        if True:
+        if False:
             try:
-                self.arduinoSerial = serial.Serial("/dev/ttyACM3", 9600)
+                self.arduinoSerial = serial.Serial("/dev/ttyACM2", 9600)
                 self.pressureArduinoDataPackets = pressureArduino.pressureResponse(self.arduinoSerial)
                 self.pressureArduinoDataPackets.start()
             except:
@@ -470,9 +472,9 @@ class ExternalCommThread(QtCore.QThread):
         else:
             pass
         
-        if False:
+        if True:
             try:
-                self.arduinoDisplaySerial = serial.Serial("/dev/ttyACM8", 115200)
+                self.arduinoDisplaySerial = serial.Serial("/dev/ttyACM2", 115200)
                 self.arduinoDisplayDataPackets = displayArduino.displayArduino(self.arduinoDisplaySerial)
             except:
                 print "Unable to connect to Arduino for display"
@@ -482,7 +484,7 @@ class ExternalCommThread(QtCore.QThread):
         # DVL initialization
         try:
 			
-            DVLComPort = serial.Serial("/dev/ttyUSB5", 115200)
+            DVLComPort = serial.Serial("/dev/ttyUSB0", 115200)
             self.dvlDataPackets = dvl.DVLDataPackets(DVLComPort)
             self.dvlResponseThread = dvl.DVLResponse(DVLComPort)
             self.dvlResponseThread.start()
@@ -498,7 +500,7 @@ class ExternalCommThread(QtCore.QThread):
         try:
             # AHRS initializing
             # Need to put the correct comm ports in 
-            self.spartonResponseThread1 = sparton_ahrs.SpartonAhrsResponse("/dev/ttyUSB1")
+            self.spartonResponseThread1 = sparton_ahrs.SpartonAhrsResponse("/dev/ttyUSB2")
             self.spartonResponseThread1.start()
             
         except:
@@ -522,7 +524,7 @@ class ExternalCommThread(QtCore.QThread):
         
         try:
 			
-			self.motherSerial = serial.Serial("/dev/ttyUSB4", 9600)
+			self.motherSerial = serial.Serial("/dev/ttyUSB5", 9600)
 			self.motherPackets = motherboard.motherBoardDataPackets(self.motherSerial)
 			
 			self.motherResponseThread = motherboard.motherBoardResponse(self.motherSerial)
@@ -827,10 +829,10 @@ class ExternalCommThread(QtCore.QThread):
                     self.weapon13On = True'''
                 if(self.motherMessage[0] == 392): # SIB Pressure
                     depth1 = self.motherMessage[1]
-                    depth2 = self.motherMessage[2]
+                    #depth2 = self.motherMessage[2]
                     depth3 = self.motherMessage[3]
-                    depth = np.median([depth1, depth2, depth3])
-                    self.position[2] = float((depth-602))/10
+                    depth = np.median([depth1, depth3])
+                    self.position[2] = float((depth-95))/9.2
                 #print self.motherMessage
 
         if self.hydrasResponseThread1 != None:
@@ -918,7 +920,37 @@ class ExternalCommThread(QtCore.QThread):
             
             self.arduinoDisplayDataPackets.sendToDisplay(depth, waypointN, waypointE, waypointUp, yaw, pitch, roll, mission)
             startArduinoDisplay = time.time()'''
-        
+        depth = str(int(self.position[2]))
+        waypointN = str(int(self.position[0]))
+        waypointE = str(int(self.position[1]))
+        waypointUp = str(int(self.position[2]))
+        yaw = str(int(self.orientation[0]))
+        pitch = str(int(self.orientation[1]))
+        roll = str(int(self.orientation[2]))
+        mission = "Percy is lit"
+
+        # Send data to the arduino that controls display inside the sub
+        if self.arduinoDisplayDataPackets != None and time.time() - self.startArduinoDisplay > 1:
+            if self.arduinoDisplayData == None:
+                self.arduinoDisplayData = [depth]
+                self.arduinoDisplayData.append(waypointN)
+                self.arduinoDisplayData.append(waypointE)
+                self.arduinoDisplayData.append(waypointUp)
+                self.arduinoDisplayData.append(yaw)
+                self.arduinoDisplayData.append(pitch)
+                self.arduinoDisplayData.append(roll)
+                self.arduinoDisplayData.append(mission)
+            else:
+                self.arduinoDisplayData[0] = depth
+                self.arduinoDisplayData[1] = waypointN
+                self.arduinoDisplayData[2] = waypointE
+                self.arduinoDisplayData[3] = waypointUp
+                self.arduinoDisplayData[4] = yaw
+                self.arduinoDisplayData[5] = pitch
+                self.arduinoDisplayData[6] = roll
+                self.arduinoDisplayData[7] = mission
+            self.arduinoDisplayDataPackets.sendToDisplay(self.arduinoDisplayData)
+            self.startArduinoDisplay = time.time()
 
     def getDVLData(self, ahrsData):
         """
@@ -935,26 +967,27 @@ class ExternalCommThread(QtCore.QThread):
                 self.velocity = [xVel, yVel, zVel]
                 heading = ahrsData[0]
                 timeVelEstX, timeVelEstY, timeVelEstZ = ensemble[1]
+                print "Values are", self.velocity, ensemble[1]
                 #Probably have to fix the following equations
                 if not(xVel < -32):# If no error in DVL, indicated by velocity being less than 32
                     degToRad = 3.1415926535 / 180
-                    '''velNcompX = xVel * round(math.cos(heading * degToRad))
-                    velNcompY = yVel * round(math.cos((heading + 90) * degToRad))
+                    velNcompX = xVel * round(math.cos(heading * degToRad))
+                    velNcompY = yVel * round(math.sin((heading) * degToRad))
 
-                    velEcompX = xVel * round(math.sin(heading * degToRad))
-                    velEcompY = yVel * round(math.sin((heading + 90) * degToRad))'''
+                    velEcompX = xVel * -round(math.sin(heading * degToRad))
+                    velEcompY = yVel * -round(math.cos((heading) * degToRad))
 
-                    velNcompX = xVel * math.cos(heading * degToRad)
+                    '''velNcompX = xVel * math.cos(heading * degToRad)
                     velNcompY = yVel * math.sin(heading *degToRad)
            
                     velEcompX = xVel * math.sin(heading * degToRad)
-                    velECompY = yVel * math.cos(heading * degToRad)
+                    velEcompY = yVel * math.cos(heading * degToRad)'''
 
 
-                    lastDistanceTraveledN = (velNcompX * timeVelEstX) + (
-                                velNcompY * timeVelEstY) * 1000 / 1.74
-                    lastDistanceTraveledE = (velEcompX * timeVelEstX) + (
-                                velEcompY * timeVelEstY) * 1000 / 1.74
+                    lastDistanceTraveledN = (velNcompX * timeVelEstX*100) + (
+                                velNcompY * timeVelEstY*100)# * 1000 / 1.74
+                    lastDistanceTraveledE = (velEcompX * timeVelEstX*100) + (
+                                velEcompY * timeVelEstY*100)# * 1000 / 1.74
                     lastDistanceTraveledD = zVel * timeVelEstZ
 
                     #Add distance traveled to last known position
@@ -964,12 +997,14 @@ class ExternalCommThread(QtCore.QThread):
                     self.position[1] = self.position[1] + lastDistanceTraveledE
 
                 else:
+                    print "DVL Error"
                     northPosition, eastPosition, upPosition, positionError = 0, 0, 0, 0
                     xVel, yVel, zVel = 0, 0, 0
                     heading, pitch, roll, depth = 0, 0, 0, 0
                     elevation, speedOfSound, waterTemp = 0, 0, 0
 
-            except:
+            except Exception as e:
+                print "DVL Exception: ", str(e)
                 northPosition, eastPosition, upPosition, positionError = 0, 0, 0, 0
                 xVel, yVel, zVel = 0, 0, 0
                 heading, pitch, roll, depth = 0, 0, 0, 0
