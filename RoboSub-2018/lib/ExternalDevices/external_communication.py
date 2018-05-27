@@ -282,6 +282,7 @@ class ExternalCommThread(QtCore.QThread):
         self.maestroSerial = None
         self.arduinoSerial = None
         self.arduinoDisplaySerial = None
+        self.arduinoDisplayData = None
         self.pressureArduinoDataPackets = None
         self.arduinoDisplayDataPackets = None
 
@@ -919,7 +920,37 @@ class ExternalCommThread(QtCore.QThread):
             
             self.arduinoDisplayDataPackets.sendToDisplay(depth, waypointN, waypointE, waypointUp, yaw, pitch, roll, mission)
             startArduinoDisplay = time.time()'''
-        
+        depth = str(int(self.position[2]))
+        waypointN = str(int(self.position[0]))
+        waypointE = str(int(self.position[1]))
+        waypointUp = str(int(self.position[3]))
+        yaw = str(int(self.orientation[0]))
+        pitch = str(int(self.orientation[1]))
+        roll = str(int(self.orientation[2]))
+        mission = "Percy is lit"
+
+        # Send data to the arduino that controls display inside the sub
+        if self.arduinoDisplayDataPackets != None and time.time() - startArduinoDisplay > 1:
+            if self.arduinoDisplayData == None:
+                self.arduinoDisplayData = [depth]
+                self.arduinoDisplayData.append(waypointN)
+                self.arduinoDisplayData.append(waypointE)
+                self.arduinoDisplayData.append(waypointUp)
+                self.arduinoDisplayData.append(yaw)
+                self.arduinoDisplayData.append(pitch)
+                self.arduinoDisplayData.append(roll)
+                self.arduinoDisplayData.append(mission)
+            else:
+                self.arduinoDisplayData[0] = depth
+                self.arduinoDisplayData[1] = waypointN
+                self.arduinoDisplayData[2] = waypointE
+                self.arduinoDisplayData[3] = waypointUp
+                self.arduinoDisplayData[4] = yaw
+                self.arduinoDisplayData[5] = pitch
+                self.arduinoDisplayData[6] = roll
+                self.arduinoDisplayData[7] = mission
+            self.arduinoDisplayDataPackets.sendToDisplay(self.arduinoDisplayData)
+            startArduinoDisplay = time.time()
 
     def getDVLData(self, ahrsData):
         """
