@@ -79,6 +79,7 @@ class ExternalComm(QtCore.QObject):
         self.previous_state_logging = previous_state_logging.Previous_State_Logging("Previous_State_Save.csv")
         self.previous_state_logging.loadFile()
         self.widget_config_logging = widget_config_logger.Widget_Config_Logger(self.mainWindowClass)
+        self.currentMission = None
 
     def connectSignals(self):
         """
@@ -91,7 +92,11 @@ class ExternalComm(QtCore.QObject):
                      self.sendGuiDataToExternalThread)
         self.connect(self.externalCommThread, QtCore.SIGNAL("requestCVData()"),self.sendCVDataToExternalThread)
         self.missionPlanner.setMissionList(self.guiDataToSend["missionList"])
+        self.connect(self.missionPlanner, QtCore.SIGNAL("currentMission(PyQt_PyObject)"), self.setCurrentMission)
         self.missionPlanner.connectSignals()
+
+    def setCurrentMission(self, mission):
+        self.currentMission = mission
 
     def setWaypointX(self, name, value):
         if "missionList" in self.guiDataToSend:
@@ -649,12 +654,15 @@ class ExternalCommThread(QtCore.QThread):
                 	self.computerVisionComm.sendParameters()
 
                 self.getSensorData()
+                self.emit(QtCore.SIGNAL("requestCurrentMission"))
                 self.detectionData = self.computerVisionComm.detectionData
                 data = {"ahrs": self.ahrsData, "dvl": self.dvlGuiData, "pmud": self.pmudGuiData,
                         "sib": self.sibGuiData,
                         "hydras": self.hydrasPingerData}
 
                 self.emit(QtCore.SIGNAL("finished(PyQt_PyObject)"), data)
+                if self.currentMission != None:
+                    self.emit(QtCore.SIGNAL("gotPositionData(PyQt_PyObject)", self.position+self.orientation, self.currentMission.generalWaypoint))
             else:
                 #self.emit(QtCore.SIGNAL("requestCVData()"))
                 #print "Test:  " + str(self.cvData)
