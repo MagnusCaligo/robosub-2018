@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>601</width>
-    <height>344</height>
+    <width>1088</width>
+    <height>626</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -197,7 +197,7 @@
        <item row="2" column="0">
         <widget class="QCheckBox" name="checkBox_3">
          <property name="text">
-          <string>Second Option</string>
+          <string>Relative Move (Polar)</string>
          </property>
         </widget>
        </item>
@@ -211,14 +211,14 @@
        <item row="1" column="1">
         <widget class="QCheckBox" name="useLaser">
          <property name="text">
-          <string>Use Laser</string>
+          <string>Relative Move (CART)</string>
          </property>
         </widget>
        </item>
        <item row="1" column="0">
         <widget class="QCheckBox" name="useKalmanFilter">
          <property name="text">
-          <string>Use Kalman Filter</string>
+          <string>Absolute Move</string>
          </property>
          <property name="checked">
           <bool>true</bool>
@@ -297,7 +297,7 @@
        <item>
         <widget class="QPushButton" name="addMissionButton">
          <property name="text">
-          <string>Add Mission</string>
+          <string>Add / Updated Mission</string>
          </property>
         </widget>
        </item>
@@ -329,16 +329,163 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_6">
        <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetMinimumSize</enum>
+         </property>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_7">
+           <item>
+            <widget class="QLabel" name="label_4">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Translation</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="northTranslation">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="eastTranslation">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="upTranslation">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_5">
+           <item>
+            <widget class="QLabel" name="label_5">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Rotation</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="yawRotation">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="pitchRotation">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimum">
+              <double>-180.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>180.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="rollRotation">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimum">
+              <double>-180.000000000000000</double>
+             </property>
+             <property name="maximum">
+              <double>180.000000000000000</double>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_8">
+         <item>
+          <widget class="QToolButton" name="setWaypointButton">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Set Waypoint</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="setRelativeHome">
+           <property name="text">
+            <string>Set Rel Home</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="setRelativeWaypoint">
+           <property name="text">
+            <string>Set Rel Waypoint</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <widget class="QListWidget" name="missionListWidget">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="maximumSize">
           <size>
-           <width>150</width>
+           <width>100050</width>
            <height>16777215</height>
           </size>
          </property>
@@ -363,83 +510,29 @@
         </layout>
        </item>
        <item>
-        <widget class="QCheckBox" name="missionDebugCheckbox">
-         <property name="text">
-          <string>Mission Debug</string>
-         </property>
-        </widget>
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <item>
+          <widget class="QPushButton" name="previousMissionButton">
+           <property name="text">
+            <string>Previous Mission</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="nextMissionButton">
+           <property name="text">
+            <string>Next Mission</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </item>
     </layout>
    </item>
-   <item>
-    <widget class="QWidget" name="missionDebugWidget" native="true">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_4">
-      <item>
-       <layout class="QVBoxLayout" name="debugTestingLayout">
-        <item>
-         <layout class="QGridLayout" name="gridLayout_3">
-          <item row="0" column="1">
-           <widget class="QPushButton" name="nextMissionButton">
-            <property name="text">
-             <string>Next Mission</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QPushButton" name="previousMissionButton">
-            <property name="text">
-             <string>Previous Mission</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QPushButton" name="nextFlagButtion">
-            <property name="text">
-             <string>Next Flag</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QPushButton" name="previousFlagButton">
-            <property name="text">
-             <string>Previous Flag</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QPlainTextEdit" name="missionDebugOutput"/>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>missionDebugCheckbox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>missionDebugWidget</receiver>
-   <slot>setShown(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>277</x>
-     <y>417</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>465</x>
-     <y>38</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

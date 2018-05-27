@@ -17,7 +17,6 @@ class MissionCommander(QtCore.QObject):
         self.missionDictionary = {}
         self.stopTime = None
         self.externalComm = externalComm
-        self.missionDebugMode = False
 
         if not "missionList" in self.externalComm.guiDataToSend:
             self.externalComm.guiDataToSend["missionList"] = []
@@ -44,28 +43,15 @@ class MissionCommander(QtCore.QObject):
         self.ui_missionCommander.loadMissionList.clicked.connect(self.openFileDialog)
         
         #Connects all the signals with Mission Planner
-        self.ui_missionCommander.missionDebugCheckbox.stateChanged.connect(self.setDebugMode)
         self.ui_missionCommander.previousMissionButton.clicked.connect(lambda: self.emit(QtCore.SIGNAL("nextOrPreviousMission(PyQt_PyObject)"), False))
-        self.ui_missionCommander.nextMissionButton.clicked.connect(lambda: self.emit(QtCore.SIGNAL("nextOrPreviousMission(PyQt_PyObject)"), True))      
-        self.ui_missionCommander.previousFlagButton.clicked.connect(lambda: self.emit(QtCore.SIGNAL("nextOrPreviousFlag(PyQt_PyObject)"), False))
-        self.ui_missionCommander.nextFlagButton.clicked.connect(lambda: self.emit(QtCore.SIGNAL("nextOrPreviousFlag(PyQt_PyObject)"), True))
-        self.connect(self.externalComm.missionPlanner, QtCore.SIGNAL("missionDebugMessage(PyQt_PyObject)"), self.printDebugMessage)
+        self.ui_missionCommander.nextMissionButton.clicked.connect(lambda: self.emit(QtCore.SIGNAL("nextOrPreviousMission(PyQt_PyObject)"), True)) 
         
         
         #Resets the mission List and then loads in all the items from the misison list
         self.ui_missionCommander.missionListWidget.clear()
         for i, v in enumerate(self.externalComm.guiDataToSend["missionList"]):
             self.ui_missionCommander.missionListWidget.addItem(QtGui.QListWidgetItem(v.parameters["name"]))
-        self.ui_missionCommander.missionDebugWidget.hide()
         
-        
-        
-    def printDebugMessage(self,string):
-        self.ui_missionCommander.missionDebugOutput.appendPlainText(string )
-        
-    def setDebugMode(self, int):
-        self.missionDebugMode = bool(int)
-        self.emit(QtCore.SIGNAL("setDebugMissionMode(PyQt_PyObject)"), self.missionDebugMode)
     
 
     def updateSelectedMission(self, missionName):
