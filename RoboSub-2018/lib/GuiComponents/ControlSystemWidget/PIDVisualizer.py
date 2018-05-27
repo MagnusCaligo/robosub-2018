@@ -7,13 +7,9 @@ import time
 import math
 
 class PIDVisualizer(QtGui.QWidget):
-	def __init__(self, Kp=0, Ki=0, Kd=0, targetValue=0, currentValue=2, timeWindow=10, sampleTimeInterval=.01):
+	def __init__(self, targetValue=0, currentValue=0, timeWindow=10, sampleTimeInterval=.01):
 		
 		QtGui.QWidget.__init__(self)
-		#PID Values
-		self.Kp = Kp
-		self.Ki = Ki
-		self.Kd = Kd
 
 		'''
 		Sensor Data Values:
@@ -56,20 +52,13 @@ class PIDVisualizer(QtGui.QWidget):
 		self.timer.timeout.connect(self.__updateGraph__)
 		self.timer.start(self.sampleTimeInterval)
 
-	def setPIDValues(self, Kp, Ki, Kd):
-		self.Kp = Kp
-		self.Ki = Ki
-		self.Kd = Kd
-		#update labels
-
 	def setTargetValue(self, targetValue, currentValue):
 		self.targetValue = targetValue
 		self.currentValue = currentValue
 		self.error = self.targetValue - self.currentValue
 		#update graph to show line at new target value
 
-	def updateValues(self, Kp, Ki, Kd, targetValue, currentValue):
-		self.setPIDValues(Kp, Ki, Kd)
+	def updateValues(self, targetValue, currentValue):
 		self.setTargetValue(targetValue, currentValue)
 
 		#running buffer where new data is inserted at the end and old data is truncated
@@ -79,27 +68,24 @@ class PIDVisualizer(QtGui.QWidget):
 		self.curve1.setData(self.xAxisTimeFrame, self.yAxisCurrentValue)
 		self.curve2.setData(self.xAxisTimeFrame, self.yAxisTargetValue)
 	
-	def dummyTestData(self):
-		frequency = 0.5
-		noise = random.normalvariate(0., 1.)
-		currentValue = 10.*math.sin(time.time()*frequency*2*math.pi) + noise
-		return currentValue
+	def clearYAxisData(self, targetValue=0, currentValue=0):
+		self.setTargetValue(targetValue, currentValue)
+		self.yAxisCurrentValue = self.yAxisCurrentValue * self.currentValue
+		self.yAxisTargetValue = self.yAxisTargetValue * self.targetValue
 
 	def __updateGraph__(self):
+		
 		#Plot the current value and target value of sensor data
-		#self.updateValues(10, 10, 10, 0, self.dummyTestData())
 		self.curve1.setData(self.xAxisTimeFrame, self.yAxisCurrentValue)
 		self.curve2.setData(self.xAxisTimeFrame, self.yAxisTargetValue)
 
-'''
-app = QtGui.QApplication(sys.argv)
-w = QtGui.QWidget()
-PIDPlotter = PIDVisualizer()
-layout = QtGui.QGridLayout()
-layout.addWidget(PIDPlotter.plt, 0, 1, 3, 1)
-w.setLayout(layout)
-w.show()
+if __name__ == "__main__": 
+	app = QtGui.QApplication(sys.argv)
+	w = QtGui.QWidget()
+	PIDPlotter = PIDVisualizer()
+	layout = QtGui.QGridLayout()
+	layout.addWidget(PIDPlotter.plt, 0, 1, 3, 1)
+	w.setLayout(layout)
+	w.show()
 
-sys.exit(app.exec_())
-'''
-
+	sys.exit(app.exec_())
