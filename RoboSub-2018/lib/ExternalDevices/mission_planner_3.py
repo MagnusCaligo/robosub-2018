@@ -144,9 +144,6 @@ class MissionPlanner(QtCore.QThread):
     def setDebugMissionMode(self, value):
         self.missionDebug = False
     
-    def nextOrPreviousFlag(self, next):
-        self.changeFlag = next
-    
     def nextOrPreviousMission(self, next):
         self.changeMission = next
     
@@ -252,14 +249,6 @@ class MissionPlanner(QtCore.QThread):
         if self.manualMode == True:
             self.joystickController.killThread()
         self.sendDebugMessage("Stopping...")
-        for i,v in enumerate(self.missionList):
-            print "Test"
-            v.executed = False
-            v.readyToExecute = False
-            v.reachedSpecificWaypoint = False
-            v.locatedObstacles = False
-            v.reachedGeneralWaypoint = False
-            v.parameters["startTime"] = 0
         if self.MovementController != None:
             for i in range(0,9):
                 self.maestroSerial.write(bytearray([0xFF, i, 0x7F]))
@@ -273,7 +262,6 @@ class MissionPlanner(QtCore.QThread):
     def run(self):
         self.sendDebugMessage("Starting...")
         missionIndex = 0
-        sentFlagMessage = False
         self.running = True
         waypointError = None
         
@@ -490,16 +478,6 @@ class MissionPlanner(QtCore.QThread):
 							self.desiredMoveYaw, self.desiredMovePitch, self.desiredMoveRoll = self.externalCommThread.orientation[0],self.externalCommThread.orientation[1],self.externalCommThread.orientation[2]
 							self.desiredMissionOrientation = [False, 0, 0, 0, 0, 0, 0, 0]
 							print "Under normal Operation, desired epth is: ", self.desiredMoveDepth
-					
-					#self.MovementController.move(poseData[3], xPwm, poseData[3], zPwm, xDesiredRotation, yDesiredRotation, 0)
-					#self.MovementController.move(poseData[3], xPwm, self.manualDepthValue, zPwm, xDesiredRotation, yDesiredRotation, 0)
-#                 try:
-#                     self.MovementController.move(poseData[3], xPwm, poseData[3], zPwm, xDesiredRotation, yDesiredRotation, 0)
-#                 except:
-#                     print "Something Went Wrong:"
-#                     print poseData[3], xPwm, poseData[3], zPwm, xDesiredRotation, yDesiredRotation, 0
-                #self.MovementController.advancedMove(poseData, 3,0,0, poseData[1], poseData[0], poseData[2])
-                
             return
         
         '''
@@ -533,69 +511,16 @@ class MissionPlanner(QtCore.QThread):
                     missionIndex -= 1
                     break
                 
-                
-                if mission.resetFlagBoolean == True:
-                    sentFlagMessage = False
-                    mission.resetFlagBoolean = False
-                
-                #Check for Socket Data from Computer Vision Process
-                # NEED TO WRITE THIS CODE
-                #socket.listen or something like that
-                
-                #This array will contain the position and orientation of the obstacle relative to the sub
-                obstacleLocation = []
-                #Collect Sensor Data
-                
-                if self.changeFlag != None:
-                    sentFlagMessage = False
-                    
-                if self.changeFlag == True:
-                    if mission.readyToExecute:
-                        mission.executed = True
-                    if mission.reachedSpecificWaypoint:
-                        mission.readyToExecute = True
-                    if mission.locatedObstacles:
-                        mission.reachedSpecificWaypoint = True
-                    if mission.reachedGeneralWaypoint:
-                        mission.locatedObstacles = True
-                    mission.reachedGeneralWaypoint = True
-                elif self.changeFlag == False:
-                    if mission.locatedObstacles == False:
-                        mission.reachedGeneralWaypoint = False
-                    if mission.reachedSpecificWaypoint == False:
-                        mission.locatedObstacles = False
-                    if mission.readyToExecute == False:
-                        mission.reachedSpecificWaypoint = False
-                    if mission.executed == False:
-                        mission.readyToExecute = False
-                    mission.readyToExecute= False
-                    
-                self.changeFlag = None               
-                
                 if not self.debug:
                     #This is where it will get position and orietnation data when the gui is not in debug mode
                     currentLocation = self.externalCommThread.position
                     currentOrientation = self.externalCommThread.orientation
                 else:
                     self.missionDebug = True
-                
-                #Check each flag to see if the mission is ready to move on 
-                if not mission.reachedGeneralWaypoint:
-                    continue
-                #At this point it is suppose to turn until it locates the obstacle it is looking for
-                #The obstacle data is coming in from the neural network process
-                if not mission.locatedObstacles:
-                	continue
-                #Work with the neural network process and dynamically change the specificWaypoint to get
-                #right in front of the obstacle or where ever we need to be
-                if not mission.reachedSpecificWaypoint:
-                    continue
-                #Do last minute alignment checks to make sure that we are ready to execute
-                if not mission.readyToExecute:
-					continue
-                #Once ready to execute, EXECUTE!
-                elif not mission.executed:
-                  continue
+
+
+                #This is where we call the mission code to run
+                mission.update()
             
             if (time.time() - startTime) > maxTime:
 				missionIndex += 1
