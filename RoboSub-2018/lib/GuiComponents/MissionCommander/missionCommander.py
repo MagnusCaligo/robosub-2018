@@ -17,7 +17,6 @@ class MissionCommander(QtCore.QObject):
         self.missionDictionary = {}
         self.stopTime = None
         self.externalComm = externalComm
-        self.missionDebugMode = False
 
         if not "missionList" in self.externalComm.guiDataToSend:
             self.externalComm.guiDataToSend["missionList"] = []
@@ -42,30 +41,25 @@ class MissionCommander(QtCore.QObject):
         self.ui_missionCommander.moveDown.clicked.connect(lambda: self.moveMissionPosition(False))
         self.ui_missionCommander.saveMissionList.clicked.connect(lambda: self.saveCurrentState(True))
         self.ui_missionCommander.loadMissionList.clicked.connect(self.openFileDialog)
+
+        self.ui_missionCommander.northTranslation.valueChanged.connect(lambda: self.externalComm.setWaypointX(str(self.ui_missionCommander.missionListWidget.currentItem().text()), float(self.ui_missionCommander.northTranslation.value())))
+        self.ui_missionCommander.eastTranslation.valueChanged.connect(lambda: self.externalComm.setWaypointY(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.eastTranslation.value()))
+        self.ui_missionCommander.upTranslation.valueChanged.connect(lambda: self.externalComm.setWaypointZ(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.upTranslation.value()))
+        self.ui_missionCommander.yawRotation.valueChanged.connect(lambda: self.externalComm.setWaypointOrientation_Yaw(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.yawRotation.value()))
+        self.ui_missionCommander.pitchRotation.valueChanged.connect(lambda: self.externalComm.setWaypointOrientation_Pitch(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.pitchRotation.value()))
+        self.ui_missionCommander.rollRotation.valueChanged.connect(lambda: self.externalComm.setWaypointOrientation_Roll(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.rollRotation.value()))
+
         
         #Connects all the signals with Mission Planner
-        self.ui_missionCommander.missionDebugCheckbox.stateChanged.connect(self.setDebugMode)
         self.ui_missionCommander.previousMissionButton.clicked.connect(lambda: self.emit(QtCore.SIGNAL("nextOrPreviousMission(PyQt_PyObject)"), False))
-        self.ui_missionCommander.nextMissionButton.clicked.connect(lambda: self.emit(QtCore.SIGNAL("nextOrPreviousMission(PyQt_PyObject)"), True))      
-        self.ui_missionCommander.previousFlagButton.clicked.connect(lambda: self.emit(QtCore.SIGNAL("nextOrPreviousFlag(PyQt_PyObject)"), False))
-        self.ui_missionCommander.nextFlagButton.clicked.connect(lambda: self.emit(QtCore.SIGNAL("nextOrPreviousFlag(PyQt_PyObject)"), True))
-        self.connect(self.externalComm.missionPlanner, QtCore.SIGNAL("missionDebugMessage(PyQt_PyObject)"), self.printDebugMessage)
+        self.ui_missionCommander.nextMissionButton.clicked.connect(lambda: self.emit(QtCore.SIGNAL("nextOrPreviousMission(PyQt_PyObject)"), True)) 
         
         
         #Resets the mission List and then loads in all the items from the misison list
         self.ui_missionCommander.missionListWidget.clear()
         for i, v in enumerate(self.externalComm.guiDataToSend["missionList"]):
             self.ui_missionCommander.missionListWidget.addItem(QtGui.QListWidgetItem(v.parameters["name"]))
-        self.ui_missionCommander.missionDebugWidget.hide()
         
-        
-        
-    def printDebugMessage(self,string):
-        self.ui_missionCommander.missionDebugOutput.appendPlainText(string )
-        
-    def setDebugMode(self, int):
-        self.missionDebugMode = bool(int)
-        self.emit(QtCore.SIGNAL("setDebugMissionMode(PyQt_PyObject)"), self.missionDebugMode)
     
 
     def updateSelectedMission(self, missionName):
@@ -112,6 +106,14 @@ class MissionCommander(QtCore.QObject):
         generalWaypoint = mission.parameters['useGeneralWaypoint']
         if generalWaypoint != 0:
             self.ui_missionCommander.useGeneralWaypoint.setText(str(generalWaypoint))
+
+        #Modify the Waypoint
+        self.ui_missionCommander.northTranslation.setValue(mission.generalWaypoint[0])
+        self.ui_missionCommander.eastTranslation.setValue(mission.generalWaypoint[1])
+        self.ui_missionCommander.upTranslation.setValue(mission.generalWaypoint[2])
+        self.ui_missionCommander.yawRotation.setValue(mission.generalWaypoint[3])
+        self.ui_missionCommander.pitchRotation.setValue(mission.generalWaypoint[4])
+        self.ui_missionCommander.rollRotation.setValue(mission.generalWaypoint[5])
         
         #Modify the Checkboxes
         self.ui_missionCommander.useKalmanFilter.setChecked(True)

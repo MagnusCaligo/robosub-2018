@@ -92,6 +92,8 @@ class ExternalComm(QtCore.QObject):
         self.connect(self.externalCommThread, QtCore.SIGNAL("requestCVData()"),self.sendCVDataToExternalThread)
         self.missionPlanner.setMissionList(self.guiDataToSend["missionList"])
         self.missionPlanner.connectSignals()
+        self.externalCommThread.connect(self.missionPlanner, QtCore.SIGNAL("currentMission(PyQt_PyObject)"), self.externalCommThread.setCurrentMission)
+
 
     def setWaypointX(self, name, value):
         if "missionList" in self.guiDataToSend:
@@ -303,6 +305,10 @@ class ExternalCommThread(QtCore.QThread):
         self.dvlAhrsDummyThread = None
         self.dvlResponseThread = None
 
+
+	#Mission Info
+	self.currentMission = None
+
         # For AHRS
         self.ahrsData1 = [0, 0, 0]
         self.ahrsData2 = [0, 0, 0]
@@ -393,10 +399,6 @@ class ExternalCommThread(QtCore.QThread):
         self.motorOffJoystickLock = True
         self.powerOnJoystickLock = False
 
-        # For Missions
-        self.currentMission = "None"
-        self.powerOffMissionLock = True
-        self.desiredMissionOrientation = [False, 0, 0, 0, 0]
 
         # GUI data
         self.guiData = {}
@@ -420,6 +422,11 @@ class ExternalCommThread(QtCore.QThread):
 
     def stopThread(self):
         self.isRunning = False
+
+    def setCurrentMission(self, mission):
+        if mission == "None":
+            return
+        self.currentMission = mission
 
     def __initSensors__(self):
         """
@@ -484,7 +491,7 @@ class ExternalCommThread(QtCore.QThread):
         # DVL initialization
         try:
 			
-            DVLComPort = serial.Serial("/dev/ttyUSB0", 115200)
+            DVLComPort = serial.Serial("/dev/ttyUSB8", 115200)
             self.dvlDataPackets = dvl.DVLDataPackets(DVLComPort)
             self.dvlResponseThread = dvl.DVLResponse(DVLComPort)
             self.dvlResponseThread.start()
@@ -500,7 +507,7 @@ class ExternalCommThread(QtCore.QThread):
         try:
             # AHRS initializing
             # Need to put the correct comm ports in 
-            self.spartonResponseThread1 = sparton_ahrs.SpartonAhrsResponse("/dev/ttyUSB2")
+            self.spartonResponseThread1 = sparton_ahrs.SpartonAhrsResponse("/dev/ttyUSB1")
             self.spartonResponseThread1.start()
             
         except:
@@ -524,7 +531,7 @@ class ExternalCommThread(QtCore.QThread):
         
         try:
 			
-			self.motherSerial = serial.Serial("/dev/ttyUSB5", 9600)
+			self.motherSerial = serial.Serial("/dev/ttyUSB4", 9600)
 			self.motherPackets = motherboard.motherBoardDataPackets(self.motherSerial)
 			
 			self.motherResponseThread = motherboard.motherBoardResponse(self.motherSerial)
@@ -650,12 +657,15 @@ class ExternalCommThread(QtCore.QThread):
                 	self.computerVisionComm.sendParameters()
 
                 self.getSensorData()
+                self.emit(QtCore.SIGNAL("requestCurrentMission"))
                 self.detectionData = self.computerVisionComm.detectionData
                 data = {"ahrs": self.ahrsData, "dvl": self.dvlGuiData, "pmud": self.pmudGuiData,
                         "sib": self.sibGuiData,
                         "hydras": self.hydrasPingerData}
 
                 self.emit(QtCore.SIGNAL("finished(PyQt_PyObject)"), data)
+                if self.currentMission != None:
+                    self.emit(QtCore.SIGNAL("gotPositionData(PyQt_PyObject, PyQt_PyObject)"), self.position+self.orientation, self.currentMission.generalWaypoint)
             else:
                 #self.emit(QtCore.SIGNAL("requestCVData()"))
                 #print "Test:  " + str(self.cvData)

@@ -43,16 +43,6 @@ class MissionPlanner(QtCore.QThread):
         self.missionDebug = False
         
         self.thrusters = []
-#         self.thrusters.append(movement.BrushedThruster(1, [0, 0, 0], [-1, 0, -1]))#Up/Down thruster
-#         self.thrusters.append(movement.BrushedThruster(2, [1, 0, 0], [0, 1, 0]))  #Up/Down thruster
-#         self.thrusters.append(movement.BrushedThruster(3, [0, 0, 0], [-1, 0, 1]))  #Up/Down thruster
-#         self.thrusters.append(movement.BrushedThruster(4, [0, 0, 1], [0, -1, 0]))  #Up/Down thruster
-#         self.thrusters.append(movement.BrushedThruster(5, [0, 0, 0], [1, 0, 1])) #Left/Right thruster
-#         self.thrusters.append(movement.BrushedThruster(6, [1, 0, 0], [0, -1, 0])) #Left/Right thruster
-#         self.thrusters.append(movement.BrushedThruster(7, [0, 0, 0], [1, 0, -1])) #Fwd/Rev thruster
-#         self.thrusters.append(movement.BrushedThruster(8, [0, 0, 1], [0, 1, 0])) #Fwd/Rev thruster
-        
-        #some of these are backwards because thrusters were plugged in incorrectly, numbers 3,4,7,8
         self.thrusters.append(movement.BrushedThruster(1, [0, 1, 0], [-1, 0, 1]))
         self.thrusters.append(movement.BrushedThruster(2, [-1, 0, 0], [0, 0, 1]))  
         self.thrusters.append(movement.BrushedThruster(3, [0, 1, 0], [1, 0, 1]))  
@@ -146,7 +136,6 @@ class MissionPlanner(QtCore.QThread):
         self.connect(self.controlSystemClass, QtCore.SIGNAL("updatePIDValues(PyQt_PyObject)"), lambda val: self.changePIDValues(False, val))
         self.connect(self.externalCommClass, QtCore.SIGNAL("stopThread"), self.stopThread)
         self.connect(self.externalCommClass, QtCore.SIGNAL("waypointChanged(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), lambda val1, val2, val3: self.changeWaypoint(val1, val2, val3))
-        self.connect(self.externalCommClass.externalCommThread, QtCore.SIGNAL("requestCurrentMission"), self.getCurrentMission)
         
         for i,v in enumerate(self.missionList):
             self.connect(v, QtCore.SIGNAL("debugMessage(PyQt_PyObject)"), self.sendDebugMessage)
@@ -154,9 +143,6 @@ class MissionPlanner(QtCore.QThread):
     #Changes the Mission Debug Value on the Fly
     def setDebugMissionMode(self, value):
         self.missionDebug = False
-    
-    def nextOrPreviousFlag(self, next):
-        self.changeFlag = next
     
     def nextOrPreviousMission(self, next):
         self.changeMission = next
@@ -208,11 +194,11 @@ class MissionPlanner(QtCore.QThread):
         
     #Returns the current mission.... Usefull for Nate and his Map for some reason
     def getCurrentMission(self):
-	if self.currentMission != None:
-		self.emit(QtCore.SIGNAL("currentMission(PyQt_PyObject)"), self.currentMission)
+        self.emit(QtCore.SIGNAL("currentMission(PyQt_PyObject)"), self.currentMission)
         
     #Change Waypoint - Allows for us to change the General Waypoint of a Mission while the sub is in the water
     def changeWaypoint(self, missionName, waypointPosition, waypointOrientation):
+        print "Waypoint Changed"
         if missionName in self.missionList:
             self.missionList[missionName].generalWaypoint = waypointPosition + waypointOrientation
             #print "Waypoint changed to " + str(waypointPosition + waypointOrientation)
@@ -263,14 +249,6 @@ class MissionPlanner(QtCore.QThread):
         if self.manualMode == True:
             self.joystickController.killThread()
         self.sendDebugMessage("Stopping...")
-        for i,v in enumerate(self.missionList):
-            print "Test"
-            v.executed = False
-            v.readyToExecute = False
-            v.reachedSpecificWaypoint = False
-            v.locatedObstacles = False
-            v.reachedGeneralWaypoint = False
-            v.parameters["startTime"] = 0
         if self.MovementController != None:
             for i in range(0,9):
                 self.maestroSerial.write(bytearray([0xFF, i, 0x7F]))
@@ -284,7 +262,6 @@ class MissionPlanner(QtCore.QThread):
     def run(self):
         self.sendDebugMessage("Starting...")
         missionIndex = 0
-        sentFlagMessage = False
         self.running = True
         waypointError = None
         
@@ -300,14 +277,12 @@ class MissionPlanner(QtCore.QThread):
             self.toggleLeftBumper = False
             self.toggleRightBumper = False
             self.quickButtonPressDepth = True
-            controllerInputTimer = time.time()
             while self.running:
-                if abs(time.time() - controllerInputTimer) > .5:
-                    self.killThrusters()
                 
                 while len(self.joystickController.getList) > 0:
-                                        controllerInputTimer = time.time()
 					controllerData = self.joystickController.getList.pop(0)
+                
+					print controllerData
                 
 					xPwm = 0
 					zPwm = 0
@@ -320,8 +295,7 @@ class MissionPlanner(QtCore.QThread):
               
 					if controllerData == None:
 						print "No Controller Data"
-                                                self.killAllThrusters()
-						continue
+						#continue
 					else:                
 						#print controllerData
 						joystickInput = controllerData[1]
@@ -501,21 +475,9 @@ class MissionPlanner(QtCore.QThread):
 						#NORMAL OPERATION        
 						elif self.toggleRightBumper == False and self.toggleLeftBumper == False:
 							self.thrusterPWMs = self.MovementController.move(self.externalCommThread.position[2], axis0, self.desiredMoveDepth, -axis1, axis3, axis4, -axis2)
-							print "PWM", self.thrusterPWMs
 							self.desiredMoveYaw, self.desiredMovePitch, self.desiredMoveRoll = self.externalCommThread.orientation[0],self.externalCommThread.orientation[1],self.externalCommThread.orientation[2]
 							self.desiredMissionOrientation = [False, 0, 0, 0, 0, 0, 0, 0]
 							print "Under normal Operation, desired epth is: ", self.desiredMoveDepth
-					
-					#self.MovementController.move(poseData[3], xPwm, poseData[3], zPwm, xDesiredRotation, yDesiredRotation, 0)
-					#self.MovementController.move(poseData[3], xPwm, self.manualDepthValue, zPwm, xDesiredRotation, yDesiredRotation, 0)
-#                 try:
-#                     self.MovementController.move(poseData[3], xPwm, poseData[3], zPwm, xDesiredRotation, yDesiredRotation, 0)
-#                 except:
-#                     print "Something Went Wrong:"
-#                     print poseData[3], xPwm, poseData[3], zPwm, xDesiredRotation, yDesiredRotation, 0
-                #self.MovementController.advancedMove(poseData, 3,0,0, poseData[1], poseData[0], poseData[2])
-                
-            print "Finished Manual Controll Loop"
             return
         
         '''
@@ -532,15 +494,7 @@ class MissionPlanner(QtCore.QThread):
             self.currentMission = mission
             maxTime = int(mission.parameters["maxTime"])
             startTime = time.time()   
-            
-            #Modify the General Waypoint if it is set to use the same waypoint as another mission
-            
-            if mission.parameters["useGeneralWaypoint"] != None:
-               print "Using Waypoint: ", mission.parameters["useGeneralWaypoint"]
-               for i,v in enumerate(self.missionList):
-                  if v.name == mission.parameters["useGeneralWaypoint"]:
-                    mission.generalWaypoint = v.lastKnownPosition
-                    break
+        
             
             
             #while ((startTime - time.time()) <= maxTime or self.missionDebug==True) and self.running:
@@ -557,211 +511,16 @@ class MissionPlanner(QtCore.QThread):
                     missionIndex -= 1
                     break
                 
-                
-                if mission.resetFlagBoolean == True:
-                    sentFlagMessage = False
-                    mission.resetFlagBoolean = False
-                
-                #Check for Socket Data from Computer Vision Process
-                # NEED TO WRITE THIS CODE
-                #socket.listen or something like that
-                
-                #This array will contain the position and orientation of the obstacle relative to the sub
-                obstacleLocation = []
-                #Collect Sensor Data
-                
-                if self.changeFlag != None:
-                    sentFlagMessage = False
-                    
-                if self.changeFlag == True:
-                    if mission.readyToExecute:
-                        mission.executed = True
-                    if mission.reachedSpecificWaypoint:
-                        mission.readyToExecute = True
-                    if mission.locatedObstacles:
-                        mission.reachedSpecificWaypoint = True
-                    if mission.reachedGeneralWaypoint:
-                        mission.locatedObstacles = True
-                    mission.reachedGeneralWaypoint = True
-                elif self.changeFlag == False:
-                    if mission.locatedObstacles == False:
-                        mission.reachedGeneralWaypoint = False
-                    if mission.reachedSpecificWaypoint == False:
-                        mission.locatedObstacles = False
-                    if mission.readyToExecute == False:
-                        mission.reachedSpecificWaypoint = False
-                    if mission.executed == False:
-                        mission.readyToExecute = False
-                    mission.readyToExecute= False
-                    
-                self.changeFlag = None               
-                
                 if not self.debug:
                     #This is where it will get position and orietnation data when the gui is not in debug mode
-                    if mission.parameters["useKalmanFilter"] == True:
-                        currentLocation = self.externalCommThread.position
-                        currentOrientation = self.externalCommThread.orientation
-                    else:
-                        currentLocation = self.externalCommThread.position
-                        currentOrientation = self.externalCommThread.orientation
+                    currentLocation = self.externalCommThread.position
+                    currentOrientation = self.externalCommThread.orientation
                 else:
                     self.missionDebug = True
-                    
-                
-                
-                #Check each flag to see if the mission is ready to move on 
-                if not mission.reachedGeneralWaypoint:
-                    #print "Haven't reached general waypoint"
-                    reachedWaypoint = True
-                    #Sends a message saying which flag it is on, but only once
-                    if not sentFlagMessage:
-                        self.sendDebugMessage("Begining General Waypoint")
-                        print "Begining new waypoint"
-                        sentFlagMessage = True
-                        
-                    if "ignoreGeneralWaypoint" in mission.parameters:
-						#print "variable is set"
-						if mission.parameters["ignoreGeneralWaypoint"] == "True":
-							#print "Actually ignored it"
-							self.reachedGeneralWaypoint = True
-							continue
-                    
-                    if not self.debug:
-                        if waypointError != None:
-                            #print "Waypont Error: ", waypointError
-                            #print "Genral Distance Error", mission.generalDistanceError
-                            #print "Orientation error", mission.generalRotationError
-                            if abs(waypointError[0]) < mission.generalDistanceError and abs(waypointError[1]) < mission.generalDistanceError and abs(waypointError[2]) < mission.generalDistanceError:
-                                pass #This will only be called if we are actually at the waypoint in terms of position
-                                #print "Not there position"
-                            else:
-                                reachedWaypoint = False
-                                
-                            if abs(waypointError[3]) < mission.generalRotationError and abs(waypointError[4]) <mission.generalRotationError and abs(waypointError[5]) < mission.generalRotationError:
-                                pass #Only will be called if we have the correct orientaiton
-                                #print "Not there orientation"
-                            else:
-                                reachedWaypoint = False
-                        else:
-                            print "Waypoint error was weird"
-                            reachedWaypoint = False
-                    
-                    #print "Waypoint Status: ", reachedWaypoint
-                    if reachedWaypoint and not self.missionDebug:
-                    
-                        print "Reahed the waypoint"
-                        if mission.parameters["startTime"] == 0:
-                            print "Reseting time"
-                            mission.parameters["startTime"] = time.time()
-                        
-                        if time.time() - mission.parameters["startTime"] >= int(mission.parameters["waitTime"]):
-                            mission.reachedGeneralWaypoint = True
-                            mission.parameters["startTime"] = 0
-                            print "Finished General Waypoint"
-                            self.sendDebugMessage("Reached General Waypoint")
-                            self.relativeMoveWaypoint = None
-                            sentFlagMessage = False
-                            '''
-                            At this point we would tell the neural network to look for the object
-                            socket.send("Look for: " + mission.obstacleName)
-                            '''
-                            continue
-                        else:
-                            print time.time() - mission.parameters["startTime"]						
-                    #If we haven't reached the waypoint and the gui isn't in debug mode, then attempt to move to the general waypoint
-                    if not self.debug:
-						if mission.parameters["useRelativeWaypoint"] == "True":
-							print "Using relative waypoint"
-							if self.relativeMoveWaypoint == None:
-								print "Going to: ", mission.generalWaypoint
-								pose, n, e, u, x, y, z = self.MovementController.relativeMove(currentOrientation+currentLocation,None, None, None, None, None, None, mission.generalWaypoint[1], mission.generalWaypoint[2], mission.generalWaypoint[0], 
-                                                              mission.generalWaypoint[4], mission.generalWaypoint[3], 0)
-								self.relativeMoveWaypoint = [n, e, u, y, x, z]
-                            #print "relative Waypoint: ",self.relativeMoveWaypoint    
-							waypointError = self.MovementController.advancedMove(currentOrientation + currentLocation, self.relativeMoveWaypoint[0], self.relativeMoveWaypoint[1], mission.generalWaypoint[2], self.relativeMoveWaypoint[4], self.relativeMoveWaypoint[3], self.relativeMoveWaypoint[5])[1]		
-						elif mission.parameters["useRelativeWorld"] == "True":
-							print "Using relative world"
-							if self.relativeMoveWaypoint == None:
-								pose, n, e, u, x, y, z = self.MovementController.relativeMove(currentOrientation + currentLocation, mission.generalWaypoint[0], mission.generalWaypoint[1], mission.generalWaypoint[2], 
-                                                              mission.generalWaypoint[4], mission.generalWaypoint[3], 0)
-								self.relativeMoveWaypoint = [n,e,u,y,x,z]
-							waypointError = self.MovementController.advancedMove(currentOrientation + currentLocation, self.relativeMoveWaypoint[0], self.relativeMoveWaypoint[1], mission.generalWaypoint[2], self.relativeMoveWaypoint[4], self.relativeMoveWaypoint[3], self.relativeMoveWaypoint[5])[1]		                               
-						else:
-							#print "Using absolute"
-							waypointError = self.MovementController.advancedMove(currentOrientation+currentLocation, mission.generalWaypoint[0], mission.generalWaypoint[1], mission.generalWaypoint[2], 
-                                                              mission.generalWaypoint[4], mission.generalWaypoint[3], mission.generalWaypoint[5], mission.parameters["drivingMode"])[1]
-						#print "Waypoint Error: ", waypointError
-                    continue
-                
-                
-                
-                #At this point it is suppose to turn until it locates the obstacle it is looking for
-                #The obstacle data is coming in from the neural network process
-                if not mission.locatedObstacles:
-					if not sentFlagMessage:
-						self.sendDebugMessage("Begining Object Detection")
-						sentFlagMessage = True
-					
-					if not self.debug:
-						foundObstacles = mission.lookForObstacles(self.externalCommThread, self.MovementController)
-					if foundObstacles and not self.missionDebug:
-						print "Found obstacles"
-						mission.locatedObstacles = True
-						sentFlagMessage = False  
-					continue
-                
-                
-                #Work with the neural network process and dynamically change the specificWaypoint to get
-                #right in front of the obstacle or where ever we need to be
-                if not mission.reachedSpecificWaypoint:
-                    
-                     #Sends a message saying which flag it is on, but only once
-                    if not sentFlagMessage:
-                        self.sendDebugMessage("Begining Specific Waypoint")
-                        sentFlagMessage = True
-                
-                    reachedWaypoint = True
-                    if not self.debug:
-                        reachedWaypoint = mission.calculateSpecificWaypoint(self.externalCommThread, self.MovementController)
-                    '''
-                    if not self.debug:
-                        for n,p in enumerate(currentLocation):
-                            if not ((p + mission.specificDistanceError >= mission.specificWaypoint[n]) and (p - mission.specificDistanceError <= mission.specificWaypoint[n])):
-                                reachedWaypoint = False
-                        for n, p in enumerate(currentOrientation):
-                            if not ((p - mission.specificRotationError <= mission.specificWaypoint[n+3]) and (p + mission.specificRotationError >= mission.specificWaypoint[n +3])):
-                                reachedWaypoint = False
-                    '''
-                            
-                    if reachedWaypoint and not self.missionDebug:
-                        mission.reachedSpecificWaypoint = True
-                        sentFlagMessage = False
-                    continue
-                
-                #Do last minute alignment checks to make sure that we are ready to execute
-                if not mission.readyToExecute:
-                    
-                     #Sends a message saying which flag it is on, but only once
-                    if not sentFlagMessage:
-                        self.sendDebugMessage("Begining Ready to Execute")
-                        sentFlagMessage = True
-                    
-                    if not self.debug:
-                        readyToExecute = mission.getExecutionPositionDifference(self.externalCommThread, self.MovementController)
-                        if readyToExecute and not self.missionDebug:
-							mission.readyToExecute = True
-							sentFlagMessage = False
-							continue
-                    continue
-                #Once ready to execute, EXECUTE!
-                elif not mission.executed:
-                    if not self.debug:
-                        mission.executionTask(self.externalCommThread, self.MovementController)
-                    self.sendDebugMessage("Executed!")
-                    mission.executed = True
-                    mission.success = True
-                    missionIndex += 1
-                    break
+
+
+                #This is where we call the mission code to run
+                mission.update()
             
             if (time.time() - startTime) > maxTime:
 				missionIndex += 1
