@@ -15,14 +15,14 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout" stretch="0">
+    <layout class="QHBoxLayout" name="horizontalLayout" stretch="0">
      <property name="sizeConstraint">
       <enum>QLayout::SetFixedSize</enum>
      </property>
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="pitchForward">
         <attribute name="title">

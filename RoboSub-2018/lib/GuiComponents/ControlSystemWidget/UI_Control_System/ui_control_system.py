@@ -28,9 +28,9 @@ class Ui_Form(object):
         Form.resize(765, 437)
         self.verticalLayout_2 = QtGui.QVBoxLayout(Form)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
-        self.verticalLayout = QtGui.QVBoxLayout()
-        self.verticalLayout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
-        self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.horizontalLayout = QtGui.QHBoxLayout()
+        self.horizontalLayout.setSizeConstraint(QtGui.QLayout.SetFixedSize)
+        self.horizontalLayout.setObjectName(_fromUtf8("horizontalLayout"))
         self.tabWidget = QtGui.QTabWidget(Form)
         self.tabWidget.setObjectName(_fromUtf8("tabWidget"))
         self.pitchForward = QtGui.QWidget()
@@ -89,11 +89,11 @@ class Ui_Form(object):
         self.verticalLayout_10.setObjectName(_fromUtf8("verticalLayout_10"))
         self.gridLayout_13.addLayout(self.verticalLayout_10, 0, 0, 1, 1)
         self.tabWidget.addTab(self.tab_6, _fromUtf8(""))
-        self.verticalLayout.addWidget(self.tabWidget)
-        self.verticalLayout_2.addLayout(self.verticalLayout)
+        self.horizontalLayout.addWidget(self.tabWidget)
+        self.verticalLayout_2.addLayout(self.horizontalLayout)
 
         self.retranslateUi(Form)
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
