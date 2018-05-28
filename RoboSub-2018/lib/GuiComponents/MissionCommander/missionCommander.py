@@ -41,6 +41,14 @@ class MissionCommander(QtCore.QObject):
         self.ui_missionCommander.moveDown.clicked.connect(lambda: self.moveMissionPosition(False))
         self.ui_missionCommander.saveMissionList.clicked.connect(lambda: self.saveCurrentState(True))
         self.ui_missionCommander.loadMissionList.clicked.connect(self.openFileDialog)
+
+        self.ui_missionCommander.northTranslation.valueChanged.connect(lambda: self.externalComm.setWaypointX(str(self.ui_missionCommander.missionListWidget.currentItem().text()), float(self.ui_missionCommander.northTranslation.value())))
+        self.ui_missionCommander.eastTranslation.valueChanged.connect(lambda: self.externalComm.setWaypointY(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.eastTranslation.value()))
+        self.ui_missionCommander.upTranslation.valueChanged.connect(lambda: self.externalComm.setWaypointZ(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.upTranslation.value()))
+        self.ui_missionCommander.yawRotation.valueChanged.connect(lambda: self.externalComm.setWaypointOrientation_Yaw(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.yawRotation.value()))
+        self.ui_missionCommander.pitchRotation.valueChanged.connect(lambda: self.externalComm.setWaypointOrientation_Pitch(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.pitchRotation.value()))
+        self.ui_missionCommander.rollRotation.valueChanged.connect(lambda: self.externalComm.setWaypointOrientation_Roll(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.rollRotation.value()))
+
         
         #Connects all the signals with Mission Planner
         self.ui_missionCommander.previousMissionButton.clicked.connect(lambda: self.emit(QtCore.SIGNAL("nextOrPreviousMission(PyQt_PyObject)"), False))
@@ -98,6 +106,14 @@ class MissionCommander(QtCore.QObject):
         generalWaypoint = mission.parameters['useGeneralWaypoint']
         if generalWaypoint != 0:
             self.ui_missionCommander.useGeneralWaypoint.setText(str(generalWaypoint))
+
+        #Modify the Waypoint
+        self.ui_missionCommander.northTranslation.setValue(mission.generalWaypoint[0])
+        self.ui_missionCommander.eastTranslation.setValue(mission.generalWaypoint[1])
+        self.ui_missionCommander.upTranslation.setValue(mission.generalWaypoint[2])
+        self.ui_missionCommander.yawRotation.setValue(mission.generalWaypoint[3])
+        self.ui_missionCommander.pitchRotation.setValue(mission.generalWaypoint[4])
+        self.ui_missionCommander.rollRotation.setValue(mission.generalWaypoint[5])
         
         #Modify the Checkboxes
         self.ui_missionCommander.useKalmanFilter.setChecked(True)
@@ -124,6 +140,8 @@ class MissionCommander(QtCore.QObject):
             filename = QtGui.QFileDialog.getSaveFileName(fileWidget, 'Save File', '/')
         
         if filename == "":
+            return
+        if not os.path.isfile(filename):
             return
         
         def jdefault(o):

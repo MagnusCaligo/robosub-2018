@@ -190,7 +190,7 @@ class MovementController():
                 self.serialStream.write(bytearray([0xFF, 7, thrust]))
                 #print "7:" + str(thrusterPWMs[6])
             if thrusterPWMs[7] != self.previousPwm[7]:
-                thrust = np.interp(-thrusterPWMs[7],[-100,100],[0,254])
+                thrust = np.interp(thrusterPWMs[7],[-100,100],[0,254])
                 thrust = int(thrust)
                 self.serialStream.write(bytearray([0xFF, 8, thrust]))
                 #print "8:" + str(thrusterPWMs[7])

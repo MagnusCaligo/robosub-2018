@@ -30,10 +30,9 @@ class displayArduino:
             #Note: The index for each piece of data is 2 bytes(this is how the arduino reads the index)
             #Single integer indices needed to by augmented with a preceding '0' to be a 2byte string
             if index < 10:
-                print(bytes('0'+str(index)+dataString+',', 'ascii'))
-                self.arduinoCom.write(bytes('0'+str(index)+dataString+',', 'ascii'))
+                self.arduinoCom.write('0'+str(index)+dataString+',')
             else:
-                self.arduinoCom.write(bytes(str(index)+dataString+',', 'ascii'))
+                self.arduinoCom.write(str(index)+dataString+',')
         #Flush data sending buffer
         self.arduinoCom.flush()
         

@@ -57,6 +57,7 @@ class PIDVisualizer(QtGui.QWidget):
 		self.currentValue = currentValue
 		self.error = self.targetValue - self.currentValue
 		#update graph to show line at new target value
+		self.yAxisTargetValue = targetValue * np.ones(int(self.bufferSize), dtype=np.float)
 
 	def updateValues(self, targetValue, currentValue):
 		self.setTargetValue(targetValue, currentValue)

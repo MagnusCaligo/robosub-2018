@@ -146,6 +146,7 @@ class MissionPlanner(QtCore.QThread):
         self.connect(self.controlSystemClass, QtCore.SIGNAL("updatePIDValues(PyQt_PyObject)"), lambda val: self.changePIDValues(False, val))
         self.connect(self.externalCommClass, QtCore.SIGNAL("stopThread"), self.stopThread)
         self.connect(self.externalCommClass, QtCore.SIGNAL("waypointChanged(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), lambda val1, val2, val3: self.changeWaypoint(val1, val2, val3))
+        self.connect(self.externalCommClass.externalCommThread, QtCore.SIGNAL("requestCurrentMission"), self.getCurrentMission)
         
         for i,v in enumerate(self.missionList):
             self.connect(v, QtCore.SIGNAL("debugMessage(PyQt_PyObject)"), self.sendDebugMessage)
@@ -207,11 +208,11 @@ class MissionPlanner(QtCore.QThread):
         
     #Returns the current mission.... Usefull for Nate and his Map for some reason
     def getCurrentMission(self):
-        self.emit(QtCore.SIGNAL("currentMission(PyQt_PyObject)"), self.currentMission)
+	if self.currentMission != None:
+		self.emit(QtCore.SIGNAL("currentMission(PyQt_PyObject)"), self.currentMission)
         
     #Change Waypoint - Allows for us to change the General Waypoint of a Mission while the sub is in the water
     def changeWaypoint(self, missionName, waypointPosition, waypointOrientation):
-        print "Waypoint Changed"
         if missionName in self.missionList:
             self.missionList[missionName].generalWaypoint = waypointPosition + waypointOrientation
             #print "Waypoint changed to " + str(waypointPosition + waypointOrientation)
@@ -686,10 +687,10 @@ class MissionPlanner(QtCore.QThread):
 								self.relativeMoveWaypoint = [n,e,u,y,x,z]
 							waypointError = self.MovementController.advancedMove(currentOrientation + currentLocation, self.relativeMoveWaypoint[0], self.relativeMoveWaypoint[1], mission.generalWaypoint[2], self.relativeMoveWaypoint[4], self.relativeMoveWaypoint[3], self.relativeMoveWaypoint[5])[1]		                               
 						else:
-							print "Using absolute"
+							#print "Using absolute"
 							waypointError = self.MovementController.advancedMove(currentOrientation+currentLocation, mission.generalWaypoint[0], mission.generalWaypoint[1], mission.generalWaypoint[2], 
                                                               mission.generalWaypoint[4], mission.generalWaypoint[3], mission.generalWaypoint[5], mission.parameters["drivingMode"])[1]
-						print "Waypoint Error: ", waypointError
+						#print "Waypoint Error: ", waypointError
                     continue
                 
                 
