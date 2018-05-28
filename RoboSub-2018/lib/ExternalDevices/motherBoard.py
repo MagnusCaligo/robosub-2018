@@ -415,16 +415,13 @@ class motherBoardResponse(threading.Thread):
                     elif idFrame == 320:# Weapon 13 on
                         message = [idFrame]
                     elif idFrame == 392:
-                         #print "111111111111111111"
-                         extPress1 = (struct.unpack('H', struct.pack('H', payload[0] | ((payload[1] & (int('0x03', 0)) << 8))))[0])
-                         #print "22222222222222222"
-                         #print payload[0]
-                         #extPress2 = (struct.unpack('H', struct.pack('H', (payload[1] >> 2 | (payload[2] & int('0xF', 0)) << 6)))[0])
-                         extPress2 = (struct.unpack('H', struct.pack('H', (payload[1] | (payload[2] & int('0xF', 0)) >> 2)))[0])
-                         #print "333333333333333333333"
-                         extPress3 = (struct.unpack('H', struct.pack('H', (payload[2] >> 4) | (payload[3] & int('0x1F', 0)) << 4))[0])
+                         #Byte 2 (bits 0-1) shifted 8 bits left OR Byte 1 (bits 0-7)
+                         extPress1 = struct.unpack('H', struct.pack('H', (payload[1] & int('0x03', 0)) << 8 | payload[0]))[0]
+                         #Byte 3 (bits 0-3) shifted 6 bits left OR Byte 2 (bits 2-7) shifted 2 bits right
+                         extPress2 = struct.unpack('H', struct.pack('H', (payload[2] & int('0xF', 0)) << 6 | payload[1] >> 2))[0]
+                         #Byte 4 (bits 0-5) shifted 4 bits left OR Byte 3 (bits 4-7) shifted 4
+                         extPress3 = struct.unpack('H', struct.pack('H', (payload[3] & int('0x1F', 0)) << 4 | payload[2] >> 4))[0]
                          #intPress1 = (struct.unpack('H', struct.pack('H', payload[4] | payload[5] << 8 | (int('0xf', 0) & payload[6]) << 16))[0])
-                         #print "4444444444444444444444444"
                          message = [idFrame, extPress1, extPress2, extPress3]
                     elif idFrame == 400:
                         pass
