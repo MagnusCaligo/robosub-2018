@@ -84,7 +84,7 @@ class DVLResponse(threading.Thread):
         try:
             if self.DVLCom.inWaiting() != 0:
                 SYNC = hex(ord(self.DVLCom.read()))
-                print SYNC
+                #print SYNC
                 if SYNC == "0xa5":
 
                     header = ord(self.DVLCom.read())  # Use ord when dealing with 1 byte
@@ -121,7 +121,8 @@ class DVLResponse(threading.Thread):
                         disBeam2 = self.DVLCom.read(4)
                         disBeam2 = struct.unpack('<f', disBeam2)
                         disBeam3 = self.DVLCom.read(4)
-                        self.distanceToFloor = (disBeam0[0] + disBeam1[0] + disBeam2[0] + disBeam3[0]) / 4
+                        disBeam3 = struct.unpack('<f', disBeam3)
+                        self.distanceToFloor = ((disBeam0[0]) + (disBeam1[0]) + (disBeam2[0]) + (disBeam3[0])) / 4
                         fomBeam0 = self.DVLCom.read(4)
                         fomBeam1 = self.DVLCom.read(4)
                         fomBeam2 = self.DVLCom.read(4)
@@ -255,4 +256,6 @@ class DVLResponse(threading.Thread):
         * **No Return.**\n
         '''
         self.runThread = False     
+		
+
         

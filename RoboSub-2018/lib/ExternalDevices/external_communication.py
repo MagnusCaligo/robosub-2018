@@ -92,6 +92,8 @@ class ExternalComm(QtCore.QObject):
         self.connect(self.externalCommThread, QtCore.SIGNAL("requestCVData()"),self.sendCVDataToExternalThread)
         self.missionPlanner.setMissionList(self.guiDataToSend["missionList"])
         self.missionPlanner.connectSignals()
+        self.externalCommThread.connect(self.missionPlanner, QtCore.SIGNAL("currentMission(PyQt_PyObject)"), self.externalCommThread.setCurrentMission)
+
 
     def setWaypointX(self, name, value):
         if "missionList" in self.guiDataToSend:
@@ -285,6 +287,7 @@ class ExternalCommThread(QtCore.QThread):
         self.arduinoDisplayData = None
         self.pressureArduinoDataPackets = None
         self.arduinoDisplayDataPackets = None
+        self.startArduinoDisplay = time.time()
 
         self.isDebug = True
         self.runProcess = True
@@ -301,6 +304,10 @@ class ExternalCommThread(QtCore.QThread):
         self.clearDVLDataInitial = True
         self.dvlAhrsDummyThread = None
         self.dvlResponseThread = None
+
+
+	#Mission Info
+	self.currentMission = None
 
         # For AHRS
         self.ahrsData1 = [0, 0, 0]
@@ -392,10 +399,6 @@ class ExternalCommThread(QtCore.QThread):
         self.motorOffJoystickLock = True
         self.powerOnJoystickLock = False
 
-        # For Missions
-        self.currentMission = "None"
-        self.powerOffMissionLock = True
-        self.desiredMissionOrientation = [False, 0, 0, 0, 0]
 
         # GUI data
         self.guiData = {}
@@ -419,6 +422,11 @@ class ExternalCommThread(QtCore.QThread):
 
     def stopThread(self):
         self.isRunning = False
+
+    def setCurrentMission(self, mission):
+        if mission == "None":
+            return
+        self.currentMission = mission
 
     def __initSensors__(self):
         """
@@ -461,9 +469,9 @@ class ExternalCommThread(QtCore.QThread):
             self.maestroSerial = serial.Serial("/dev/ttyACM0", 9600)			                						     																		    
             print "Maestro was not found"
             
-        if True:
+        if False:
             try:
-                self.arduinoSerial = serial.Serial("/dev/ttyACM3", 9600)
+                self.arduinoSerial = serial.Serial("/dev/ttyACM2", 9600)
                 self.pressureArduinoDataPackets = pressureArduino.pressureResponse(self.arduinoSerial)
                 self.pressureArduinoDataPackets.start()
             except:
@@ -471,9 +479,9 @@ class ExternalCommThread(QtCore.QThread):
         else:
             pass
         
-        if False:
+        if True:
             try:
-                self.arduinoDisplaySerial = serial.Serial("/dev/ttyACM8", 115200)
+                self.arduinoDisplaySerial = serial.Serial("/dev/ttyACM2", 115200)
                 self.arduinoDisplayDataPackets = displayArduino.displayArduino(self.arduinoDisplaySerial)
             except:
                 print "Unable to connect to Arduino for display"
@@ -488,9 +496,9 @@ class ExternalCommThread(QtCore.QThread):
             self.dvlResponseThread = dvl.DVLResponse(DVLComPort)
             self.dvlResponseThread.start()
             
-            dvlAhrsComPort = serial.Serial("/dev/ttyUSB6", 38400)
+            '''dvlAhrsComPort = serial.Serial("/dev/ttyUSB6", 38400)
             self.dvlAhrsDummyThread = dvl.AHRSDummyCommunicator(dvlAhrsComPort)
-            self.dvlAhrsDummyThread.start()
+            self.dvlAhrsDummyThread.start()'''
             
             
         except:
@@ -649,12 +657,15 @@ class ExternalCommThread(QtCore.QThread):
                 	self.computerVisionComm.sendParameters()
 
                 self.getSensorData()
+                self.emit(QtCore.SIGNAL("requestCurrentMission"))
                 self.detectionData = self.computerVisionComm.detectionData
                 data = {"ahrs": self.ahrsData, "dvl": self.dvlGuiData, "pmud": self.pmudGuiData,
                         "sib": self.sibGuiData,
                         "hydras": self.hydrasPingerData}
 
                 self.emit(QtCore.SIGNAL("finished(PyQt_PyObject)"), data)
+                if self.currentMission != None:
+                    self.emit(QtCore.SIGNAL("gotPositionData(PyQt_PyObject, PyQt_PyObject)"), self.position+self.orientation, self.currentMission.generalWaypoint)
             else:
                 #self.emit(QtCore.SIGNAL("requestCVData()"))
                 #print "Test:  " + str(self.cvData)
@@ -827,12 +838,11 @@ class ExternalCommThread(QtCore.QThread):
                 elif(self.motherMessage[0] == 320): # Weapon 13 on
                     self.weapon13On = True'''
                 if(self.motherMessage[0] == 392): # SIB Pressure
-                    print "Mother Message: ", self.motherMessage
                     depth1 = self.motherMessage[1]
-                    depth2 = self.motherMessage[2]
+                    #depth2 = self.motherMessage[2]
                     depth3 = self.motherMessage[3]
-                    depth = np.median([depth1, depth2, depth3])
-                    self.position[2] = float((depth-602))/10
+                    depth = np.median([depth1, depth3])
+                    self.position[2] = float((depth-95))/9.2
                 #print self.motherMessage
 
         if self.hydrasResponseThread1 != None:
@@ -923,14 +933,14 @@ class ExternalCommThread(QtCore.QThread):
         depth = str(int(self.position[2]))
         waypointN = str(int(self.position[0]))
         waypointE = str(int(self.position[1]))
-        waypointUp = str(int(self.position[3]))
+        waypointUp = str(int(self.position[2]))
         yaw = str(int(self.orientation[0]))
         pitch = str(int(self.orientation[1]))
         roll = str(int(self.orientation[2]))
         mission = "Percy is lit"
 
         # Send data to the arduino that controls display inside the sub
-        if self.arduinoDisplayDataPackets != None and time.time() - startArduinoDisplay > 1:
+        if self.arduinoDisplayDataPackets != None and time.time() - self.startArduinoDisplay > 1:
             if self.arduinoDisplayData == None:
                 self.arduinoDisplayData = [depth]
                 self.arduinoDisplayData.append(waypointN)
@@ -950,7 +960,7 @@ class ExternalCommThread(QtCore.QThread):
                 self.arduinoDisplayData[6] = roll
                 self.arduinoDisplayData[7] = mission
             self.arduinoDisplayDataPackets.sendToDisplay(self.arduinoDisplayData)
-            startArduinoDisplay = time.time()
+            self.startArduinoDisplay = time.time()
 
     def getDVLData(self, ahrsData):
         """
@@ -967,19 +977,27 @@ class ExternalCommThread(QtCore.QThread):
                 self.velocity = [xVel, yVel, zVel]
                 heading = ahrsData[0]
                 timeVelEstX, timeVelEstY, timeVelEstZ = ensemble[1]
+                print "Values are", self.velocity, ensemble[1]
                 #Probably have to fix the following equations
                 if not(xVel < -32):# If no error in DVL, indicated by velocity being less than 32
                     degToRad = 3.1415926535 / 180
                     velNcompX = xVel * round(math.cos(heading * degToRad))
-                    velNcompY = yVel * round(math.cos((heading + 90) * degToRad))
+                    velNcompY = yVel * round(math.sin((heading) * degToRad))
 
-                    velEcompX = xVel * round(math.sin(heading * degToRad))
-                    velEcompY = yVel * round(math.sin((heading + 90) * degToRad))
+                    velEcompX = xVel * -round(math.sin(heading * degToRad))
+                    velEcompY = yVel * -round(math.cos((heading) * degToRad))
 
-                    lastDistanceTraveledN = (velNcompX * timeVelEstX) + (
-                                velNcompY * timeVelEstY) * 1000 / 1.74
-                    lastDistanceTraveledE = (velEcompX * timeVelEstX) + (
-                                velEcompY * timeVelEstY) * 1000 / 1.74
+                    '''velNcompX = xVel * math.cos(heading * degToRad)
+                    velNcompY = yVel * math.sin(heading *degToRad)
+           
+                    velEcompX = xVel * math.sin(heading * degToRad)
+                    velEcompY = yVel * math.cos(heading * degToRad)'''
+
+
+                    lastDistanceTraveledN = (velNcompX * timeVelEstX*100) + (
+                                velNcompY * timeVelEstY*100)# * 1000 / 1.74
+                    lastDistanceTraveledE = (velEcompX * timeVelEstX*100) + (
+                                velEcompY * timeVelEstY*100)# * 1000 / 1.74
                     lastDistanceTraveledD = zVel * timeVelEstZ
 
                     #Add distance traveled to last known position
@@ -989,12 +1007,14 @@ class ExternalCommThread(QtCore.QThread):
                     self.position[1] = self.position[1] + lastDistanceTraveledE
 
                 else:
+                    print "DVL Error"
                     northPosition, eastPosition, upPosition, positionError = 0, 0, 0, 0
                     xVel, yVel, zVel = 0, 0, 0
                     heading, pitch, roll, depth = 0, 0, 0, 0
                     elevation, speedOfSound, waterTemp = 0, 0, 0
 
-            except:
+            except Exception as e:
+                print "DVL Exception: ", str(e)
                 northPosition, eastPosition, upPosition, positionError = 0, 0, 0, 0
                 xVel, yVel, zVel = 0, 0, 0
                 heading, pitch, roll, depth = 0, 0, 0, 0

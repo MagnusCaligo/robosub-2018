@@ -6,6 +6,7 @@ import lib.ExternalDevices.Missions as Missions
 import json
 import os
 from pprint import pprint
+from lib.Utils.SlideEdit import SlideEdit
 
 class MissionCommander(QtCore.QObject):
     """
@@ -25,12 +26,33 @@ class MissionCommander(QtCore.QObject):
         self.openFileDialog("Saved_Missions/missionCommanderPreviousState.txt")
 
     def connectSignals(self):
+	
+		
         """
         Connects signals of the missionCommander widget to the
         appropriate slot.
         :return:
         """
 #Veronica smells like poo poo 
+        self.ui_missionCommander.yawRotation = SlideEdit()
+        self.ui_missionCommander.pitchRotation = SlideEdit()
+        self.ui_missionCommander.rollRotation = SlideEdit()
+		
+        self.ui_missionCommander.verticalLayout_5.addWidget(self.ui_missionCommander.yawRotation)
+        self.ui_missionCommander.verticalLayout_5.addWidget(self.ui_missionCommander.pitchRotation)
+        self.ui_missionCommander.verticalLayout_5.addWidget(self.ui_missionCommander.rollRotation)
+		
+        self.ui_missionCommander.yawRotation.updateMin(0)
+        self.ui_missionCommander.yawRotation.updateMax(360)
+        self.ui_missionCommander.yawRotation.setCurrentValue(0)
+		
+        self.ui_missionCommander.pitchRotation.updateMin(0)
+        self.ui_missionCommander.pitchRotation.updateMax(360)
+        self.ui_missionCommander.pitchRotation.setCurrentValue(180)
+		
+        self.ui_missionCommander.rollRotation.updateMin(0)
+        self.ui_missionCommander.rollRotation.updateMax(360)
+        self.ui_missionCommander.rollRotation.setCurrentValue(180)
 
         
         #Connects all the buttons and stuff on the Mission Commander Widget
@@ -41,6 +63,14 @@ class MissionCommander(QtCore.QObject):
         self.ui_missionCommander.moveDown.clicked.connect(lambda: self.moveMissionPosition(False))
         self.ui_missionCommander.saveMissionList.clicked.connect(lambda: self.saveCurrentState(True))
         self.ui_missionCommander.loadMissionList.clicked.connect(self.openFileDialog)
+
+        self.ui_missionCommander.northTranslation.valueChanged.connect(lambda: self.externalComm.setWaypointX(str(self.ui_missionCommander.missionListWidget.currentItem().text()), float(self.ui_missionCommander.northTranslation.value())) if (self.ui_missionCommander.missionListWidget.currentItem() != None) else None)
+        self.ui_missionCommander.eastTranslation.valueChanged.connect(lambda: self.externalComm.setWaypointY(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.eastTranslation.value()) if (self.ui_missionCommander.missionListWidget.currentItem() != None) else None)
+        self.ui_missionCommander.upTranslation.valueChanged.connect(lambda: self.externalComm.setWaypointZ(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.upTranslation.value()) if (self.ui_missionCommander.missionListWidget.currentItem() != None) else None)
+        self.ui_missionCommander.yawRotation.valueChanged.connect(lambda: self.externalComm.setWaypointOrientation_Yaw(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.yawRotation._currentValue) if (self.ui_missionCommander.missionListWidget.currentItem() != None) else None)
+        self.ui_missionCommander.pitchRotation.valueChanged.connect(lambda: self.externalComm.setWaypointOrientation_Pitch(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.pitchRotation._currentValue - 180) if (self.ui_missionCommander.missionListWidget.currentItem() != None) else None)
+        self.ui_missionCommander.rollRotation.valueChanged.connect(lambda: self.externalComm.setWaypointOrientation_Roll(self.ui_missionCommander.missionListWidget.currentItem().text(), self.ui_missionCommander.rollRotation._currentValue - 180) if (self.ui_missionCommander.missionListWidget.currentItem() != None) else None)
+
         
         #Connects all the signals with Mission Planner
         self.ui_missionCommander.previousMissionButton.clicked.connect(lambda: self.emit(QtCore.SIGNAL("nextOrPreviousMission(PyQt_PyObject)"), False))
@@ -98,6 +128,14 @@ class MissionCommander(QtCore.QObject):
         generalWaypoint = mission.parameters['useGeneralWaypoint']
         if generalWaypoint != 0:
             self.ui_missionCommander.useGeneralWaypoint.setText(str(generalWaypoint))
+
+        #Modify the Waypoint
+        self.ui_missionCommander.northTranslation.setValue(mission.generalWaypoint[0])
+        self.ui_missionCommander.eastTranslation.setValue(mission.generalWaypoint[1])
+        self.ui_missionCommander.upTranslation.setValue(mission.generalWaypoint[2])
+        self.ui_missionCommander.yawRotation.setCurrentValue(mission.generalWaypoint[3])
+        self.ui_missionCommander.pitchRotation.setCurrentValue(mission.generalWaypoint[4])
+        self.ui_missionCommander.rollRotation.setCurrentValue(mission.generalWaypoint[5])
         
         #Modify the Checkboxes
         self.ui_missionCommander.useKalmanFilter.setChecked(True)
@@ -124,6 +162,8 @@ class MissionCommander(QtCore.QObject):
             filename = QtGui.QFileDialog.getSaveFileName(fileWidget, 'Save File', '/')
         
         if filename == "":
+            return
+        if not os.path.isfile(filename):
             return
         
         def jdefault(o):

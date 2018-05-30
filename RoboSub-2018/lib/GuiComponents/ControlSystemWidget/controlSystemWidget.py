@@ -3,7 +3,7 @@ from lib.Utils.SlideEdit import SlideEdit
 from UI_Control_System.ui_control_system import Ui_Form
 from lib.ExternalDevices.previous_state_logging import Previous_State_Logging
 import copy
-
+import PIDVisualizer
 
 class ControlSystemWidget(QtCore.QObject):
     
@@ -18,6 +18,8 @@ class ControlSystemWidget(QtCore.QObject):
         self.PIDVals = {}
         self.previous_state_logging = Previous_State_Logging
         self.tabLayoutNames = []
+        self.graph = PIDVisualizer.PIDVisualizer()
+        self.currentlySelectedPID = -1
         
         for i,v in enumerate(self.labelNames):
             self.PIDVals["YawForward_"+v] = float(self.externalComm.previous_state_logging.getValue("YawForward_" + v))
@@ -45,6 +47,23 @@ class ControlSystemWidget(QtCore.QObject):
         self.tabLayoutNames = ["YawForward", "YawBackward", "Pitch", "Roll", "Depth", "XPosition", "ZPosition"]
         self._createSlideEdit()
         self._setSavedValues()
+        self.connect(self.externalComm.externalCommThread, QtCore.SIGNAL("gotPositionData(PyQt_PyObject, PyQt_PyObject)"), self.listData)
+
+
+
+    def listData(self, currentPosition, desiredPosition):
+        currentTabIndex = self.ui_controlSystemWidget.tabWidget.currentIndex()
+        mapToDegree = { -1:-1, 0:3, 1:-1, 2:4, 3:5, 4:2, 5:0, 6:1}
+        selectedPID = mapToDegree[currentTabIndex]
+        if(selectedPID == -1):
+            return
+        if selectedPID != self.currentlySelectedPID:
+            self.graph.clearYAxisData()
+            self.currentlySelectedPID = selectedPID
+
+        self.graph.updateValues(desiredPosition[selectedPID], currentPosition[selectedPID])
+
+        pass
 
     def _setSavedValues(self):
         """
@@ -84,6 +103,8 @@ class ControlSystemWidget(QtCore.QObject):
                 self.tabLayoutList[j].addWidget(label)
                 self.tabLayoutList[j].addWidget(slideEdit)
                 self.slideEditList.append(slideEdit)
+        self.ui_controlSystemWidget.horizontalLayout.addWidget(self.graph.plt)
+        
 
     def saveValues(self):
         """
