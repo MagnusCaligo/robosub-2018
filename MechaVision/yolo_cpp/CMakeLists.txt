@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.11)
 
+set(CMAKE_MODULE_PATH ".")
+
 #Suppressing CMAKE 3.0 warnings
 if(POLICY CMP0043)
     cmake_policy(SET CMP0037 OLD)

@@ -633,7 +633,6 @@ class MissionPlanner(QtCore.QThread):
                             #print "Orientation error", mission.generalRotationError
                             if abs(waypointError[0]) < mission.generalDistanceError and abs(waypointError[1]) < mission.generalDistanceError and abs(waypointError[2]) < mission.generalDistanceError:
                                 pass #This will only be called if we are actually at the waypoint in terms of position
-                                #print "Not there position"
                             else:
                                 reachedWaypoint = False
                                 
@@ -649,7 +648,7 @@ class MissionPlanner(QtCore.QThread):
                     #print "Waypoint Status: ", reachedWaypoint
                     if reachedWaypoint and not self.missionDebug:
                     
-                        print "Reahed the waypoint"
+                        #print "Reahed the waypoint"
                         if mission.parameters["startTime"] == 0:
                             print "Reseting time"
                             mission.parameters["startTime"] = time.time()
@@ -667,7 +666,8 @@ class MissionPlanner(QtCore.QThread):
                             '''
                             continue
                         else:
-                            print time.time() - mission.parameters["startTime"]						
+                            #print time.time() - mission.parameters["startTime"]						
+                            pass
                     #If we haven't reached the waypoint and the gui isn't in debug mode, then attempt to move to the general waypoint
                     if not self.debug:
 						if mission.parameters["useRelativeWaypoint"] == "True":
