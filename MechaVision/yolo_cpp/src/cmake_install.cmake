@@ -1,4 +1,4 @@
-# Install script for directory: /media/sub_data/robosub-2017/MechaVision/yolo_cpp/src
+# Install script for directory: /media/sub_data/robosub-2018/MechaVision/yolo_cpp/src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

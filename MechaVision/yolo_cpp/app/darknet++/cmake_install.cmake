@@ -1,4 +1,4 @@
-# Install script for directory: /media/sub_data/robosub-2017/MechaVision/yolo_cpp/app/darknet++
+# Install script for directory: /media/sub_data/robosub-2018/MechaVision/yolo_cpp/app/darknet++
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

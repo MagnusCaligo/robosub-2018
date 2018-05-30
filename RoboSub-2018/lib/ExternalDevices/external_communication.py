@@ -466,7 +466,7 @@ class ExternalCommThread(QtCore.QThread):
                         maestroPort = port[0]
             self.maestroSerial = serial.Serial(maestroPort, 9600)
         except:
-            self.maestroSerial = serial.Serial("/dev/ttyACM0", 9600)			                						     																		    
+            self.maestroSerial = serial.Serial("/dev/ttyACM1", 9600)			                						     																		    
             print "Maestro was not found"
             
         if False:
@@ -481,7 +481,7 @@ class ExternalCommThread(QtCore.QThread):
         
         if True:
             try:
-                self.arduinoDisplaySerial = serial.Serial("/dev/ttyACM2", 115200)
+                self.arduinoDisplaySerial = serial.Serial("/dev/ttyACM0", 115200)
                 self.arduinoDisplayDataPackets = displayArduino.displayArduino(self.arduinoDisplaySerial)
             except:
                 print "Unable to connect to Arduino for display"
@@ -491,7 +491,7 @@ class ExternalCommThread(QtCore.QThread):
         # DVL initialization
         try:
 			
-            DVLComPort = serial.Serial("/dev/ttyUSB8", 115200)
+            DVLComPort = serial.Serial("/dev/ttyUSB5", 115200)
             self.dvlDataPackets = dvl.DVLDataPackets(DVLComPort)
             self.dvlResponseThread = dvl.DVLResponse(DVLComPort)
             self.dvlResponseThread.start()
@@ -977,15 +977,15 @@ class ExternalCommThread(QtCore.QThread):
                 self.velocity = [xVel, yVel, zVel]
                 heading = ahrsData[0]
                 timeVelEstX, timeVelEstY, timeVelEstZ = ensemble[1]
-                print "Values are", self.velocity, ensemble[1]
+                #print "Values are", self.velocity, ensemble[1]
                 #Probably have to fix the following equations
                 if not(xVel < -32):# If no error in DVL, indicated by velocity being less than 32
                     degToRad = 3.1415926535 / 180
-                    velNcompX = xVel * round(math.cos(heading * degToRad))
-                    velNcompY = yVel * round(math.sin((heading) * degToRad))
+                    velNcompX = (xVel) * round(math.cos(heading * degToRad))
+                    velNcompY = (yVel) * -round(math.sin((heading) * degToRad))
 
-                    velEcompX = xVel * -round(math.sin(heading * degToRad))
-                    velEcompY = yVel * -round(math.cos((heading) * degToRad))
+                    velEcompX = (xVel) * -round(math.sin(heading * degToRad))
+                    velEcompY = (yVel) * round(math.cos((heading) * degToRad))
 
                     '''velNcompX = xVel * math.cos(heading * degToRad)
                     velNcompY = yVel * math.sin(heading *degToRad)
@@ -1002,7 +1002,7 @@ class ExternalCommThread(QtCore.QThread):
 
                     #Add distance traveled to last known position
                     #North
-                    self.position[0] = self.position[0] + lastDistanceTraveledN
+                    self.position[0] = self.position[0] - lastDistanceTraveledN
                     #East
                     self.position[1] = self.position[1] + lastDistanceTraveledE
 

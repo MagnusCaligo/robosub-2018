@@ -1,4 +1,4 @@
-# Install script for directory: /media/sub_data/robosub-2017/MechaVision/yolo_cpp
+# Install script for directory: /media/sub_data/robosub-2018/MechaVision/yolo_cpp
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,9 +34,9 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/media/sub_data/robosub-2017/MechaVision/yolo_cpp/src/cmake_install.cmake")
-  include("/media/sub_data/robosub-2017/MechaVision/yolo_cpp/yolo++/cmake_install.cmake")
-  include("/media/sub_data/robosub-2017/MechaVision/yolo_cpp/app/cmake_install.cmake")
+  include("/media/sub_data/robosub-2018/MechaVision/yolo_cpp/src/cmake_install.cmake")
+  include("/media/sub_data/robosub-2018/MechaVision/yolo_cpp/yolo++/cmake_install.cmake")
+  include("/media/sub_data/robosub-2018/MechaVision/yolo_cpp/app/cmake_install.cmake")
 
 endif()
 
@@ -48,5 +48,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/media/sub_data/robosub-2017/MechaVision/yolo_cpp/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/media/sub_data/robosub-2018/MechaVision/yolo_cpp/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

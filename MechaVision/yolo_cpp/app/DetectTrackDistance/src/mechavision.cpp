@@ -6,10 +6,10 @@
 #include <stdlib.h>
 #include <future>
 #include <thread>
-#include <dlib/threads.h>
-#include <dlib/ref.h>
+//#include <dlib/threads.h>
+//#include <dlib/ref.h>
 #include <opencv2/features2d/features2d.hpp>
-#include <opencv2/features2d.hpp>
+//#include <opencv2/features2d.hpp>
 using namespace cv;
 using namespace std;
 using namespace FlyCapture2;
@@ -54,7 +54,7 @@ int MechaVision::writeFrame(Mat &frame)
     compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
     compression_params.push_back(25);
 	        
-    cv::imwrite("/media/nvidia/Extra Space/robosub-2017/RoboSub-2017/lib/GuiComponents/ComputerVision/processed" + std::to_string(imageWriteNumber) +".png", frame, compression_params);
+    cv::imwrite("/media/sub_data/processedImages/" + std::to_string(imageWriteNumber) +".png", frame, compression_params);
 	imageWriteNumber++;
 	if(imageWriteNumber >= 5){
 		imageWriteNumber = 0;
@@ -97,7 +97,7 @@ void MechaVision::HSVThresholding()
  * 	- Initialize dlib correlation trackers for all the detections.
  *
  ************/
-void MechaVision::initTracker()
+/*void MechaVision::initTracker()
 {
     // Loop through the detections vector.  Each element is a detection
     for (auto & detection: detections)
@@ -113,20 +113,20 @@ void MechaVision::initTracker()
 		    //centerX << " " << centerY << " " << 
 		    //width << " " << height << " "  << std::endl << std::flush;
             
-	    dlib::cv_image<dlib::rgb_pixel> dlib_img(tracking);
-            tracker.start_track(dlib_img, dlib::centered_rect(dlib::point(centerX, centerY), width, height));
+	    //dlib::cv_image<dlib::rgb_pixel> dlib_img(tracking);
+            //tracker.start_track(dlib_img, dlib::centered_rect(dlib::point(centerX, centerY), width, height));
 
     }
-}
+}*/
 
 /*************
  * Use:
  *	- Update the trackers on a new frame.
  *
  ************/
-void MechaVision::updateTracker()
+/*void MechaVision::updateTracker()
 {
-    double confidence = tracker.update(dlib_img);
+    //double confidence = tracker.update(dlib_img);
     tracker_pos = tracker.get_position();
 
     //std::cout << "Tracker confidence: " << confidence << std::endl << std::flush;
@@ -140,7 +140,7 @@ void MechaVision::updateTracker()
     box.push_back(tracker_pos.bottom());
 
     MechaVision::drawBoundingBoxes(box);
-}
+}*/
 
 /*************
  * Use
@@ -523,7 +523,7 @@ int MechaVision::initCameras()
 	BusManager busMgr;
 	PGRGuid guid;
 
-	error = busMgr.GetCameraFromIndex(0, &guid);	
+	error = busMgr.GetCameraFromIndex(1, &guid);	
 	error = fl_camera.Connect( &guid );
 	error = fl_camera.GetCameraInfo( &camInfo );
 	error = fl_camera.StartCapture();

@@ -34,11 +34,11 @@ class AbstractMission(QtCore.QObject):
         
         
         self.name = parameters["name"]
-        self.generalDistanceError = 2 #How much of a positional error we want 
-        self.generalRotationError = 40 #how much of an orientation error we want
+        self.generalDistanceError = 1 #How much of a positional error we want 
+        self.generalRotationError = 5 #how much of an orientation error we want
         
         self.specificDistanceError = 3 #How much error we want on the specific waypoint
-        self.specificRotationError = 20#how much rotation error we want on the specific waypoint
+        self.specificRotationError = 5#how much rotation error we want on the specific waypoint
         
         self.resetFlagBoolean = False
         

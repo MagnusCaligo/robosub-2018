@@ -70,11 +70,11 @@ int main( int argc, char** argv)
 		 *                                                                                       */
 
 	Yolo yolo;
-	yolo.setConfigFilePath("/media/nvidia/Extra\ Space/robosub-2017/MechaVision/yolo_cpp/app/DetectTrackDistance/cfg/yolo-allObstacles.cfg");
-	yolo.setDataFilePath("/media/nvidia/Extra\ Space/robosub-2017/MechaVision/yolo_cpp/app/DetectTrackDistance/data/allObstacles.data");
-	yolo.setWeightFilePath("/media/nvidia/Extra\ Space/yolo-allObstacles_8000.weights");
-	yolo.setAlphabetPath("/media/nvidia/Extra\ Space/home/ubuntu/robosub-2017/MechaVision/yolo_cpp/app/DetectTrackDistance/data/labels/");
-	yolo.setNameListFile("/media/nvidia/Extra\ Space/robosub-2017/MechaVision/yolo_cpp/app/DetectTrackDistance/data/allObstacles.names");
+	yolo.setConfigFilePath("/media/sub_data/cfg/yolo-allObstacles.cfg");
+	yolo.setDataFilePath("/media/nvidia/sub_data/data/allObstacles.data");
+	yolo.setWeightFilePath("/media/sub_data/yolo-allObstacles_8000.weights");
+	yolo.setAlphabetPath("/media/sub_data/data/labels/");
+	yolo.setNameListFile("/media/sub_data/data/allObstacles.names");
 
 	Mat img;
 	Mat rawImg;
@@ -185,7 +185,7 @@ int main( int argc, char** argv)
 
 	    }
 		if (detections.size() > 0){
-			std::cout << "Yay!" << std::endl;
+			//std::cout << "Yay!" << std::endl;
 			Json::Value value;
 			Json::StyledWriter writer;
 			
@@ -217,7 +217,7 @@ int main( int argc, char** argv)
 			
 //			computerVisionComm->sendResponse(zmq_context, socket, outputString);
 		}else{
-	std::cout << "Couldn't find anything" << std::endl;
+	//std::cout << "Couldn't find anything" << std::endl;
 //			computerVisionComm->sendResponse(zmq_context, socket, "No Detections");
 		}
 

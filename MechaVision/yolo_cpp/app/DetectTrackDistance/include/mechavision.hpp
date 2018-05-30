@@ -17,7 +17,7 @@
 #include <zmq.hpp>
 #include <iostream>
 
-#include <dlib/image_processing.h>
+/*#include <dlib/image_processing.h>
 #include <dlib/threads.h>
 #include <dlib/ref.h>
 #include <dlib/dnn.h>
@@ -28,7 +28,7 @@
 #include <dlib/opencv.h>
 #include <dlib/gui_widgets.h>
 #include <opencv2/imgproc/imgproc.hpp>
-//#include <dlib/geometry.h>
+//#include <dlib/geometry.h>*/
 
 #include "FlyCapture2.h"
 
@@ -40,8 +40,8 @@ using namespace FlyCapture2;
 
 struct Tracker {
 	std::vector<float> tracker_pos;
-	dlib::correlation_tracker tracker;
-	dlib::drectangle dlib_tracker_pos;
+	//dlib::correlation_tracker tracker;
+	//dlib::drectangle dlib_tracker_pos;
 };
 
 
@@ -114,9 +114,9 @@ private:
     //cv::gpu::GpuMat gpu_left, gpu_right, gpu_disparity;
 
     // Dlib variables
-    dlib::correlation_tracker tracker;
+    /*dlib::correlation_tracker tracker;
     dlib::matrix<dlib::rgb_pixel> dlib_img;
-    dlib::drectangle tracker_pos;
+    dlib::drectangle tracker_pos;*/
 
     // PointGrey Variables
     Error error;

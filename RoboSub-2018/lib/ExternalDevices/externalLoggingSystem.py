@@ -16,6 +16,7 @@ class exLog:
 
     # Pass in the correct data as lists.
     def writeToFile(self, dvl, ahrs):
+        return
         time = str(datetime.datetime.now().time().hour) + ':' + str(datetime.datetime.now().time().minute)\
                + ':' + str(datetime.datetime.now().time().second)
 
