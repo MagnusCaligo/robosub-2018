@@ -72,6 +72,11 @@
        </item>
        <item>
         <property name="text">
+         <string>Navigation v3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>Qualification Gate</string>
         </property>
        </item>

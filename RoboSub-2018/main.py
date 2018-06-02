@@ -9,6 +9,7 @@ from lib.ExternalDevices.external_communication import ExternalComm
 from lib.GuiComponents.MissionCommander.missionCommander import MissionCommander
 from lib.GuiComponents.DataGraphing.dataGraphing import DataGraphing
 from lib.GuiComponents.ControlSystemWidget.controlSystemWidget import ControlSystemWidget
+from lib.GuiComponents.DebugValues.debugValues import DebugValues
 
 import sys
 
@@ -45,12 +46,13 @@ def main():
     missionCommanderClass = MissionCommander(externalCommClass)
     dataGraphingClass = DataGraphing(externalCommClass)
     controlSystemClass = ControlSystemWidget(externalCommClass)
+    debugValuesClass = DebugValues(externalCommClass)
     
     #Passes the mission commander class into Mission Planner to connect signals
     externalCommClass.missionPlanner.setReferences(missionCommanderClass, controlSystemClass)
 
     window.setClasses([manualControlClass, computerVisionClass, mapClass, embeddedWidgetClass,
-                       externalCommClass, missionCommanderClass, dataGraphingClass, controlSystemClass])
+                       externalCommClass, missionCommanderClass, dataGraphingClass, controlSystemClass, debugValuesClass])
     window.show()
     window.add_mainWidget()
     roboSubGui.aboutToQuit.connect(window.exitHandler)

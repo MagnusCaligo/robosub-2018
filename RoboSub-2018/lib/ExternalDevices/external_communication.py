@@ -19,6 +19,7 @@ import previous_state_logging
 import widget_config_logger
 import time
 import mission_planner_2
+import mission_planner_3
 import platform
 import subprocess
 import sparton_ahrs
@@ -73,7 +74,7 @@ class ExternalComm(QtCore.QObject):
         self.dataChangedFromMap = False  # True if Data was change
         self.os = platform.platform()
         self.running = False
-        self.missionPlanner = mission_planner_2.MissionPlanner(self)
+        self.missionPlanner = mission_planner_3.MissionPlanner(self)
         self.externalCommThread.missionPlanner = self.missionPlanner
         self.missionCommander = missionCommander.MissionCommander(self) #This is used JUST for saving missions after they have modified by the Map
         self.previous_state_logging = previous_state_logging.Previous_State_Logging("Previous_State_Save.csv")
@@ -93,7 +94,7 @@ class ExternalComm(QtCore.QObject):
         self.missionPlanner.setMissionList(self.guiDataToSend["missionList"])
         self.missionPlanner.connectSignals()
         self.externalCommThread.connect(self.missionPlanner, QtCore.SIGNAL("currentMission(PyQt_PyObject)"), self.externalCommThread.setCurrentMission)
-
+        self.externalCommThread.connect(self.mainWindowClass.debugValuesClass, QtCore.SIGNAL("debugPositionValues(PyQt_PyObject)"), self.externalCommThread.setDebugValues)
 
     def setWaypointX(self, name, value):
         if "missionList" in self.guiDataToSend:
@@ -577,6 +578,10 @@ class ExternalCommThread(QtCore.QThread):
         self.connect(self.externalCommClass, QtCore.SIGNAL("getCVData(PyQt_PyObject)"),
                      self.getCVData)
         self.connect(self.externalCommClass, QtCore.SIGNAL("stopThread"), self.stopThread)
+        
+    def setDebugValues(self, data):
+        self.position = data[:3]
+        self.orientation = data[3:]
 
     @QtCore.pyqtSlot()
     def getGuiData(self, guiData):
@@ -658,6 +663,7 @@ class ExternalCommThread(QtCore.QThread):
 
                 self.getSensorData()
                 self.emit(QtCore.SIGNAL("requestCurrentMission"))
+                self.emit(QtCore.SIGNAL("Data Updated"))
                 self.detectionData = self.computerVisionComm.detectionData
                 data = {"ahrs": self.ahrsData, "dvl": self.dvlGuiData, "pmud": self.pmudGuiData,
                         "sib": self.sibGuiData,
@@ -674,6 +680,10 @@ class ExternalCommThread(QtCore.QThread):
                 	self.computerVisionComm.sendParameters()
 
                 self.getSensorData()
+                self.emit(QtCore.SIGNAL("Data Updated"))
+                self.emit(QtCore.SIGNAL("requestCurrentMission"))
+                if self.currentMission != None:
+                    self.emit(QtCore.SIGNAL("gotPositionData(PyQt_PyObject, PyQt_PyObject)"), self.position+self.orientation, self.currentMission.generalWaypoint)
 		self.detectionData = self.computerVisionComm.detectionData
 		
 		# Reconnect to the maestro after the kill switch
@@ -783,6 +793,8 @@ class ExternalCommThread(QtCore.QThread):
 
         #self.ahrsData = self.calculateMedianAhrs(self.ahrsData1, self.ahrsData2, self.ahrsData3)
         self.ahrsData = self.ahrsData1
+        if self.spartonResponseThread1 != None:
+            self.orientation = self.ahrsData
         #self.ahrsData[0] = 0
         #print "AHRS", self.ahrsData
 			#print int(self.ahrsData1[0]), int(self.ahrsData2[0]), int(self.ahrsData3[0])
@@ -862,18 +874,18 @@ class ExternalCommThread(QtCore.QThread):
                     self.hydrasAltitude = hydrasData2[1]
         #print "Hydras Data: ", self.hydrasHeading     
         		
-	if self.dvlResponseThread != None:
-		fakeData = [self.ahrsData[0], self.ahrsData[1], self.ahrsData[2]]
-		#fakeData[0] = (fakeData[0]+270)%360
-		#self.dvlAhrsDummyThread.updateAhrsValues(self.ahrsData)
-		self.getDVLData(self.ahrsData)
-		#print "Overwritting DVL data to prevent sub from \"pointing\" towards waypoint"
-	
-	'''
-        if self.dvlAhrsDummyThread != None:
-            self.dvlAhrsDummyThread.updateAhrsValues(self.ahrsData)
-            self.dvlGuiData = self.getDVLData(self.ahrsGuiData)
-	'''
+        if self.dvlResponseThread != None:
+            fakeData = [self.ahrsData[0], self.ahrsData[1], self.ahrsData[2]]
+            #fakeData[0] = (fakeData[0]+270)%360
+            #self.dvlAhrsDummyThread.updateAhrsValues(self.ahrsData)
+            self.getDVLData(self.ahrsData)
+            #print "Overwritting DVL data to prevent sub from \"pointing\" towards waypoint"
+        
+        '''
+            if self.dvlAhrsDummyThread != None:
+                self.dvlAhrsDummyThread.updateAhrsValues(self.ahrsData)
+                self.dvlGuiData = self.getDVLData(self.ahrsGuiData)
+        '''
 
         '''
            if self.arduinoSerial != None:
@@ -891,29 +903,27 @@ class ExternalCommThread(QtCore.QThread):
         depthError = 20.7 #Depth errror, needs to be changed per pool... Lowering the number makes the sub think its starting lower               
         depth = (((pressureData/1023.0)*30.0)-depthError)/(0.466) 
         '''
-            
-	if self.pressureArduinoDataPackets != None:
-		while len(self.pressureArduinoDataPackets.getList) > 0:
-			depth = self.pressureArduinoDataPackets.getList.pop(0)
-			if not abs(self.position[2] - depth) > 5 and depth > -2:
-				self.position[2] = depth
-			else:
-				print depth
-			#print depth
-            
-            #print self.ahrsData, self.position[2]
-	if True or self.isDebug: 
-		pass      
-		#print self.detectionData
-		#print self.orientation, self.position
-		#print self.position[2]
-            
-            #print self.position
-            
-            
-	self.ahrsGuiData = self.ahrsData
-	self.orientation = self.ahrsData
-	self.emit(QtCore.SIGNAL("Data Updated"))
+                
+        if self.pressureArduinoDataPackets != None:
+            while len(self.pressureArduinoDataPackets.getList) > 0:
+                depth = self.pressureArduinoDataPackets.getList.pop(0)
+                if not abs(self.position[2] - depth) > 5 and depth > -2:
+                    self.position[2] = depth
+                else:
+                    print depth
+                #print depth
+                
+                #print self.ahrsData, self.position[2]
+        if True or self.isDebug: 
+            pass      
+            #print self.detectionData
+            #print self.orientation, self.position
+            #print self.position[2]
+                
+                #print self.position
+                
+                
+        self.ahrsGuiData = self.ahrsData
 
         '''
         # Send data to the arduino that controls display inside the sub
@@ -1074,8 +1084,6 @@ class ComputerVisionProcess(QtCore.QThread):
         self.os = platform.platform()
 
     def run(self):
-        print "Test"
-        
         if self.os == 'Linux-4.4.15-aarch64-with-Ubuntu-16.04-xenial':
             print "Starting computer vision process..."
             subprocess.call('/media/nvidia/Extra Space/robosub-2017/MechaVision/yolo_cpp/MechaVision')
