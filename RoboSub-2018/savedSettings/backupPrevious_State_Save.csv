@@ -1,15 +1,14 @@
 Roll_Integration Max,0.0
 max_diff_Torpedo,0.0
-XPosition_Integration Max,0.0
+>>>>>>> bd129f4210720261d482e1776a7a65390ef7ca7b,
 maxDisparity_Torpedo,0.0
 Roll_Kd,0.0
 sad_Torpedo,0.0
 Roll_Ki,0.0
 scanlinesmask_Torpedo,0.0
-XPosition_Kd,0.0
-YPosition_Integration Min,10.0
+hcwinsize_Torpedo,0.0
 Roll_Kp,0.10000000149011612
-P1_Torpedo,0.0
+ZPosition_Kd,0.0
 YPosition_Kd,4.650000095367432
 previousWidgetConfig,0
 thresholdMin_Torpedo,0.0
@@ -19,55 +18,56 @@ Depth_Integration Min,10.0
 Depth_Kd,0.0
 YPosition_Kp,2.7300000190734863
 hueMax_Torpedo,0.0
-YawBackward_Ki,0.0
+Roll_Controller,0.0
 minDisparity_Torpedo,0.0
-hcwinsize_Torpedo,0.0
+XPosition_Kd,0.0
 Depth_Ki,0.0
 Depth_Integration Max,10.0
 hueMin_Torpedo,0.0
-YawForward_Kd,0.0
 YawBackward_Integration Max,0.0
 Depth_Kp,0.4000000059604645
 saturationMin_Torpedo,0.0
-YawBackward_Integration Min,0.0
+Depth_Controller,0.0
 saturationMax_Torpedo,0.0
 P2_Torpedo,0.0
-ZPosition_Kd,0.0
-uniquenessratio_Torpedo,0.0
+P1_Torpedo,0.0
+YawBackward_Kp,0.0
 YawForward_Ki,0.0
 YawForward_Integration Max,0.0
 Pitch_Kp,0.5
 YawForward_Integration Min,0.0
-Depth_Controller,0.0
-Roll_Controller,0.0
+YawBackward_Integration Min,0.0
+YawForward_Kd,0.0
 Pitch_Integration Min,10.0
 Pitch_Controller,0.0
 ZPosition_Ki,0.0
+Roll_Integration Min,0.0
 Pitch_Ki,0.0
 XPosition_Integration Min,0.0
+Pitch_Integration Max,10.0
 YawForward_Controller,0.0
-ZPosition_Kp,0.0
+ZPosition_Kp,1.9230799674987793
 ZPosition_Controller,0.0
 Pitch_Kd,0.0
 XPosition_Kp,0.0
 ctwinsize_Torpedo,0.0
 YawForward_Kp,0.8999999761581421
 btclipvalue_Torpedo,0.0
-<<<<<<< HEAD,
 YawBackward_Kd,0.0
 YawBackward_Controller,0.0
 =======,
 ZPosition_Integration Max,0.0
 ZPosition_Integration Min,0.0
->>>>>>> bd129f4210720261d482e1776a7a65390ef7ca7b,
+XPosition_Integration Max,0.0
 valueMin_Torpedo,0.0
 YPosition_Controller,0.7850000262260437
 XPosition_Controller,0.0
-Pitch_Integration Max,10.0
+YPosition_Integration Min,10.0
 DoneWriting,True
 thresholdMax_Torpedo,0.0
-YawBackward_Kp,0.0
-YPosition_Integration Max,27.66670036315918
-Roll_Integration Min,0.0
+uniquenessratio_Torpedo,0.0
 valueMax_Torpedo,0.0
+YPosition_Integration Max,27.66670036315918
+<<<<<<< HEAD,
+YawBackward_Ki,0.0
 DoneWriting,True

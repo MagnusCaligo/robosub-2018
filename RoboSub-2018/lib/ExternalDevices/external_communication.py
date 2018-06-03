@@ -491,7 +491,7 @@ class ExternalCommThread(QtCore.QThread):
         # DVL initialization
         try:
 			
-            DVLComPort = serial.Serial("/dev/ttyUSB5", 115200)
+            DVLComPort = serial.Serial("/dev/ttyUSB1", 115200)
             self.dvlDataPackets = dvl.DVLDataPackets(DVLComPort)
             self.dvlResponseThread = dvl.DVLResponse(DVLComPort)
             self.dvlResponseThread.start()
@@ -507,7 +507,7 @@ class ExternalCommThread(QtCore.QThread):
         try:
             # AHRS initializing
             # Need to put the correct comm ports in 
-            self.spartonResponseThread1 = sparton_ahrs.SpartonAhrsResponse("/dev/ttyUSB1")
+            self.spartonResponseThread1 = sparton_ahrs.SpartonAhrsResponse("/dev/ttyUSB3")
             self.spartonResponseThread1.start()
             
         except:
@@ -531,7 +531,7 @@ class ExternalCommThread(QtCore.QThread):
         
         try:
 			
-			self.motherSerial = serial.Serial("/dev/ttyUSB4", 9600)
+			self.motherSerial = serial.Serial("/dev/ttyUSB0", 9600)
 			self.motherPackets = motherboard.motherBoardDataPackets(self.motherSerial)
 			
 			self.motherResponseThread = motherboard.motherBoardResponse(self.motherSerial)
@@ -636,7 +636,7 @@ class ExternalCommThread(QtCore.QThread):
         highestNum += 1
 
         self.fileName = 'exLog' + str(highestNum)
-        self.log = externalLoggingSystem.exLog(self.fileName)
+        #self.log = externalLoggingSystem.exLog(self.fileName)
         startTime = time.time()
         while self.isRunning:
             time.sleep(.01)
@@ -665,6 +665,7 @@ class ExternalCommThread(QtCore.QThread):
 
                 self.emit(QtCore.SIGNAL("finished(PyQt_PyObject)"), data)
                 if self.currentMission != None:
+                    print "Emitting"
                     self.emit(QtCore.SIGNAL("gotPositionData(PyQt_PyObject, PyQt_PyObject)"), self.position+self.orientation, self.currentMission.generalWaypoint)
             else:
                 #self.emit(QtCore.SIGNAL("requestCVData()"))
@@ -711,6 +712,8 @@ class ExternalCommThread(QtCore.QThread):
                 if data != self.prevData:
                     self.prevData = data
                     self.emit(QtCore.SIGNAL("finished(PyQt_PyObject)"), data)
+
+        self.mainWindow.gui.processEvents()
                     
     def calculateMedianAhrs(self, ahrsData1, ahrsData2, ahrsData3):
         '''
@@ -1033,7 +1036,7 @@ class ExternalCommThread(QtCore.QThread):
 
             # TODO: Include hydras data too.
             #print "Calling writeToFile()"
-            self.log.writeToFile(self.position, self.orientation)
+            #self.log.writeToFile(self.position, self.orientation)
 
     def calculateMedianAhrs(self, ahrsData1, ahrsData2, ahrsData3):
         """

@@ -18,6 +18,7 @@ def main():
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_X11InitThreads)
     roboSubGui = QtGui.QApplication(sys.argv)
     window = MainWindow()
+    window.gui = roboSubGui
 
     if False:
         roboSubGui.setStyle(QtGui.QStyleFactory.create("plastique"))
