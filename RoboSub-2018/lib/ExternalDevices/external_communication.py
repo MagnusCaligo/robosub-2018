@@ -531,7 +531,7 @@ class ExternalCommThread(QtCore.QThread):
         
         try:
 			
-			self.motherSerial = serial.Serial("/dev/ttyUSB4", 9600)
+			self.motherSerial = serial.Serial("COM18", 9600)
 			self.motherPackets = motherboard.motherBoardDataPackets(self.motherSerial)
 			
 			self.motherResponseThread = motherboard.motherBoardResponse(self.motherSerial)
@@ -792,6 +792,7 @@ class ExternalCommThread(QtCore.QThread):
         #print self.ahrsData1
         if self.motherPackets != None:
 	    self.motherPackets.sendSIBPressureRequest()
+        self.motherPackets.sendBMSVoltageRequest()
         if self.motherResponseThread != None:
             while len(self.motherResponseThread.getList) > 0:
                 self.motherMessage = self.motherResponseThread.getList.pop(0)
@@ -843,6 +844,9 @@ class ExternalCommThread(QtCore.QThread):
                     depth3 = self.motherMessage[3]
                     depth = np.median([depth1, depth3])
                     self.position[2] = float((depth-95))/9.2
+                elif(self.motherMessage[0] == 648):#Voltage Data	
+					self.batteryVoltage = self.motherMessage[1]
+					print "Battery Voltage is", self.batteryVoltage
                 #print self.motherMessage
 
         if self.hydrasResponseThread1 != None:
