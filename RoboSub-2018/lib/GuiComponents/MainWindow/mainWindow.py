@@ -33,6 +33,7 @@ class MainWindow(QtGui.QMainWindow):
         self.missionCommanderWidget = None
         self.dataGraphingWidget = None
         self.controlSystemWidget = None
+        self.debugValuesWidget = None
 
         # Create classes instance
         self.manualControlClass = None
@@ -44,6 +45,7 @@ class MainWindow(QtGui.QMainWindow):
         self.missionCommanderClass = None
         self.dataGraphingClass = None
         self.controlSystemClass = None
+        self.debugValuesClass = None
 
         self.previousStateLogging = Previous_State_Logging('Previous_Save.csv')
         
@@ -69,6 +71,7 @@ class MainWindow(QtGui.QMainWindow):
         self.missionCommanderClass = classes[5]
         self.dataGraphingClass = classes[6]
         self.controlSystemClass = classes[7]
+        self.debugValuesClass = classes[8]
         
         self.externalCommClass.connectSignals()
         filename = self.externalCommClass.previous_state_logging.getValue("previousWidgetConfig")
@@ -110,6 +113,7 @@ class MainWindow(QtGui.QMainWindow):
         self.subwin_mainWidget.missionCommanderButton.clicked.connect(lambda: self.add_missionCommanderWidget())
         self.subwin_mainWidget.dataGraphingButton.clicked.connect(lambda: self.add_dataGraphingWidget())
         self.subwin_mainWidget.controlSystemButton.clicked.connect(lambda: self.add_controlSystemWidget())
+        self.subwin_mainWidget.debugValuesButton.clicked.connect(lambda: self.add_debugValuesWidget())
         self.subwin_mainWidget.startButton.clicked.connect(lambda: self.startPressed())
         self.subwin_mainWidget.stopButton.clicked.connect(lambda: self.stopPressed())
         self.subwin_mainWidget.saveConfigButton.clicked.connect(lambda: self.saveConfigValues())
@@ -130,9 +134,9 @@ class MainWindow(QtGui.QMainWindow):
         self.subwin_mainWidget.eastLabel.setText("East: " + str(self.externalCommClass.externalCommThread.position[1]))
         self.subwin_mainWidget.upLabel.setText("Up: " + str(self.externalCommClass.externalCommThread.position[2]))
 
-        self.subwin_mainWidget.yawLabel.setText("Yaw: " + str(self.externalCommClass.externalCommThread.ahrsData[0]))
-        self.subwin_mainWidget.pitchLabel.setText("Pitch: " + str(self.externalCommClass.externalCommThread.ahrsData[1]))
-        self.subwin_mainWidget.rollLabel.setText("Roll: " + str(self.externalCommClass.externalCommThread.ahrsData[2]))
+        self.subwin_mainWidget.yawLabel.setText("Yaw: " + str(self.externalCommClass.externalCommThread.orientation[0]))
+        self.subwin_mainWidget.pitchLabel.setText("Pitch: " + str(self.externalCommClass.externalCommThread.orientation[1]))
+        self.subwin_mainWidget.rollLabel.setText("Roll: " + str(self.externalCommClass.externalCommThread.orientation[2]))
 
     @QtCore.pyqtSlot()
     def loadMissions(self):
@@ -271,6 +275,29 @@ class MainWindow(QtGui.QMainWindow):
         self.externalCommClass.running = False
         self.externalCommClass.stopThread()
 
+    @QtCore.pyqtSlot()
+    def add_debugValuesWidget(self):
+        """
+        Adds the mapWidget to the Mdi area
+        :return: None
+        """
+        # Initialize widget
+        self.debugValuesWidget= QtGui.QWidget()
+        self.debugValuesClass.ui_DebugValues.setupUi(self.debugValuesWidget)
+        self.debugValuesClass.connectSignals()
+
+
+        # Initialize subwindow
+        self.subwindow = QtGui.QMdiSubWindow(self.ui_MainWindow.mdiArea)
+        self.debugValuesWidget.setParent(self.subwindow)
+        self.subwindow.setWidget(self.debugValuesWidget)
+        self.subwindow.setWindowTitle('Debug Values')
+
+        # Show new subwindow
+        self.ui_MainWindow.mdiArea.addSubWindow(self.subwindow)
+        self.debugValuesWidget.show()
+        self.subwindow.show()
+        self.subwindow.widget().show()
 
     @QtCore.pyqtSlot()
     def add_mapWidget(self):

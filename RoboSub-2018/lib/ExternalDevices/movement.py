@@ -138,6 +138,9 @@ class MovementController():
         **Returns**: \n
         * **thrusterPWMs** - List containing the final PWMs assigned to each thruster.\n
         '''
+        if self.serialStream == None:
+            print "MAESTRO NOT CONNECTED"
+            return
         thrusterPWMs = []
         for index, thruster in enumerate(self.thrusters): #For each thruster object..
             
