@@ -138,6 +138,8 @@ class MainWindow(QtGui.QMainWindow):
         self.subwin_mainWidget.pitchLabel.setText("Pitch: " + str(self.externalCommClass.externalCommThread.orientation[1]))
         self.subwin_mainWidget.rollLabel.setText("Roll: " + str(self.externalCommClass.externalCommThread.orientation[2]))
 
+        self.subwin_mainWidget.batteryVoltageLabel.setText("Battery Voltage: " + str(self.externalCommClass.externalCommThread.batteryVoltage))
+		
     @QtCore.pyqtSlot()
     def loadMissions(self):
         self.missionCommanderClass.openFileDialog()

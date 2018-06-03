@@ -25,7 +25,7 @@ except AttributeError:
 class Ui_MainWindowWidget(object):
     def setupUi(self, MainWindowWidget):
         MainWindowWidget.setObjectName(_fromUtf8("MainWindowWidget"))
-        MainWindowWidget.resize(700, 839)
+        MainWindowWidget.resize(700, 904)
         MainWindowWidget.setAutoFillBackground(False)
         MainWindowWidget.setStyleSheet(_fromUtf8(""))
         self.verticalLayout_2 = QtGui.QVBoxLayout(MainWindowWidget)
@@ -482,6 +482,9 @@ class Ui_MainWindowWidget(object):
         self.verticalLayout_4.addWidget(self.rollLabel)
         self.horizontalLayout_4.addLayout(self.verticalLayout_4)
         self.verticalLayout_2.addLayout(self.horizontalLayout_4)
+        self.batteryVoltageLabel = QtGui.QLabel(MainWindowWidget)
+        self.batteryVoltageLabel.setObjectName(_fromUtf8("batteryVoltageLabel"))
+        self.verticalLayout_2.addWidget(self.batteryVoltageLabel)
 
         self.retranslateUi(MainWindowWidget)
         QtCore.QMetaObject.connectSlotsByName(MainWindowWidget)
@@ -509,4 +512,5 @@ class Ui_MainWindowWidget(object):
         self.yawLabel.setText(_translate("MainWindowWidget", "Yaw: 0", None))
         self.pitchLabel.setText(_translate("MainWindowWidget", "Pitch: 0", None))
         self.rollLabel.setText(_translate("MainWindowWidget", "Roll: 0", None))
+        self.batteryVoltageLabel.setText(_translate("MainWindowWidget", "Battery Voltage: ", None))
 

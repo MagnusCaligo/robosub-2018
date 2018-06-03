@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>700</width>
-    <height>839</height>
+    <height>904</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -1161,6 +1161,13 @@
       </layout>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="batteryVoltageLabel">
+     <property name="text">
+      <string>Battery Voltage: </string>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
