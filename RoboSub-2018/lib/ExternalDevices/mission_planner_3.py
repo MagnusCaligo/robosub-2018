@@ -196,7 +196,7 @@ class MissionPlanner(QtCore.QThread):
         
     #Change Waypoint - Allows for us to change the General Waypoint of a Mission while the sub is in the water
     def changeWaypoint(self, missionName, waypointPosition, waypointOrientation):
-        print "Waypoint Changed"
+        #print "Waypoint Changed"
         if missionName in self.missionList:
             self.missionList[missionName].generalWaypoint = waypointPosition + waypointOrientation
             #print "Waypoint changed to " + str(waypointPosition + waypointOrientation)
@@ -523,7 +523,7 @@ class MissionPlanner(QtCore.QThread):
 
 
                 #This is where we call the mission code to run
-                missionReturnedValue = mission.update(currentLocation, currentOrientation)
+                missionReturnedValue = mission.update()
                 if missionReturnedValue == 1: #Mission completed
                     missionIndex += 1
                     break

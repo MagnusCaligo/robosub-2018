@@ -24,7 +24,7 @@ class MissionCommander(QtCore.QObject):
             self.externalComm.guiDataToSend["missionList"] = []
 
         
-        self.openFileDialog("Saved_Missions/missionCommanderPreviousState.txt")
+        self.openFileDialog("./Saved_Missions/missionCommanderPreviousState.txt")
 
     def connectSignals(self):
 	
@@ -35,6 +35,14 @@ class MissionCommander(QtCore.QObject):
         :return:
         """
 #Veronica smells like poo poo 
+
+        self.ui_missionCommander.northTranslation.setMinimum(-500)
+        self.ui_missionCommander.northTranslation.setMinimum(-500)
+        self.ui_missionCommander.eastTranslation.setMinimum(-500)
+        self.ui_missionCommander.eastTranslation.setMaximum(500)
+        self.ui_missionCommander.upTranslation.setMinimum(-500)
+        self.ui_missionCommander.upTranslation.setMaximum(500)
+
         self.ui_missionCommander.yawRotation = SlideEdit()
         self.ui_missionCommander.pitchRotation = SlideEdit()
         self.ui_missionCommander.rollRotation = SlideEdit()
@@ -92,31 +100,31 @@ class MissionCommander(QtCore.QObject):
         
         #Creates the mission by the type
         if missionType == "Navigation":
-            mission = Missions.NavigationMission(parameters)
+            mission = Missions.NavigationMission
         elif missionType == "Qualification Gate":
-            mission = Missions.QualificationGate(parameters)
+            mission = Missions.QualificationGate
         elif missionType == "Buoys - Red":
-            mission = Missions.Buoys(parameters)
+            mission = Missions.Buoys
         elif missionType == "Buoys - Green":
-            mission = Missions.Buoys(parameters)
+            mission = Missions.Buoys
         elif missionType == "Buoys - Yellow":
-            mission = Missions.Buoys(parameters)
+            mission = Missions.Buoys
         elif missionType == "Football Gate":
-            mission = Missions.FootballGate(parameters)
+            mission = Missions.FootballGate
         elif missionType == "Torpedo Board - Locate":
-            mission = Missions.TorpedoBoard(parameters)
+            mission = Missions.TorpedoBoard
         elif missionType == "Torpedo Board - Grab Handle":
-            mission = Missions.TorpedoBoard(parameters)
+            mission = Missions.TorpedoBoard
         elif missionType == "Torpedo Board - Fire Torpedos":
-            mission = Missions.TorpedoBoard(parameters)
+            mission = Missions.TorpedoBoard
         elif missionType == "Dropper - Locate":
-            mission = Missions.Dropper(parameters)
+            mission = Missions.Dropper
         elif missionType == "Dropper - Grab Handle":
-            mission = Missions.Dropper(parameters)
+            mission = Missions.Dropper
         elif missionType == "Dropper - Drop":
-            mission = Missions.Dropper(parameters)
+            mission = Missions.Dropper
         elif missionType == "Octogon":
-            mission = Missions.Octogon(parameters)
+            mission = Missions.Octogon
         elif missionType == "Navigation v3":
             mission = NavigationMission
             
@@ -175,8 +183,8 @@ class MissionCommander(QtCore.QObject):
         self.ui_missionCommander.eastTranslation.setValue(mission.generalWaypoint[1])
         self.ui_missionCommander.upTranslation.setValue(mission.generalWaypoint[2])
         self.ui_missionCommander.yawRotation.setCurrentValue(mission.generalWaypoint[3])
-        self.ui_missionCommander.pitchRotation.setCurrentValue(mission.generalWaypoint[4])
-        self.ui_missionCommander.rollRotation.setCurrentValue(mission.generalWaypoint[5])
+        self.ui_missionCommander.pitchRotation.setCurrentValue(mission.generalWaypoint[4]+180)
+        self.ui_missionCommander.rollRotation.setCurrentValue(mission.generalWaypoint[5]+180)
         
         #Modify the Checkboxes
         self.ui_missionCommander.useKalmanFilter.setChecked(True)
@@ -196,7 +204,7 @@ class MissionCommander(QtCore.QObject):
         #Writes the current mission list to a JSON file
         #Defaults to the previousState file
         if len(filename) == 0:
-            filename = "Saved_Missions/missionCommanderPreviousState.txt"
+            filename = "./Saved_Missions/missionCommanderPreviousState.txt"
         else:
             fileWidget = QtGui.QWidget()
             fileWidget.resize(320, 240)
