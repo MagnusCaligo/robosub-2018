@@ -138,7 +138,7 @@ class MovementController():
         **Returns**: \n
         * **thrusterPWMs** - List containing the final PWMs assigned to each thruster.\n
         '''
-        if self.serialStream == None:
+        if not self.serialStream.isOpen():
             print "MAESTRO NOT CONNECTED"
             return
         thrusterPWMs = []
@@ -757,7 +757,7 @@ class JoystickMovementController():
             #print index, xPwmSignal*-thruster.orientation[0], yPwmSignal*-thruster.orientation[1], zPwmSignal*-thruster.orientation[2], xPwmRotateSignal*thruster.orientation[1]*thruster.location[2], (yPwmRotateSignal*-thruster.orientation[0]*thruster.location[2] + yPwmRotateSignal*thruster.orientation[2]*thruster.location[0]), zPwmRotateSignal*-thruster.orientation[1]*thruster.location[0]
             
         netSendTCBDataTimer = sendTCBDataTimer.netTimer(sendTCBDataTimer.cpuClockTimeInSeconds())
-        if netSendTCBDataTimer >= .5 and self.serialStream != None: #Because I send data to fast for TCB to process, I need to send less data to the TCB. This timer slows down data being sent to the TCB so its circular buffer wont overwrite data
+        if netSendTCBDataTimer >= .5 and not self.serialStream.isOpen():  #Because I send data to fast for TCB to process, I need to send less data to the TCB. This timer slows down data being sent to the TCB so its circular buffer wont overwrite data
 
 
             

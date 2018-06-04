@@ -26,8 +26,6 @@ class AbstractMission(QtCore.QObject):
         self.cameraMatrix = [[808, 0, 404],
                             [0,608,304],
                             [0,0,1.0]]
-        for i,v in parameters.iteritems():
-            self.parameters[i] = v
 
         '''
         Key values inside of parameters
@@ -50,6 +48,9 @@ class AbstractMission(QtCore.QObject):
         self.parameters["drivingMode"] = 0
         self.parameters["useRelativeWaypoint"] = "False"
         self.parameters["useRelativeWorld"] = "False"
+
+        for i,v in parameters.iteritems():
+            self.parameters[i] = v
 
     def updateLocation(self, position, orientation):
         self.position = position

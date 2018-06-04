@@ -158,17 +158,19 @@ class MissionCommander(QtCore.QObject):
         if isinstance(mission, Missions.NavigationMission):
             self.ui_missionCommander.missionTypeCB.setCurrentIndex(1)
         elif isinstance(mission, Missions.QualificationGate):
+            self.ui_missionCommander.missionTypeCB.setCurrentIndex(3)
+        elif isinstance(mission, NavigationMission):
             self.ui_missionCommander.missionTypeCB.setCurrentIndex(2)
         elif isinstance(mission, Missions.Buoys):
-            self.ui_missionCommander.missionTypeCB.setCurrentIndex(3)
+            self.ui_missionCommander.missionTypeCB.setCurrentIndex(4)
         elif isinstance(mission, Missions.FootballGate):
-            self.ui_missionCommander.missionTypeCB.setCurrentIndex(6)
-        elif isinstance(mission, Missions.TorpedoBoard):
             self.ui_missionCommander.missionTypeCB.setCurrentIndex(7)
+        elif isinstance(mission, Missions.TorpedoBoard):
+            self.ui_missionCommander.missionTypeCB.setCurrentIndex(8)
         elif isinstance(mission, Missions.Dropper):
-            self.ui_missionCommander.missionTypeCB.setCurrentIndex(10)
+            self.ui_missionCommander.missionTypeCB.setCurrentIndex(11)
         elif isinstance(mission, Missions.Octogon):
-            self.ui_missionCommander.missionTypeCB.setCurrentIndex(13)
+            self.ui_missionCommander.missionTypeCB.setCurrentIndex(14)
         
         #Modify the TextLine Edits
         self.ui_missionCommander.missionNameLineEdit.setText(mission.name)
@@ -199,6 +201,7 @@ class MissionCommander(QtCore.QObject):
         self.ui_missionCommander.parameterStringInputs.clear()
         self.ui_missionCommander.parameterStringInputs.setPlainText(mission.parameters["parametersString"])
         self.saveCurrentState()
+
         
     def saveCurrentState(self, *filename):
         #Writes the current mission list to a JSON file
@@ -468,6 +471,8 @@ class MissionCommander(QtCore.QObject):
                 mission = Missions.Dropper(parameters)
             elif missionType == "Octogon":
                 mission = Missions.Octogon(parameters)
+            elif missionType == "Navigation v3":
+                mission = NavigationMission(parameters)
                 
             if mission == None:
                 print "Didn't load correctly: " + missionType

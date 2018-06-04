@@ -74,7 +74,7 @@ class ExternalComm(QtCore.QObject):
         self.dataChangedFromMap = False  # True if Data was change
         self.os = platform.platform()
         self.running = False
-        self.missionPlanner = mission_planner_2.MissionPlanner(self)
+        self.missionPlanner = mission_planner_3.MissionPlanner(self)
         self.externalCommThread.missionPlanner = self.missionPlanner
         self.missionCommander = missionCommander.MissionCommander(self) #This is used JUST for saving missions after they have modified by the Map
         self.previous_state_logging = previous_state_logging.Previous_State_Logging("Previous_State_Save.csv")
@@ -91,10 +91,17 @@ class ExternalComm(QtCore.QObject):
         self.connect(self.externalCommThread, QtCore.SIGNAL("requestGuiData()"),
                      self.sendGuiDataToExternalThread)
         self.connect(self.externalCommThread, QtCore.SIGNAL("requestCVData()"),self.sendCVDataToExternalThread)
+        self.connect(self.missionPlanner, QtCore.SIGNAL("missionDebugMessage(PyQt_PyObject)"), self.writeMessage)
         self.missionPlanner.setMissionList(self.guiDataToSend["missionList"])
         self.missionPlanner.connectSignals()
         self.externalCommThread.connect(self.missionPlanner, QtCore.SIGNAL("currentMission(PyQt_PyObject)"), self.externalCommThread.setCurrentMission)
         self.externalCommThread.connect(self.mainWindowClass.debugValuesClass, QtCore.SIGNAL("debugPositionValues(PyQt_PyObject)"), self.externalCommThread.setDebugValues)
+
+    def resetPosition(self):
+        self.externalCommThread.position = [0,0,0]
+
+    def writeMessage(self, string):
+        self.mainWindowClass.systemOutput.insertPlainText(string + "\n")
 
     def setWaypointX(self, name, value):
         if "missionList" in self.guiDataToSend:
@@ -806,7 +813,7 @@ class ExternalCommThread(QtCore.QThread):
         #print self.ahrsData1
         if self.motherPackets != None:
 	    self.motherPackets.sendSIBPressureRequest()
-        self.motherPackets.sendBMSVoltageRequest()
+            self.motherPackets.sendBMSVoltageRequest()
         if self.motherResponseThread != None:
             while len(self.motherResponseThread.getList) > 0:
                 self.motherMessage = self.motherResponseThread.getList.pop(0)

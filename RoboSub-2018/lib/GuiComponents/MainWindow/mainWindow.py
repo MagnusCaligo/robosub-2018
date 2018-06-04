@@ -120,6 +120,7 @@ class MainWindow(QtGui.QMainWindow):
         self.subwin_mainWidget.debugCheck.clicked.connect(lambda: self.changeText())
         self.subwin_mainWidget.loadConfigsButton.clicked.connect(lambda: self.loadConfigValues())
         self.subwin_mainWidget.loadMissionsButton.clicked.connect(lambda: self.loadMissions())
+        self.subwin_mainWidget.resetButton.clicked.connect(self.resetButtonClicked)
         self.systemOutput = self.subwin_mainWidget.plainTextEdit;
 
         
@@ -128,6 +129,10 @@ class MainWindow(QtGui.QMainWindow):
 		
         self.subwin_mainWidget.startButton.setText("Start Debug")
         self.subwin_mainWidget.stopButton.setText("Stop Debug")
+
+    def resetButtonClicked(self):
+        self.externalCommClass.resetPosition()
+        self.subwin_mainWidget.plainTextEdit.clear()
 		
     def updateSensorDisplay(self):
         self.subwin_mainWidget.northLabel.setText("North: " + str(self.externalCommClass.externalCommThread.position[0]))
