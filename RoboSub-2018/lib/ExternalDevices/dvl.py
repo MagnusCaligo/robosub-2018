@@ -52,6 +52,9 @@ class DVLResponse(threading.Thread):
         self.velocitiesXYZ = [0, 0, 0]  # Velocities for the DVL's coordinate system
         self.velTimesXYZ = [0, 0, 0]  # Time estimate for the velocities
         self.positionA = [0, 0, 0]  # North, East, Down
+
+    def clearDistanceTraveled(self):
+	pass
     
     def run(self):
         '''
@@ -63,6 +66,7 @@ class DVLResponse(threading.Thread):
         **Return**: \n
         * **No Return.**\n
         '''
+        #self.setSampleRate()
         while self.runThread:
             
             #time.sleep(0.01) #Slows down thread to save some power
@@ -232,30 +236,46 @@ class DVLResponse(threading.Thread):
             print "NO ERROR"
             return [self.velocitiesXYZ, self.velTimesXYZ]
 
-    def clearDistanceTraveled(self):
+    def setSampleRate(self):
         '''
-        Resets the DVL's origin point to its current position.
-        
+        Sets DVL Sample Rate from 1-8Hz. Takes ~ 1 second.
+
         **Parameters**: \n
         * **No Input Parameters.**
-        
+
         **Returns**: \n
         * **No Return.**\n
         '''
+        #self.DVLCom.write('\x03')#Writes ASCII Ctrl-C
+        #Break into Confirmation Mode
+        self.DVLCom.write(bytearray('@@@@@@'))
+        time.sleep(0.100)
+        self.DVLCom.write(bytearray('K1W%!Q'))
+        time.sleep(0.300)
+        self.DVLCom.write(bytearray('K1W%!Q'))
+        #Set DVL Sample Rate to 8.0 Hz
+        self.DVLCom.write(bytearray('MC'))
+        self.DVLCom.write(bytearray('SETDVL,SR=8.0\n'))
+        #Break back into Measurement Mode
+        '''self.DVLCom.write(bytearray('@@@@@@'))
+        time.sleep(0.100)
+        self.DVLCom.write(bytearray('K1W%!Q'))
+        time.sleep(0.300)
+        self.DVLCom.write(bytearray('K1W%!Q'))'''
+        self.DVLCom.write(bytearray('START'))
+        #@PNOR, SETDVL, SR = 8.0
         pass
-        
-            
+
+
     def killThread(self):
         '''
-        Ends thread process. 
-        
+        Ends thread process.
+
         **Parameters**: \n
         * **No Input Parameters.**
-        
+
         **Returns**: \n
         * **No Return.**\n
         '''
-        self.runThread = False     
-		
-
+        self.runThread = False
         

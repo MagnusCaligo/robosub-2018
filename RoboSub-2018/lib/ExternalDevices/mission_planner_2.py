@@ -215,7 +215,7 @@ class MissionPlanner(QtCore.QThread):
     def changeWaypoint(self, missionName, waypointPosition, waypointOrientation):
         if missionName in self.missionList:
             self.missionList[missionName].generalWaypoint = waypointPosition + waypointOrientation
-            #print "Waypoint changed to " + str(waypointPosition + waypointOrientation)
+            print "Waypoint changed to " + str(waypointPosition + waypointOrientation)
     
     #Function is connected to the control system widget. Updates the PID values when the sliders change
     #ManualPIDs is a boolean. If its true then the PIDs are for manual mode, else they are for Autonomous Mode
@@ -528,7 +528,7 @@ class MissionPlanner(QtCore.QThread):
             
             mission = self.missionList[missionIndex]
             if mission != self.currentMission:
-                 self.sendDebugMessage("Starting Mission: " + mission.parameters["name"])
+                 print ("Starting Mission: " + mission.parameters["name"])
             self.currentMission = mission
             maxTime = int(mission.parameters["maxTime"])
             startTime = time.time()   

@@ -131,8 +131,6 @@ class MissionPlanner(QtCore.QThread):
         
     def connectSignals(self):
         self.connect(self.missionCommander, QtCore.SIGNAL("setDebugMissionMode(PyQt_PyObject)"), self.setDebugMissionMode)
-        self.connect(self.missionCommander, QtCore.SIGNAL("nextOrPreviousFlag(PyQt_PyObject)"), self.nextOrPreviousFlag)
-        self.connect(self.missionCommander, QtCore.SIGNAL("nextOrPreviousMission(PyQt_PyObject)"), self.nextOrPreviousMission)
         self.connect(self.controlSystemClass, QtCore.SIGNAL("updatePIDValues(PyQt_PyObject)"), lambda val: self.changePIDValues(False, val))
         self.connect(self.externalCommClass, QtCore.SIGNAL("stopThread"), self.stopThread)
         self.connect(self.externalCommClass, QtCore.SIGNAL("waypointChanged(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), lambda val1, val2, val3: self.changeWaypoint(val1, val2, val3))
@@ -255,8 +253,9 @@ class MissionPlanner(QtCore.QThread):
             self.MovementController = None
     
     def killThrusters(self):
-        for i in range(0,9):
-            self.maestroSerial.write(bytearray([0xFF, i, 0x7F]))
+        if self.maestroSerial.isOpen():
+            for i in range(0,9):
+                self.maestroSerial.write(bytearray([0xFF, i, 0x7F]))
 
     #Main thread that is launched during autonomous run 
     def run(self):
@@ -494,33 +493,40 @@ class MissionPlanner(QtCore.QThread):
             self.currentMission = mission
             maxTime = int(mission.parameters["maxTime"])
             startTime = time.time()   
+            
+            #Initalize a bunch of mission dependant stuff 
+            mission.startTime = startTime
+            mission.setMovementController(self.MovementController) #Sets the movement controller so the mission can move on its own
+            mission.initalizeOnMissionStart()
         
             
             
             #while ((startTime - time.time()) <= maxTime or self.missionDebug==True) and self.running:
-            while ((time.time()-startTime) <= maxTime) and self.running:
-                #print mission.name
-       		 	  
+            while ((time.time()-startTime) <= maxTime) and self.running: 
        		 	  
                 if self.changeMission == True and missionIndex <= len(self.missionList)-1:
                     self.changeMission = None
                     missionIndex +=1
-                    break
+                    break #Break out and load new mission
                 elif self.changeMission == False and missionIndex >=0:
                     self.changeMission = None
                     missionIndex -= 1
-                    break
+                    break #Break out and load new mission
                 
                 if not self.debug:
                     #This is where it will get position and orietnation data when the gui is not in debug mode
                     currentLocation = self.externalCommThread.position
                     currentOrientation = self.externalCommThread.orientation
+                    mission.updateLocation(currentLocation, currentOrientation)
                 else:
                     self.missionDebug = True
 
 
                 #This is where we call the mission code to run
-                mission.update()
+                missionReturnedValue = mission.update()
+                if missionReturnedValue == 1: #Mission completed
+                    missionIndex += 1
+                    break
             
             if (time.time() - startTime) > maxTime:
 				missionIndex += 1

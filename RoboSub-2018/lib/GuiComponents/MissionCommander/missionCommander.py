@@ -7,6 +7,7 @@ import json
 import os
 from pprint import pprint
 from lib.Utils.SlideEdit import SlideEdit
+from lib.ExternalDevices.Mission_Planner_3_Missions.NavigationMission import NavigationMission
 
 class MissionCommander(QtCore.QObject):
     """
@@ -56,6 +57,7 @@ class MissionCommander(QtCore.QObject):
 
         
         #Connects all the buttons and stuff on the Mission Commander Widget
+        self.ui_missionCommander.missionTypeCB.currentIndexChanged.connect(self.updateParametersFromCombox)
         self.ui_missionCommander.missionListWidget.currentItemChanged.connect(self.updateSelectedMission)
         self.ui_missionCommander.addMissionButton.clicked.connect(self.createMission)
         self.ui_missionCommander.removeMissionButton.clicked.connect(self.removeMission)
@@ -82,7 +84,46 @@ class MissionCommander(QtCore.QObject):
         for i, v in enumerate(self.externalComm.guiDataToSend["missionList"]):
             self.ui_missionCommander.missionListWidget.addItem(QtGui.QListWidgetItem(v.parameters["name"]))
         
-    
+    def writeDebugMessage(self, message):
+        self.externalComm.mainWindowClass.systemOutput.insertPlainText(str(message) + "\n")
+        
+    def updateParametersFromCombox(self):
+        missionType = str(self.ui_missionCommander.missionTypeCB.currentText())
+        
+        #Creates the mission by the type
+        if missionType == "Navigation":
+            mission = Missions.NavigationMission(parameters)
+        elif missionType == "Qualification Gate":
+            mission = Missions.QualificationGate(parameters)
+        elif missionType == "Buoys - Red":
+            mission = Missions.Buoys(parameters)
+        elif missionType == "Buoys - Green":
+            mission = Missions.Buoys(parameters)
+        elif missionType == "Buoys - Yellow":
+            mission = Missions.Buoys(parameters)
+        elif missionType == "Football Gate":
+            mission = Missions.FootballGate(parameters)
+        elif missionType == "Torpedo Board - Locate":
+            mission = Missions.TorpedoBoard(parameters)
+        elif missionType == "Torpedo Board - Grab Handle":
+            mission = Missions.TorpedoBoard(parameters)
+        elif missionType == "Torpedo Board - Fire Torpedos":
+            mission = Missions.TorpedoBoard(parameters)
+        elif missionType == "Dropper - Locate":
+            mission = Missions.Dropper(parameters)
+        elif missionType == "Dropper - Grab Handle":
+            mission = Missions.Dropper(parameters)
+        elif missionType == "Dropper - Drop":
+            mission = Missions.Dropper(parameters)
+        elif missionType == "Octogon":
+            mission = Missions.Octogon(parameters)
+        elif missionType == "Navigation v3":
+            mission = NavigationMission
+            
+        if hasattr(mission, "defaultParameters"):
+            self.ui_missionCommander.parameterStringInputs.clear()
+            self.ui_missionCommander.parameterStringInputs.setPlainText(mission.defaultParameters)
+
 
     def updateSelectedMission(self, missionName):
         '''
@@ -244,6 +285,8 @@ class MissionCommander(QtCore.QObject):
         #Sets all the parameters for the mission based off of the values in the gui
         
         parameters["name"] = missionName
+        if self.ui_missionCommander.maxTimeLineEdit.text() == "":
+            return
         parameters["maxTime"] = int(self.ui_missionCommander.maxTimeLineEdit.text())
         if self.ui_missionCommander.useGeneralWaypoint.text() == "":
             parameters["useGeneralWaypoint"] = None
@@ -279,11 +322,12 @@ class MissionCommander(QtCore.QObject):
             return
         
         #Creates the mission by the type
+        print "Mission is", missionType 
         if missionType == "Navigation":
             mission = Missions.NavigationMission(parameters)
         elif missionType == "Qualification Gate":
             mission = Missions.QualificationGate(parameters)
-        elif missionType == "Buoys - Red":
+        elif missionType == "Bouys - Red":
             mission = Missions.Buoys(parameters)
         elif missionType == "Buoys - Green":
             mission = Missions.Buoys(parameters)
@@ -305,6 +349,8 @@ class MissionCommander(QtCore.QObject):
             mission = Missions.Dropper(parameters)
         elif missionType == "Octogon":
             mission = Missions.Octogon(parameters)
+        elif missionType == "Navigation v3":
+            mission = NavigationMission(parameters)
             
         mission.parameters["missionType"] = missionType
         mission.name = str(parameters["name"])

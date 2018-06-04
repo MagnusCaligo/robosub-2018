@@ -284,6 +284,19 @@ class motherBoardDataPackets():
             self.motherCom.write(bytearray(packet))            
         except Exception as msg:
             print "Could not send Backplane Current message to the Motherboard:", msg
+			
+    def sendBMSVoltageRequest(self):
+        messageID = int(hex(641), 0) # 0001 1001 0000
+        byte0 = int('0xEE', 0) # Starting byte, EE in hex
+        byte1 = int('0x50', 0)
+        byte2 = int('0x30', 0)
+        
+        packet = [byte0, byte1, byte2]
+        
+        try:
+            self.motherCom.write(bytearray(packet))            
+        except Exception as msg:
+            print "Could not send BMS Voltage message to the Motherboard:", msg
     
     
 class motherBoardResponse(threading.Thread):
@@ -372,7 +385,7 @@ class motherBoardResponse(threading.Thread):
                     #message = ID, rtr, payloadLength
                     payload = []
                     if payloadLength > 0:
-                        for x in range(payloadLength-1):
+                        for x in range(payloadLength):
                             payload.append(ord(self.motherCom.read()))
                     #print payload    
                     if idFrame == 8:#Kill Switch Interrupt
@@ -428,6 +441,11 @@ class motherBoardResponse(threading.Thread):
                         #intPress2 = (struct.unpack('H', struct.pack('H', payload[6] >> 4 | payload[7] << 4 ))[0])
                     elif idFrame == 504:
                         pass
+                    elif idFrame == 648:
+						firstPart = float(payload[0])
+						secondPart = float(payload[1])
+						voltage = firstPart + (secondPart/100)
+						message = [idFrame, voltage]
                     self.motherCom.flushInput()
                     return message
                 
@@ -452,7 +470,12 @@ class motherBoardResponse(threading.Thread):
         self.runThread = False    
 
 if __name__ == "__main__":
-	back = serial.Serial("/dev/ttyUSB7", 9600)
+	back = serial.Serial("/dev/ttyUSB18", 9600)
 	motherboard = motherboardDataPackets(back)
+	motherResponseThread = motherBoardResponse(back)
 	motherboad.sendBackplaneCurrentRequest()
+	
+	while True:
+		if motherResponseThread.inWaiting > 0:
+			print "Got something from backplane"
 	 
