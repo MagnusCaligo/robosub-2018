@@ -73,7 +73,7 @@ class AbstractMission(QtCore.QObject):
             
             self.finalWaypoint = newWaypoint
 
-        elif self.paramters["useRelativeWorld"] in ["True", 'true']:
+        elif self.parameters["useRelativeWorld"] in ["True", 'true']:
             newWaypoint = []
             
             newWaypoint.append(self.position[0] + self.generalWaypoint[0])
@@ -96,16 +96,16 @@ class AbstractMission(QtCore.QObject):
         self.emit(QtCore.SIGNAL("debugMessage(PyQt_PyObject)"), string)
 
     def moveToWaypoint(self, waypoint):
-        self.waypointError = self.movementController.advancedMove(currentOrientation+currentLocation, waypoint[0], waypoint[1], waypoint[2], 
+        self.waypointError = self.movementController.advancedMove(self.orientation+self.position, waypoint[0], waypoint[1], waypoint[2], 
                       waypoint[4], waypoint[3], waypoint[5], self.parameters["drivingMode"])[1]
         
         reachedWaypoint = True #Assume we reached the waypoint, check the math to see if we are within the error
-        if abs(self.waypointError[0]) < self.generalDistanceError and abs(self.waypointError[1]) < mission.generalDistanceError and abs(self.waypointError[2]) < mission.generalDistanceError:
+        if abs(self.waypointError[0]) < self.generalDistanceError and abs(self.waypointError[1]) < self.generalDistanceError and abs(self.waypointError[2]) < self.generalDistanceError:
             pass #This will only be called if we are actually at the waypoint in terms of position
         else:
             reachedWaypoint = False
             
-        if abs(self.waypointError[3]) < mission.generalRotationError and abs(self.waypointError[4]) < mission.generalRotationError and abs(self.waypointError[5]) < mission.generalRotationError:
+        if abs(self.waypointError[3]) < self.generalRotationError and abs(self.waypointError[4]) < self.generalRotationError and abs(self.waypointError[5]) < self.generalRotationError:
             pass #Only will be called if we have the correct orientaiton
             #print "Not there orientation"
         else:

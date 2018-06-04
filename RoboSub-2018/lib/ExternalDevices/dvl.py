@@ -52,6 +52,9 @@ class DVLResponse(threading.Thread):
         self.velocitiesXYZ = [0, 0, 0]  # Velocities for the DVL's coordinate system
         self.velTimesXYZ = [0, 0, 0]  # Time estimate for the velocities
         self.positionA = [0, 0, 0]  # North, East, Down
+
+    def clearDistanceTraveled(self):
+	pass
     
     def run(self):
         '''
@@ -63,7 +66,7 @@ class DVLResponse(threading.Thread):
         **Return**: \n
         * **No Return.**\n
         '''
-        self.setSampleRate()
+        #self.setSampleRate()
         while self.runThread:
             
             #time.sleep(0.01) #Slows down thread to save some power
@@ -251,13 +254,15 @@ class DVLResponse(threading.Thread):
         time.sleep(0.300)
         self.DVLCom.write(bytearray('K1W%!Q'))
         #Set DVL Sample Rate to 8.0 Hz
-        self.DVLCom.write(bytearray(['SETDVL,SR=8.0\n']))
+        self.DVLCom.write(bytearray('MC'))
+        self.DVLCom.write(bytearray('SETDVL,SR=8.0\n'))
         #Break back into Measurement Mode
-        self.DVLCom.write(bytearray('@@@@@@'))
+        '''self.DVLCom.write(bytearray('@@@@@@'))
         time.sleep(0.100)
         self.DVLCom.write(bytearray('K1W%!Q'))
         time.sleep(0.300)
-        self.DVLCom.write(bytearray('K1W%!Q'))
+        self.DVLCom.write(bytearray('K1W%!Q'))'''
+        self.DVLCom.write(bytearray('START'))
         #@PNOR, SETDVL, SR = 8.0
         pass
 

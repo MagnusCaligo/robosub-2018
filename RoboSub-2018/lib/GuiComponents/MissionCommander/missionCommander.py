@@ -330,11 +330,12 @@ class MissionCommander(QtCore.QObject):
             return
         
         #Creates the mission by the type
+        print "Mission is", missionType 
         if missionType == "Navigation":
             mission = Missions.NavigationMission(parameters)
         elif missionType == "Qualification Gate":
             mission = Missions.QualificationGate(parameters)
-        elif missionType == "Buoys - Red":
+        elif missionType == "Bouys - Red":
             mission = Missions.Buoys(parameters)
         elif missionType == "Buoys - Green":
             mission = Missions.Buoys(parameters)

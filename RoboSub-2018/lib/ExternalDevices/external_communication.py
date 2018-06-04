@@ -74,7 +74,7 @@ class ExternalComm(QtCore.QObject):
         self.dataChangedFromMap = False  # True if Data was change
         self.os = platform.platform()
         self.running = False
-        self.missionPlanner = mission_planner_3.MissionPlanner(self)
+        self.missionPlanner = mission_planner_2.MissionPlanner(self)
         self.externalCommThread.missionPlanner = self.missionPlanner
         self.missionCommander = missionCommander.MissionCommander(self) #This is used JUST for saving missions after they have modified by the Map
         self.previous_state_logging = previous_state_logging.Previous_State_Logging("Previous_State_Save.csv")
@@ -434,7 +434,7 @@ class ExternalCommThread(QtCore.QThread):
         Initialized sensors and data packets to be ran in the run loop.
         :return:
         """
-        if platform.platform() == 'Linux-4.4.15-aarch64-with-Ubuntu-16.04-xenial':
+        if True or platform.platform() == 'Linux-4.4.15-aarch64-with-Ubuntu-16.04-xenial':
                self.computerVisionProcess.start()
                pass
         else:
@@ -492,7 +492,7 @@ class ExternalCommThread(QtCore.QThread):
         # DVL initialization
         try:
 			
-            DVLComPort = serial.Serial("/dev/ttyUSB5", 115200)
+            DVLComPort = serial.Serial("/dev/ttyUSB1", 115200)
             self.dvlDataPackets = dvl.DVLDataPackets(DVLComPort)
             self.dvlResponseThread = dvl.DVLResponse(DVLComPort)
             self.dvlResponseThread.start()
@@ -508,7 +508,7 @@ class ExternalCommThread(QtCore.QThread):
         try:
             # AHRS initializing
             # Need to put the correct comm ports in 
-            self.spartonResponseThread1 = sparton_ahrs.SpartonAhrsResponse("/dev/ttyUSB1")
+            self.spartonResponseThread1 = sparton_ahrs.SpartonAhrsResponse("/dev/ttyUSB3")
             self.spartonResponseThread1.start()
             
         except:
@@ -532,7 +532,7 @@ class ExternalCommThread(QtCore.QThread):
         
         try:
 			
-			self.motherSerial = serial.Serial("COM18", 9600)
+			self.motherSerial = serial.Serial("/dev/ttyUSB0", 9600)
 			self.motherPackets = motherboard.motherBoardDataPackets(self.motherSerial)
 			
 			self.motherResponseThread = motherboard.motherBoardResponse(self.motherSerial)
@@ -641,7 +641,7 @@ class ExternalCommThread(QtCore.QThread):
         highestNum += 1
 
         self.fileName = 'exLog' + str(highestNum)
-        self.log = externalLoggingSystem.exLog(self.fileName)
+        #self.log = externalLoggingSystem.exLog(self.fileName)
         startTime = time.time()
         while self.isRunning:
             time.sleep(.01)
@@ -721,6 +721,8 @@ class ExternalCommThread(QtCore.QThread):
                 if data != self.prevData:
                     self.prevData = data
                     self.emit(QtCore.SIGNAL("finished(PyQt_PyObject)"), data)
+
+        self.mainWindow.gui.processEvents()
                     
     def calculateMedianAhrs(self, ahrsData1, ahrsData2, ahrsData3):
         '''
@@ -854,11 +856,10 @@ class ExternalCommThread(QtCore.QThread):
                     depth1 = self.motherMessage[1]
                     #depth2 = self.motherMessage[2]
                     depth3 = self.motherMessage[3]
-                    depth = np.median([depth1, depth3])
+                    depth = np.median([depth3])
                     self.position[2] = float((depth-95))/9.2
                 elif(self.motherMessage[0] == 648):#Voltage Data	
 					self.batteryVoltage = self.motherMessage[1]
-					print "Battery Voltage is", self.batteryVoltage
                 #print self.motherMessage
 
         if self.hydrasResponseThread1 != None:
@@ -1047,7 +1048,7 @@ class ExternalCommThread(QtCore.QThread):
 
             # TODO: Include hydras data too.
             #print "Calling writeToFile()"
-            self.log.writeToFile(self.position, self.orientation)
+            #self.log.writeToFile(self.position, self.orientation)
 
     def calculateMedianAhrs(self, ahrsData1, ahrsData2, ahrsData3):
         """
@@ -1088,6 +1089,6 @@ class ComputerVisionProcess(QtCore.QThread):
         self.os = platform.platform()
 
     def run(self):
-        if self.os == 'Linux-4.4.15-aarch64-with-Ubuntu-16.04-xenial':
+        if True or self.os == 'Linux-4.4.15-aarch64-with-Ubuntu-16.04-xenial':
             print "Starting computer vision process..."
-            subprocess.call('/media/nvidia/Extra Space/robosub-2017/MechaVision/yolo_cpp/MechaVision')
+            subprocess.call('/media/sub_data/robosub-2018/MechaVision/yolo_cpp/MechaVision')

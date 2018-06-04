@@ -46,10 +46,10 @@ ZPosition_Ki,0.0
 Pitch_Ki,0.0
 XPosition_Integration Min,0.0
 YawForward_Controller,0.0
-ZPosition_Kp,0.0
+ZPosition_Kp,1.9230799674987793
 ZPosition_Controller,0.0
 Pitch_Kd,0.0
-XPosition_Kp,0.0
+XPosition_Kp,0.800000011920929
 ctwinsize_Torpedo,0.0
 YawForward_Kp,0.8999999761581421
 btclipvalue_Torpedo,0.0
