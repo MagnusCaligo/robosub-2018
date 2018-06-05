@@ -482,7 +482,7 @@ class MissionPlanner(QtCore.QThread):
         '''
         This block of code is only called when NOT in manual control mode. It dictates the actuall movement of the sub when in autonomous mode
         '''
-        while missionIndex < len(self.missionList) and self.running:
+        while self.running and missionIndex < len(self.missionList):
             
             currentOrientation = [0,0,0]
             currentLocation = [0,0,0]
@@ -497,12 +497,18 @@ class MissionPlanner(QtCore.QThread):
             #Initalize a bunch of mission dependant stuff 
             mission.startTime = startTime
             mission.setMovementController(self.MovementController) #Sets the movement controller so the mission can move on its own
+
+            if not self.debug:
+                currentLocation = self.externalCommThread.position
+                currentOrientation = self.externalCommThread.orientation
+                mission.updateLocation(currentLocation, currentOrientation)
+
             mission.initalizeOnMissionStart()
         
             
             
             #while ((startTime - time.time()) <= maxTime or self.missionDebug==True) and self.running:
-            while ((time.time()-startTime) <= maxTime) and self.running: 
+            while self.running and ((time.time()-startTime) <= maxTime): 
        		 	  
                 if self.changeMission == True and missionIndex <= len(self.missionList)-1:
                     self.changeMission = None

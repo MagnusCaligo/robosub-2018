@@ -13,11 +13,11 @@ class NavigationMission(AbstractMission):
         self.atWaypointStartTime = None #Sets the start time from the moment we are at the waypoint so we can stay there for as long as we need to
 
         self.sentMessage1 = False
-
         
 
     def update(self):
         atWaypoint = self.moveToWaypoint(self.finalWaypoint)
+        print "Final Waypoint is", self.finalWaypoint
         if atWaypoint:
             if self.sentMessage1 == False:
                 self.writeDebugMessage("At Waypoint")
@@ -34,6 +34,9 @@ class NavigationMission(AbstractMission):
             if time.time() - self.atWaypointStartTime >= int(self.parameters["waitTime"]): 
                 self.writeDebugMessage("Finished The Waypoint")
                 return 1 #Signal the mission is over
+            else:
+                #self.writeDebugMessage("Time Difference: " + str(time.time() - self.atWaypointStartTime))
+                print "Time Difference: ", time.time() - self.atWaypointStartTime
         else:
             self.atWaypointStartTime = None
 

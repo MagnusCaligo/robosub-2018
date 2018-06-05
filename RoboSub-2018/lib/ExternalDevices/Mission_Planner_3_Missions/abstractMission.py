@@ -7,6 +7,7 @@ All missions will look something like this
 
 class AbstractMission(QtCore.QObject):
 	
+    #Default parameters to be displayed in the Mission Commander
     defaultParameters = "statTime = 100 \nwaitTime = 100 \nuseRelativeWaypoint = False \nuseRelativeWorld = False\n"
 	
     def __init__(self, parameters):
@@ -22,6 +23,9 @@ class AbstractMission(QtCore.QObject):
         
         self.waypointError = None
         self.startTime = None
+
+        self.position = [0,0,0]
+        self.orientation = [0,0,0]
 
         self.cameraMatrix = [[808, 0, 404],
                             [0,608,304],
@@ -81,9 +85,10 @@ class AbstractMission(QtCore.QObject):
             newWaypoint.append(self.position[1] + self.generalWaypoint[1])
             newWaypoint.append(self.position[2] + self.generalWaypoint[2])
 
-            newWaypoint.append(self.generalWaypoint[0])
-            newWaypoint.append(self.generalWaypoint[1])
-            newWaypoint.append(self.generalWaypoint[2])
+            newWaypoint.append(self.generalWaypoint[3])
+            newWaypoint.append(self.generalWaypoint[4])
+            newWaypoint.append(self.generalWaypoint[5])
+
             
             self.finalWaypoint = newWaypoint
         else:
