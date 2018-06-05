@@ -219,6 +219,11 @@ class MissionCommander(QtCore.QObject):
             return
         
         def jdefault(o):
+            _dict = o.__dict__
+            if "movementController" in _dict:
+                del _dict["movementController"]
+            return _dict
+
             return o.__dict__
         with open(filename, "w") as outfile:
             outfile.write(json.dumps(self.externalComm.guiDataToSend["missionList"], default=jdefault))
