@@ -1,9 +1,11 @@
 from abstractMission import AbstractMission
 import cv2
+import numpy as np
+import math
 
 class DiceMission(AbstractMission):
 
-    defaultParameters = AbstractMission.defaultParameters + "dice# = 1\n getDistanceAway = 2\n"
+    defaultParameters = AbstractMission.defaultParameters + "dice# = 0\n getDistanceAway = 2\n"
 
     def __init__(self, parameters):
         AbstractMission.__init__(self, parameters)
@@ -17,19 +19,25 @@ class DiceMission(AbstractMission):
         self.sentMessage2 = False
         self.sentMessage3 = False
 
+        self.src_pts = [(0,0,0),(.58,0,0),(.58,.58,0),(0,.58,0)]
+
 
     def checkIfFoundObstacles(self):
-        for i,v in enumerate(self.detectionData):
-            if v[0] == self.diceClassNumber:
+	if not 'classNumbers' in self.detectionData:
+		return False
+        for i,v in enumerate(self.detectionData['classNumbers']):
+            if v == self.diceClassNumber:
                 return True
         return False
 
     def sortThroughDetections(self):
+	if not 'classNumbers' in self.detectionData:
+		return None
         detections = []
         if self.detectionData != None:
-            for i,v in enumerate(self.detectionData):
-                if v[0] == self.diceNumber:
-                    detections.append(v)
+            for i,v in enumerate(self.detectionData['classNumbers']):
+                if v == self.diceClassNumber:
+			detections.append([self.detectionData["classNumbers"][i], self.detectionData["xLocations"][i],self.detectionData["yLocations"][i],self.detectionData["widths"][i],self.detectionData["heights"][i]])
             return detections
         else:
             return None
@@ -48,6 +56,7 @@ class DiceMission(AbstractMission):
             self.atWaypoint = False
             self.sentMessage1 = False
             self.atWaypointStartTime = None
+            return -1
         
         #Look For obstacles
         if self.atWaypoint == True:
@@ -86,7 +95,7 @@ class DiceMission(AbstractMission):
                         self.atBuoyLocation = True
     
                 #print "Distance: ", self.parameters["getDistanceAway"]
-                pose, error = movementController.relativeMove(externalComm.orientation+externalComm.position, None,None,None,None,None,None, tvec[0], tvec[1], tvec[2]- int(self.parameters["getDistanceAway"]), 0,rotationDifference,0)
+                error = self.movementController.relativeMove(self.orientation+self.position, None,None,None,None,None,None, tvec[0], tvec[1], tvec[2]- int(self.parameters["getDistanceAway"]), 0,rotationDifference,0)[1]
                 print "Error was ", error
 
 

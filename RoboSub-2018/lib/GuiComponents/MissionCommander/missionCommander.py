@@ -7,6 +7,7 @@ import json
 import os
 from pprint import pprint
 from lib.Utils.SlideEdit import SlideEdit
+from lib.ExternalDevices.movement import MovementController, JoystickMovementController
 from lib.ExternalDevices.Mission_Planner_3_Missions.NavigationMission import NavigationMission
 from lib.ExternalDevices.Mission_Planner_3_Missions.DiceMission import DiceMission 
 
@@ -223,8 +224,8 @@ class MissionCommander(QtCore.QObject):
         
         def jdefault(o):
             _dict = o.__dict__
-            if "movementController" in _dict:
-                del _dict["movementController"]
+            if isinstance(o, MovementController) or isinstance(0, JoystickMovementController):
+		return None
             return _dict
 
             return o.__dict__

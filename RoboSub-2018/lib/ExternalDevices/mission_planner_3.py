@@ -140,6 +140,7 @@ class MissionPlanner(QtCore.QThread):
     
     #Changes the Mission Debug Value on the Fly
     def setDebugMissionMode(self, value):
+	print "Writing Debug Message", value
         self.missionDebug = False
     
     def nextOrPreviousMission(self, next):

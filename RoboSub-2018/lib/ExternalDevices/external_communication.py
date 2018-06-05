@@ -281,6 +281,7 @@ class ExternalCommThread(QtCore.QThread):
         self.mainWindow = mainWindow
 
         self.isRunning = True
+	self.usingDebugValues = False
         self.prevAhrsData = None
         self.prevDvlData = None
         self.prevHydrasData = None
@@ -587,6 +588,7 @@ class ExternalCommThread(QtCore.QThread):
         self.connect(self.externalCommClass, QtCore.SIGNAL("stopThread"), self.stopThread)
         
     def setDebugValues(self, data):
+	self.usingDebugValues = True
         self.position = data[:3]
         self.orientation = data[3:]
 
@@ -766,6 +768,8 @@ class ExternalCommThread(QtCore.QThread):
         return ahrsDataMedian
 
     def getSensorData(self):
+	if self.usingDebugValues == True:
+		return
 
         #print "Getting Sensor Data"
         if self.killSwitchSerial != None:

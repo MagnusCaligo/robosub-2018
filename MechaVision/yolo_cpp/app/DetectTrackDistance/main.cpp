@@ -93,8 +93,8 @@ int main( int argc, char** argv)
 	      *****************************************/
 	     start = std::clock();
 	     program_start = std::clock();
-	     //guiParameters = computerVisionComm->getMessage(zmq_context, socket);
-	     //mechaVision->setGuiParams(guiParameters);
+	     guiParameters = computerVisionComm->getMessage(zmq_context, socket);
+	     mechaVision->setGuiParams(guiParameters);
 	     
 	     //std::cout << "Get Message" << std::endl;
 
@@ -215,10 +215,10 @@ int main( int argc, char** argv)
 			 
 			std::string outputString = writer.write(value);
 			
-//			computerVisionComm->sendResponse(zmq_context, socket, outputString);
+			computerVisionComm->sendResponse(zmq_context, socket, outputString);
 		}else{
 	//std::cout << "Couldn't find anything" << std::endl;
-//			computerVisionComm->sendResponse(zmq_context, socket, "No Detections");
+			computerVisionComm->sendResponse(zmq_context, socket, "No Detections");
 		}
 
 		/*if (detections.size() >= 5 && false)  //I added the false because I want to keep this function here as a reference but I didn't want to comment it out
