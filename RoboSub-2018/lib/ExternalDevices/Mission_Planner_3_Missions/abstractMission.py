@@ -8,7 +8,7 @@ All missions will look something like this
 class AbstractMission(QtCore.QObject):
 	
     #Default parameters to be displayed in the Mission Commander
-    defaultParameters = "statTime = 100 \nwaitTime = 100 \nuseRelativeWaypoint = False \nuseRelativeWorld = False\n"
+    defaultParameters = "waitTime = 10 \nuseRelativeWaypoint = False \nuseRelativeWorld = False\n"
 	
     def __init__(self, parameters):
         QtCore.QObject.__init__(self)

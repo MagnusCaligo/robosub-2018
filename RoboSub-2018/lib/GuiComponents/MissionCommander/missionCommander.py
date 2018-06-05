@@ -8,6 +8,7 @@ import os
 from pprint import pprint
 from lib.Utils.SlideEdit import SlideEdit
 from lib.ExternalDevices.Mission_Planner_3_Missions.NavigationMission import NavigationMission
+from lib.ExternalDevices.Mission_Planner_3_Missions.DiceMission import DiceMission 
 
 class MissionCommander(QtCore.QObject):
     """
@@ -98,13 +99,15 @@ class MissionCommander(QtCore.QObject):
     def updateParametersFromCombox(self):
         missionType = str(self.ui_missionCommander.missionTypeCB.currentText())
         
+
+        mission = None
         #Creates the mission by the type
         if missionType == "Navigation":
             mission = Missions.NavigationMission
         elif missionType == "Qualification Gate":
             mission = Missions.QualificationGate
-        elif missionType == "Buoys - Red":
-            mission = Missions.Buoys
+        elif missionType == "Bouys - Red":
+            mission = DiceMission
         elif missionType == "Buoys - Green":
             mission = Missions.Buoys
         elif missionType == "Buoys - Yellow":
@@ -161,7 +164,7 @@ class MissionCommander(QtCore.QObject):
             self.ui_missionCommander.missionTypeCB.setCurrentIndex(3)
         elif isinstance(mission, NavigationMission):
             self.ui_missionCommander.missionTypeCB.setCurrentIndex(2)
-        elif isinstance(mission, Missions.Buoys):
+        elif isinstance(mission, DiceMission):
             self.ui_missionCommander.missionTypeCB.setCurrentIndex(4)
         elif isinstance(mission, Missions.FootballGate):
             self.ui_missionCommander.missionTypeCB.setCurrentIndex(7)
@@ -344,7 +347,7 @@ class MissionCommander(QtCore.QObject):
         elif missionType == "Qualification Gate":
             mission = Missions.QualificationGate(parameters)
         elif missionType == "Bouys - Red":
-            mission = Missions.Buoys(parameters)
+            mission = DiceMission(parameters)
         elif missionType == "Buoys - Green":
             mission = Missions.Buoys(parameters)
         elif missionType == "Buoys - Yellow":
@@ -454,8 +457,8 @@ class MissionCommander(QtCore.QObject):
                 mission = Missions.NavigationMission(parameters)
             elif missionType == "Qualification Gate":
                 mission = Missions.QualificationGate(parameters)
-            elif missionType == "Buoys - Red":
-                mission = Missions.Buoys(parameters)
+            elif missionType == "Bouys - Red":
+                mission = DiceMission(parameters)
             elif missionType == "Buoys - Green":
                 mission = Missions.Buoys(parameters)
             elif missionType == "Buoys - Yellow":
