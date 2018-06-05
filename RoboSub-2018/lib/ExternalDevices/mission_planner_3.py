@@ -524,6 +524,7 @@ class MissionPlanner(QtCore.QThread):
                     currentLocation = self.externalCommThread.position
                     currentOrientation = self.externalCommThread.orientation
                     mission.updateLocation(currentLocation, currentOrientation)
+                    mission.updateDetectionData(self.externalCommThread.detectionData)
                 else:
                     self.missionDebug = True
 

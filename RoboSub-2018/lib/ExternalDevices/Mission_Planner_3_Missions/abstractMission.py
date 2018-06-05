@@ -56,6 +56,9 @@ class AbstractMission(QtCore.QObject):
         for i,v in parameters.iteritems():
             self.parameters[i] = v
 
+    def updateDetectionData(self, detections):
+        self.detectionData = detections
+
     def updateLocation(self, position, orientation):
         self.position = position
         self.orientation = orientation
