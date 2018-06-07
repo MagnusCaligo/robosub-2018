@@ -1007,11 +1007,11 @@ class ExternalCommThread(QtCore.QThread):
                 #Probably have to fix the following equations
                 if not(xVel < -32):# If no error in DVL, indicated by velocity being less than 32
                     degToRad = 3.1415926535 / 180
-                    velNcompX = (xVel) * round(math.cos(heading * degToRad))
-                    velNcompY = (yVel) * -round(math.sin((heading) * degToRad))
+                    velNcompX = (xVel) * -round(math.cos(math.radians(heading)))
+                    velNcompY = (yVel) * round(math.cos(math.radians(heading + 90)))
 
-                    velEcompX = (xVel) * -round(math.sin(heading * degToRad))
-                    velEcompY = (yVel) * round(math.cos((heading) * degToRad))
+                    velEcompX = (xVel) * -round(math.sin(math.radians(heading)))
+                    velEcompY = (yVel) * -round(math.sin(math.radians(heading+ 90))) 
 
                     '''velNcompX = xVel * math.cos(heading * degToRad)
                     velNcompY = yVel * math.sin(heading *degToRad)
