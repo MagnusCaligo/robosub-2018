@@ -17,13 +17,13 @@ class Example(QtGui.QWidget):
         self.initUI()
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
-        self.timer.start(10)
+        self.timer.start(100)
         self.position = [0,0,0]
         self.running = True
         self.heading = 0
         
         self.fourcc = cv2.VideoWriter_fourcc(*"H264")
-        self.output = cv2.VideoWriter("output.avi", -1, 20, (640,480))
+        self.output = cv2.VideoWriter("output.avi", 1, 20, (640,480))
         
         dataFile = open("data.data", "r")
         line = dataFile.readline()
@@ -78,11 +78,11 @@ class Example(QtGui.QWidget):
         timeVelEstX = 1
         timeVelEstY = 1
         degToRad = 3.1415926535 / 180
-        velNcompX = (xVel) * -round(math.cos(math.radians(heading)))
-        velNcompY = (yVel) * round(math.cos(math.radians(heading + 90)))
+        velNcompX = (xVel) * -(math.cos(math.radians(heading)))
+        velNcompY = (yVel) * (math.cos(math.radians(heading + 90)))
 
-        velEcompX = (xVel) * -round(math.sin(math.radians(heading)))
-        velEcompY = (yVel) * -round(math.sin(math.radians(heading+ 90)))
+        velEcompX = (xVel) * -(math.sin(math.radians(heading)))
+        velEcompY = (yVel) * -(math.sin(math.radians(heading+ 90)))
         print velEcompX, velEcompY
 
         lastDistanceTraveledN = (velNcompX * timeVelEstX*100) + (
@@ -92,9 +92,9 @@ class Example(QtGui.QWidget):
 
         #Add distance traveled to last known position
         #North
-        self.position[0] = self.position[0] - lastDistanceTraveledN
+        self.position[0] = self.position[0] + lastDistanceTraveledN
         #East
-        self.position[1] = self.position[1] + lastDistanceTraveledE
+        self.position[1] = self.position[1] - lastDistanceTraveledE
 
     def update(self):
         #Read Data
@@ -110,8 +110,8 @@ class Example(QtGui.QWidget):
         
         xVel = data[0]
         yVel = data[1]
-        self.heading = data[3]
         heading = data[3]
+        self.heading = heading
         self.calculate2(xVel,yVel,heading)
 
         #Draw
