@@ -310,6 +310,7 @@ class ExternalCommThread(QtCore.QThread):
         self.velocity = [0, 0, 0]
         self.orientation = [0, 0, 0]
         self.dvlMiscData = [0, 0, 0]
+        self.timeSinceLastComm = None
         self.clearDVLDataInitial = True
         self.dvlAhrsDummyThread = None
         self.dvlResponseThread = None
@@ -989,6 +990,8 @@ class ExternalCommThread(QtCore.QThread):
             self.startArduinoDisplay = time.time()
 
     def getDVLData(self, ahrsData):
+        if self.timeSinceLastComm == None:
+            self.timeSinceLastComm = time.time()
         """
         Communicates with the boards to accept sensor, feedback, control the SUB's movement, and communicate with the GUI
         :param ahrsData: Orientation data from the AHRS
@@ -1003,6 +1006,8 @@ class ExternalCommThread(QtCore.QThread):
                 self.velocity = [xVel, yVel, zVel]
                 heading = ahrsData[0]
                 timeVelEstX, timeVelEstY, timeVelEstZ = ensemble[1]
+                timeDifference = self.timeSinceLastComm - time.time()
+                timeVelEstX, timeVelEstY, timeVelEstZ = timeDifference
                 #print "Values are", self.velocity, ensemble[1]
                 #Probably have to fix the following equations
                 if not(xVel < -32):# If no error in DVL, indicated by velocity being less than 32
