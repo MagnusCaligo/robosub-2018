@@ -17,8 +17,8 @@ class AbstractMission(QtCore.QObject):
         self.name = parameters["name"]
         self.parameters = {}
         
-        self.generalDistanceError = 2
-        self.generalRotationError = 5
+        self.generalDistanceError = .5
+        self.generalRotationError = 3
         
         
         self.waypointError = None
@@ -106,21 +106,22 @@ class AbstractMission(QtCore.QObject):
 
     def moveToWaypoint(self, waypoint):
         self.waypointError = self.movementController.advancedMove(self.orientation+self.position, waypoint[0], waypoint[1], waypoint[2], 
-                      waypoint[4], waypoint[3], waypoint[5], self.parameters["drivingMode"])[1]
+                      waypoint[4], waypoint[3], waypoint[5])[1]
+	print "Waypoint Error:", self.waypointError
         
         reachedWaypoint = True #Assume we reached the waypoint, check the math to see if we are within the error
-        if abs(self.waypointError[0]) < self.generalDistanceError and abs(self.waypointError[1]) < self.generalDistanceError and abs(self.waypointError[2]) < self.generalDistanceError:
+        if abs(self.waypointError[0]) < self.generalDistanceError and abs(self.waypointError[1]) < self.generalDistanceError + 5 and abs(self.waypointError[2]) < self.generalDistanceError:
+            print "At Waypoint Position"
             pass #This will only be called if we are actually at the waypoint in terms of position
         else:
             reachedWaypoint = False
             
         if abs(self.waypointError[3]) < self.generalRotationError and abs(self.waypointError[4]) < self.generalRotationError and abs(self.waypointError[5]) < self.generalRotationError:
+	    print "At Waypoint Orientaiton"
             pass #Only will be called if we have the correct orientaiton
             #print "Not there orientation"
         else:
             reachedWaypoint = False
-            
-        
         return reachedWaypoint
 
 

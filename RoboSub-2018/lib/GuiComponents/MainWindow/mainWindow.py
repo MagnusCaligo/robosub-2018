@@ -235,6 +235,7 @@ class MainWindow(QtGui.QMainWindow):
         If debug is checked then start debug mode else run the sub.
         :return:
         """
+	self.resetButtonClicked()
         if self.subwin_mainWidget.debugCheck.isChecked():
             self.externalCommClass.externalCommThread.isDebug = True
             self.systemOutput.insertPlainText("Starting Debug Mode\n")

@@ -10,6 +10,7 @@ class DiceMission(AbstractMission):
     def __init__(self, parameters):
         AbstractMission.__init__(self, parameters)
         
+	self.atWaypoint = False
         self.detectionData = None
 
         self.foundObstacles = False
@@ -46,17 +47,19 @@ class DiceMission(AbstractMission):
 
     def update(self):
         #Approach General Waypoint
-        atWaypoint = self.moveToWaypoint(self.finalWaypoint)
-        if atWaypoint:
-            if self.sentMessage1 == False:
-                self.writeDebugMessage("At Waypoint")
-                self.sentMessage1 = True
-            self.atWaypoint = True
-        else:
-            self.atWaypoint = False
-            self.sentMessage1 = False
-            self.atWaypointStartTime = None
-            return -1
+	if self.atWaypoint == False:
+		atWaypoint = self.moveToWaypoint(self.finalWaypoint)
+		if atWaypoint:
+		    if self.sentMessage1 == False:
+			self.writeDebugMessage("At Waypoint")
+			self.sentMessage1 = True
+		    self.atWaypoint = True
+		else:
+		    self.atWaypoint = False
+		    self.sentMessage1 = False
+		    self.atWaypointStartTime = None
+		    print "Not there"
+		    return -1
         
         #Look For obstacles
         if self.atWaypoint == True:
@@ -95,8 +98,9 @@ class DiceMission(AbstractMission):
                         self.atBuoyLocation = True
     
                 #print "Distance: ", self.parameters["getDistanceAway"]
-                error = self.movementController.relativeMove(self.orientation+self.position, None,None,None,None,None,None, tvec[0], tvec[1], tvec[2]- int(self.parameters["getDistanceAway"]), 0,rotationDifference,0)[1]
-                print "Error was ", error
+		print "Tvec was", tvec
+                poseData, north, east, up, yaw, pitch, roll  = self.movementController.relativeMove(self.orientation+self.position, None,None,None,None,None,None, tvec[0], tvec[1] ,tvec[2]- int(self.parameters["getDistanceAway"]) , 0,0,0)
+                print "Error was ", poseData, north, east, up, yaw, pitch, roll
 
 
                 

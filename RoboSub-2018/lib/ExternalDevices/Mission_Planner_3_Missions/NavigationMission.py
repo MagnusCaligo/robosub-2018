@@ -16,7 +16,6 @@ class NavigationMission(AbstractMission):
         
 
     def update(self):
-	print "Updating"
 	atWaypoint = self.moveToWaypoint(self.finalWaypoint)
         if atWaypoint:
             if self.sentMessage1 == False:

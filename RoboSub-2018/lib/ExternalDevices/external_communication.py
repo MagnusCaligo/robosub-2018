@@ -99,6 +99,7 @@ class ExternalComm(QtCore.QObject):
 
     def resetPosition(self):
         self.externalCommThread.position = [0,0,0]
+	self.externalCommThread.dvlResponseThread.getList = []
 
     def writeMessage(self, string):
         self.mainWindowClass.systemOutput.insertPlainText(string + "\n")
@@ -1007,16 +1008,19 @@ class ExternalCommThread(QtCore.QThread):
                 heading = ahrsData[0]
                 timeVelEstX, timeVelEstY, timeVelEstZ = ensemble[1]
                 timeDifference = self.timeSinceLastComm - time.time()
-                timeVelEstX, timeVelEstY, timeVelEstZ = timeDifference
+		timeDifference = 1/float(8)
+                timeVelEstX = timeDifference
+		timeVelEstY= timeDifference
+		timeVelEstZ = timeDifference
                 #print "Values are", self.velocity, ensemble[1]
                 #Probably have to fix the following equations
                 if not(xVel < -32):# If no error in DVL, indicated by velocity being less than 32
                     degToRad = 3.1415926535 / 180
-                    velNcompX = (xVel) * -round(math.cos(math.radians(heading)))
-                    velNcompY = (yVel) * round(math.cos(math.radians(heading + 90)))
+                    velNcompX = (xVel) * (math.cos(math.radians(heading)))
+                    velNcompY = (yVel) * (math.sin(math.radians(heading)))
 
-                    velEcompX = (xVel) * -round(math.sin(math.radians(heading)))
-                    velEcompY = (yVel) * -round(math.sin(math.radians(heading+ 90))) 
+                    velEcompX = (xVel) * -(math.sin(math.radians(heading)))
+                    velEcompY = (yVel) * (math.cos(math.radians(heading))) 
 
                     '''velNcompX = xVel * math.cos(heading * degToRad)
                     velNcompY = yVel * math.sin(heading *degToRad)
@@ -1025,17 +1029,18 @@ class ExternalCommThread(QtCore.QThread):
                     velEcompY = yVel * math.cos(heading * degToRad)'''
 
 
-                    lastDistanceTraveledN = (velNcompX * timeVelEstX*100) + (
-                                velNcompY * timeVelEstY*100)# * 1000 / 1.74
-                    lastDistanceTraveledE = (velEcompX * timeVelEstX*100) + (
-                                velEcompY * timeVelEstY*100)# * 1000 / 1.74
+                    lastDistanceTraveledN = (velNcompX * timeVelEstX) + (
+                                velNcompY * timeVelEstY)#  1000 / 1.74
+                    lastDistanceTraveledE = (velEcompX * timeVelEstX) + (
+                                velEcompY * timeVelEstY)# * 1000 / 1.74
                     lastDistanceTraveledD = zVel * timeVelEstZ
 
                     #Add distance traveled to last known position
                     #North
-                    self.position[0] = self.position[0] - lastDistanceTraveledN
+		    #Equation works for north component using East equation
+                    self.position[0] = self.position[0] - lastDistanceTraveledE
                     #East
-                    self.position[1] = self.position[1] + lastDistanceTraveledE
+                    self.position[1] = self.position[1] - lastDistanceTraveledN
 
                 else:
                     print "DVL Error"

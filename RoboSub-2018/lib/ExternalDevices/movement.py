@@ -162,7 +162,7 @@ class MovementController():
                 self.serialStream.write(bytearray([0xFF, 1, thrust]))
                 #print "1:" + str(thrusterPWMs[0])
             if thrusterPWMs[1] != self.previousPwm[1]:
-               thrust = np.interp(-thrusterPWMs[1],[-100,100],[0,254])
+               thrust = np.interp(thrusterPWMs[1],[-100,100],[0,254])
                thrust = int(thrust)
                self.serialStream.write(bytearray([0xFF, 2, thrust]))
                #print "2:" + str(thrusterPWMs[1])
@@ -221,6 +221,7 @@ class MovementController():
         **Returns**: \n
         * **thrusterPWMs** - List of final PWMs assigned to each thruster.
         * **[pos[0][0], pos[1][0], pos[2][0], pitchError, yawError, rollError]** - Remaining error in position, pitch, yaw, and roll.
+	     pose[0] = East, post[1] = Up, pos[2] = north
         * **yRotateDesired** - Desired yaw.\n
         '''
         yaw, pitch, roll = poseData[0], poseData[1], poseData[2]
@@ -229,7 +230,7 @@ class MovementController():
         minPitch = -20
         maxRoll = 20
         minRoll = -20
-        maxDepth = 6
+        maxDepth = 8
         minDepth = 3
         drivingMode = 0
         if len(userVariables) > 0:
