@@ -99,7 +99,8 @@ class ExternalComm(QtCore.QObject):
 
     def resetPosition(self):
         self.externalCommThread.position = [0,0,0]
-	self.externalCommThread.dvlResponseThread.getList = []
+        if self.externalCommThread.dvlResponseThread != None:
+            self.externalCommThread.dvlResponseThread.getList = []
 
     def writeMessage(self, string):
         self.mainWindowClass.systemOutput.insertPlainText(string + "\n")
@@ -1008,10 +1009,10 @@ class ExternalCommThread(QtCore.QThread):
                 heading = ahrsData[0]
                 timeVelEstX, timeVelEstY, timeVelEstZ = ensemble[1]
                 timeDifference = self.timeSinceLastComm - time.time()
-		timeDifference = 1/float(8)
+                timeDifference = 1/float(8)
                 timeVelEstX = timeDifference
-		timeVelEstY= timeDifference
-		timeVelEstZ = timeDifference
+                timeVelEstY= timeDifference
+                timeVelEstZ = timeDifference
                 #print "Values are", self.velocity, ensemble[1]
                 #Probably have to fix the following equations
                 if not(xVel < -32):# If no error in DVL, indicated by velocity being less than 32

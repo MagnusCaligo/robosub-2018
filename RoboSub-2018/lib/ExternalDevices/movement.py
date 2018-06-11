@@ -571,9 +571,27 @@ class MovementController():
         
         return thrusterPWMs, [pos[0][0], pos[1][0], pos[2][0], pitchError, yawError, rollError], yRotateDesired
     
-    
-    def relativeMove(self, poseData, relNorthTranslateDesired, relEastTranslateDesired, relUpTranslateDesired,  relXRotateDesired, relYRotateDesired,
-                     relZRotateDesired, *xyz): #Translation in feet with respect to NSEW, rotation in degrees with respect to NSEW
+    def relativeMoveXYZ(self, poseData, x, y, z, yaw, pitch, roll):
+        #X is to the left and right of the sub
+        #Z is the front and back of the sub
+        #Y is depth
+        
+        heading = poseData[0]
+        
+        eastCompX = (x) * (math.cos(math.radians(heading)))
+        eastCompY= (y) * (math.sin(math.radians(heading)))
+
+        northCompX = (x) * -(math.sin(math.radians(heading)))
+        northCompY= (y) * (math.cos(math.radians(heading))) 
+        
+        northComp = -northCompX - northCompY
+        eastComp = -eastCompX - eastCompY
+        
+        
+        self.relativeMoveNEU(poseData, northComp, eastComp, y, pitch, yaw, roll)
+
+    def relativeMoveNEU(self, poseData, relNorthTranslateDesired, relEastTranslateDesired, relUpTranslateDesired,  relXRotateDesired, relYRotateDesired,
+                     relZRotateDesired): #Translation in feet with respect to NSEW, rotation in degrees with respect to NSEW
         '''
         Moves the Sub based on desired NESW coordinates and desired yaw, pitch, and roll.
         
@@ -595,41 +613,10 @@ class MovementController():
         yaw, pitch, roll = poseData[0], poseData[1], poseData[2]
         northPosition, eastPosition, upPosition = poseData[3], poseData[4], poseData[5]
         
-        if len(xyz) > 0:
-            try: 
-          
-                Nc = (xyz[2] * math.cos(math.radians(yaw))) + (xyz[0] * math.cos(math.radians(90 + yaw)))
-                Ec = (xyz[2] * math.sin(math.radians(yaw))) + (xyz[0] * math.sin(math.radians(90 + yaw)))
-                Uc = (xyz[1] * math.sin(math.radians(90-pitch))) + (xyz[2] * math.sin(math.radians(pitch)))
-                #Uc = xyz[2]
-                #Nc = 0
-                #Ec = 0
-                #Uc = 0
                 
-                #yComp = math.pow(math.pow(xyz[2],2) - math.pow(xyz[0],2),.5)
-                #a = 90 - math.degrees(math.atan2(yComp, xyz[0]))
-        
-                dynamicNorth = Nc + northPosition
-                dynamicEast = Ec + eastPosition    
-                dynamicUp = Uc + upPosition
-                
-                #dynamicEast = -dynamicEast
-                #dynamicNorth = - dynamicNorth
-                
-                relXRotateDesired = 0
-                relYRotateDesired = xyz[4]
-                relZRotateDesired = 0
-                
-                #print "Angle Difference: " , a
-                
-            except:
-                print "Couldn't calculate relative waypoint, returning current position"
-                return poseData, poseData[3], poseData[4], poseData[5], poseData[1], poseData[0], poseData[2]
-                
-        else:                
-            dynamicNorth = relNorthTranslateDesired + northPosition
-            dynamicEast = relEastTranslateDesired + eastPosition    
-            dynamicUp = relUpTranslateDesired + upPosition
+        dynamicNorth = relNorthTranslateDesired + northPosition
+        dynamicEast = relEastTranslateDesired + eastPosition    
+        dynamicUp = relUpTranslateDesired + upPosition
         
         dynamicXRotate = (relXRotateDesired + pitch)%360
         dynamicYRotate = (relYRotateDesired + yaw)%360
