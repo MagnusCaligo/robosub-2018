@@ -1044,7 +1044,7 @@ class ExternalCommThread(QtCore.QThread):
                     self.position[1] = self.position[1] - lastDistanceTraveledN
 
                 else:
-                    print "DVL Error"
+                    #print "DVL Error"
                     northPosition, eastPosition, upPosition, positionError = 0, 0, 0, 0
                     xVel, yVel, zVel = 0, 0, 0
                     heading, pitch, roll, depth = 0, 0, 0, 0

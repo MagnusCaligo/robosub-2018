@@ -579,16 +579,16 @@ class MovementController():
         heading = poseData[0]
         
         eastCompX = (x) * (math.cos(math.radians(heading)))
-        eastCompY= (y) * (math.sin(math.radians(heading)))
+        eastCompY= (z) * (math.sin(math.radians(heading)))
 
         northCompX = (x) * -(math.sin(math.radians(heading)))
-        northCompY= (y) * (math.cos(math.radians(heading))) 
+        northCompY= (z) * (math.cos(math.radians(heading))) 
         
         northComp = -northCompX - northCompY
         eastComp = -eastCompX - eastCompY
         
         
-        self.relativeMoveNEU(poseData, northComp, eastComp, y, pitch, yaw, roll)
+        return self.relativeMoveNEU(poseData, northComp, eastComp, y, pitch, yaw, roll)
 
     def relativeMoveNEU(self, poseData, relNorthTranslateDesired, relEastTranslateDesired, relUpTranslateDesired,  relXRotateDesired, relYRotateDesired,
                      relZRotateDesired): #Translation in feet with respect to NSEW, rotation in degrees with respect to NSEW

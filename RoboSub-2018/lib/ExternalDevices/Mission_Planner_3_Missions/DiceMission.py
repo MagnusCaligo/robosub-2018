@@ -2,10 +2,11 @@ from abstractMission import AbstractMission
 import cv2
 import numpy as np
 import math
+import time
 
 class DiceMission(AbstractMission):
 
-    defaultParameters = AbstractMission.defaultParameters + "dice# = 0\n getDistanceAway = 2\n"
+    defaultParameters = AbstractMission.defaultParameters + "dice# = 0\ngetDistanceAway = 2\n"
 
     def __init__(self, parameters):
         AbstractMission.__init__(self, parameters)
@@ -19,6 +20,13 @@ class DiceMission(AbstractMission):
         self.sentMessage1 = False
         self.sentMessage2 = False
         self.sentMessage3 = False
+
+	self.atBuoyTimer = None
+	self.lookingForObstaclesTimer = None
+	self.lookingMaxTime = 8
+
+	self.lookingAngle = 0
+	self.lookingDifference = 45
 
         self.src_pts = [(0,0,0),(.58,0,0),(.58,.58,0),(0,.58,0)]
 
@@ -43,8 +51,6 @@ class DiceMission(AbstractMission):
         else:
             return None
 
-
-
     def update(self):
         #Approach General Waypoint
         if self.atWaypoint == False:
@@ -68,6 +74,16 @@ class DiceMission(AbstractMission):
                 if self.sentMessage2 == False:
                     self.writeDebugMessage("Couldn't Find Obstacles")
                     self.sentMessage2 = True
+		if self.lookingForObstaclesTimer == None:
+			self.lookingForObstaclesTimer = time.time()
+			self.lookingAngle += self.lookingDifference
+			print "Incrementing Angle"
+		if time.time() - self.lookingForObstaclesTimer >= self.lookingMaxTime:
+			self.lookingForObstaclesTimer = None
+		waypoint = self.position + self.orientation
+		waypoint[3] += self.lookingAngle
+		print "Looking waypoint is", waypoint
+		self.moveToWaypoint(waypoint)
             else:
                 self.sentMessage2 = False
                 if self.sentMessage3 == False:
@@ -96,18 +112,10 @@ class DiceMission(AbstractMission):
     
                 if tvec[1] - int(self.parameters["getDistanceAway"]) < 1:
                         self.atBuoyLocation = True
+			if self.atBuoyTimer == None:
+				self.atBuoyTimer = time.time()
     
                 #print "Distance: ", self.parameters["getDistanceAway"]
-                print "Tvec", tvec, "\r",
-                poseData, north, east, up, yaw, pitch, roll  = self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0], tvec[1] ,tvec[2]- int(self.parameters["getDistanceAway"]),0,0,0)
-
-
-                
-
-
-        #approach obstacle
-
-        self.detectionData
-
-        #[class number, x, y, width, height]
+		poseData, north, east, up, yaw, pitch, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0], tvec[2][0]- int(self.parameters["getDistanceAway"]),0,0,0)
+		print "Dice Error", north, east, up, "\r",
 
