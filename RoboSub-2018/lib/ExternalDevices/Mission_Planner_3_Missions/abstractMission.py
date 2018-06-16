@@ -1,4 +1,5 @@
 from PyQt4 import QtCore, QtGui
+import math
 '''
 This is class contains the abstraction of a mission
 All missions will look something like this
@@ -17,8 +18,8 @@ class AbstractMission(QtCore.QObject):
         self.name = parameters["name"]
         self.parameters = {}
         
-        self.generalDistanceError = .5
-        self.generalRotationError = 3
+        self.generalDistanceError = 1
+        self.generalRotationError = 6
         
         
         self.waypointError = None
@@ -70,14 +71,24 @@ class AbstractMission(QtCore.QObject):
         #If we are using relative waypoints we need to adjust them only when the mission is starting
         if self.parameters["useRelativeWaypoint"] in ["True", 'true']: #If we are using relativeWaypoint we need to modify the waypoint based on our current position
             newWaypoint = []
-            
-            newWaypoint.append(self.position[0] + (self.generalWaypoint[0] * math.cos(math.radians(self.orientation[0]))))
-            newWaypoint.append(self.position[1] + (self.generalWaypoint[1] * math.sin(math.radians(self.orientation[0]))))
+	    heading = self.orientation[0]
+
+	    velNcompX = (self.generalWaypoint[1]) * (math.cos(math.radians(heading)))
+	    velNcompY = (self.generalWaypoint[0]) * (math.sin(math.radians(heading)))
+
+	    velEcompX = (self.generalWaypoint[1]) * -(math.sin(math.radians(heading)))
+	    velEcompY = (self.generalWaypoint[0]) * (math.cos(math.radians(heading))) 
+
+	    lastDistanceTraveledN = velNcompX + velNcompY #  1000 / 1.74
+	    lastDistanceTraveledE = velEcompX + velEcompY # * 1000 / 1.74
+
+            newWaypoint.append(self.position[0] + lastDistanceTraveledE)
+            newWaypoint.append(self.position[1] + lastDistanceTraveledN)
             newWaypoint.append(self.position[2] + self.generalWaypoint[2])
             
-            newWaypoint.append((self.orientation[0] + self.generalWaypoint[0]) % 360)
-            newWaypoint.append(self.orientation[1] + self.generalWaypoint[1]) #I don't mod by 360 because I'm going to assume we aren't going to be doing ridiculous angles
-            newWaypoint.append(self.orientation[2] + self.generalWaypoint[2]) # ^
+            newWaypoint.append((self.orientation[0] + self.generalWaypoint[3]) % 360)
+            newWaypoint.append(self.orientation[1] + self.generalWaypoint[4]) #I don't mod by 360 because I'm going to assume we aren't going to be doing ridiculous angles
+            newWaypoint.append(self.orientation[2] + self.generalWaypoint[5]) # ^
             
             self.finalWaypoint = newWaypoint
 
@@ -107,17 +118,15 @@ class AbstractMission(QtCore.QObject):
     def moveToWaypoint(self, waypoint):
         self.waypointError = self.movementController.advancedMove(self.orientation+self.position, waypoint[0], waypoint[1], waypoint[2], 
                       waypoint[4], waypoint[3], waypoint[5])[1]
-	print "Waypoint Error:", self.waypointError
+	#print "Waypoint Error:", self.waypointError
         
         reachedWaypoint = True #Assume we reached the waypoint, check the math to see if we are within the error
         if abs(self.waypointError[0]) < self.generalDistanceError and abs(self.waypointError[1]) < self.generalDistanceError + 5 and abs(self.waypointError[2]) < self.generalDistanceError:
-            print "At Waypoint Position"
             pass #This will only be called if we are actually at the waypoint in terms of position
         else:
             reachedWaypoint = False
             
         if abs(self.waypointError[3]) < self.generalRotationError and abs(self.waypointError[4]) < self.generalRotationError and abs(self.waypointError[5]) < self.generalRotationError:
-	    print "At Waypoint Orientaiton"
             pass #Only will be called if we have the correct orientaiton
             #print "Not there orientation"
         else:

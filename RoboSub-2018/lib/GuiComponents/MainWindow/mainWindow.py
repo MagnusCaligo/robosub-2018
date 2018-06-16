@@ -254,7 +254,7 @@ class MainWindow(QtGui.QMainWindow):
                 self.externalCommClass.externalCommThread.dvlResponseThread.clearDistanceTraveled()
             
             startTime = time.time()
-            #while (time.time()-startTime) < 3:
+            #while (time.time()-startTime) < 10:
 				#pass
             self.startVehicle = True
             self.externalCommClass.externalCommThread.isDebug = False

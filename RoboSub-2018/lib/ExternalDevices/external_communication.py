@@ -1039,12 +1039,12 @@ class ExternalCommThread(QtCore.QThread):
                     #Add distance traveled to last known position
                     #North
 		    #Equation works for north component using East equation
-                    self.position[0] = self.position[0] - lastDistanceTraveledE
+                    self.position[0] = self.position[0] - (lastDistanceTraveledE * float(73)/float(21))
                     #East
-                    self.position[1] = self.position[1] - lastDistanceTraveledN
+                    self.position[1] = self.position[1] - (lastDistanceTraveledN * float(73)/float(21))
 
                 else:
-                    #print "DVL Error"
+                    print "DVL Error"
                     northPosition, eastPosition, upPosition, positionError = 0, 0, 0, 0
                     xVel, yVel, zVel = 0, 0, 0
                     heading, pitch, roll, depth = 0, 0, 0, 0

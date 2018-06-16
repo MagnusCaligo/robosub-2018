@@ -585,8 +585,9 @@ class MovementController():
         northCompY= (z) * (math.cos(math.radians(heading))) 
         
         northComp = -northCompX - northCompY
-        eastComp = -eastCompX - eastCompY
-        
+        eastComp = eastCompX - eastCompY
+	print "Values", eastComp, eastCompX, eastCompY	
+
         
         return self.relativeMoveNEU(poseData, northComp, eastComp, y, pitch, yaw, roll)
 
@@ -624,8 +625,8 @@ class MovementController():
           
         
         return poseData, dynamicNorth, dynamicEast, dynamicUp, dynamicXRotate, dynamicYRotate, dynamicZRotate
-        #return advancedMove(self, poseData, dynamicNorth, dynamicEast, upTranslateDesired,  xRotateDesired, yRotateDesired,
-        #             zRotateDesired, userVariables)
+        #return self.advancedMove(self, poseData, dynamicNorth, dynamicEast, dynamicUp,  dynamicXRotate, dynamicYRotate,
+                     #dynamicZRotate)
         
     def trajectoryPlanningAndGeneration(self, desiredPosX, desiredPosY, desiredPosZ, desiredAngleX, desiredAngleY, desiredAngleZ, finalTime, ahrsData):
         '''
