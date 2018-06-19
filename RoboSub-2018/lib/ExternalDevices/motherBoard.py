@@ -441,6 +441,8 @@ class motherBoardResponse(threading.Thread):
                         #intPress2 = (struct.unpack('H', struct.pack('H', payload[6] >> 4 | payload[7] << 4 ))[0])
                     elif idFrame == 504:
                         pass
+                    elif idFrame == 656:
+                        message = [idFrame]
                     elif idFrame == 648:
 						firstPart = float(payload[0])
 						secondPart = float(payload[1])
