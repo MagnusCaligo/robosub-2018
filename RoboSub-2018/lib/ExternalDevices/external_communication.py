@@ -68,6 +68,7 @@ class ExternalComm(QtCore.QObject):
         self.batteryVoltage = None
         self.pressureSensor = None
         self.externalCommThread = ExternalCommThread(self, mainWindow)
+        self.externalCommThread.initBackplaneComms()
         self.timer = QtCore.QTimer()
         self.guiDataToSend = {}
         self.cvDataToSend = {}
@@ -439,6 +440,18 @@ class ExternalCommThread(QtCore.QThread):
         if mission == "None":
             return
         self.currentMission = mission
+		
+    def initBackplaneComms(self):
+        try:
+			
+			self.motherSerial = serial.Serial("/dev/ttyUSB0", 9600)
+			self.motherPackets = motherboard.motherBoardDataPackets(self.motherSerial)
+			
+			self.motherResponseThread = motherboard.motherBoardResponse(self.motherSerial)
+			self.motherResponseThread.start()
+			
+        except:
+            print "Unable to connect to Mother Board" 
 
     def __initSensors__(self):
         """
@@ -541,16 +554,7 @@ class ExternalCommThread(QtCore.QThread):
         except:
             print "Unable to connect to AHRS3"
         
-        try:
-			
-			self.motherSerial = serial.Serial("/dev/ttyUSB0", 9600)
-			self.motherPackets = motherboard.motherBoardDataPackets(self.motherSerial)
-			
-			self.motherResponseThread = motherboard.motherBoardResponse(self.motherSerial)
-			self.motherResponseThread.start()
-			
-        except:
-            print "Unable to connect to Mother Board" 
+        
 		#Pitch
         try:
             pass
@@ -872,6 +876,9 @@ class ExternalCommThread(QtCore.QThread):
                     depth3 = self.motherMessage[3]
                     depth = np.median([depth3])
                     self.position[2] = float((depth-95))/9.2
+                if(motherMessage[0] == 656):
+					print "Starting autonomous..."
+					self.mainWindow.startButtonPressed()
                 elif(self.motherMessage[0] == 648):#Voltage Data	
 					self.batteryVoltage = self.motherMessage[1]
                 #print self.motherMessage
