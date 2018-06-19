@@ -586,7 +586,6 @@ class MovementController():
         
         northComp = -northCompX - northCompY
         eastComp = eastCompX - eastCompY
-	print "Values", eastComp, eastCompX, eastCompY	
 
         
         return self.relativeMoveNEU(poseData, northComp, eastComp, y, pitch, yaw, roll)

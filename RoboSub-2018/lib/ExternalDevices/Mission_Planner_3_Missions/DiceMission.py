@@ -16,6 +16,7 @@ class DiceMission(AbstractMission):
         
 	self.atWaypoint = False
         self.detectionData = None
+	self.lastKnownDepth = self.finalWaypoint[2]
 
         self.foundObstacles = False
         self.diceClassNumber = 0
@@ -95,6 +96,7 @@ class DiceMission(AbstractMission):
 				self.lookingForObstaclesTimer = None
 			waypoint = self.position + self.orientation
 			waypoint[3] += self.lookingAngle
+			waypoint[2] = self.lastKnownDepth
 			self.moveToWaypoint(waypoint)
 		    else:
 			self.sentMessage2 = False
@@ -102,6 +104,7 @@ class DiceMission(AbstractMission):
 			    self.writeDebugMessage("Found Obstacles!")
 			    self.sentMessage3 = True
 
+			self.lastKnownDepth = self.position[2]
 			detections = self.sortThroughDetections()
 			detection = detections[0] #We only need one detection so we assume that its the first one
 
@@ -117,7 +120,7 @@ class DiceMission(AbstractMission):
 
 			#Solve PNP returns the rotation vector and translation vector of the object
 			rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(img_pts).astype('float32'),np.array(cameraMatrix).astype('float32'), None)[-2:]
-			print "Tvec was", tvec
+			#print "Tvec was", tvec
 			
 			center = detection[1] + (detection[3]/2)
 			
@@ -140,12 +143,12 @@ class DiceMission(AbstractMission):
 					self.sentMessage4 = False
 
 	    
-			print "rotationDifference:", rotationDifference, "Distance Away:", -(tvec[2][0]- int(self.parameters["getDistanceAway"]))
+			print "Up and Down are", tvec[1][0] +.7, "rotationDifference:", rotationDifference, "Distance Away:", -(tvec[2][0]- int(self.parameters["getDistanceAway"]))
 			#print "Distance: ", self.parameters["getDistanceAway"]
 			#poseData, north, east, up, yaw, pitch, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0], ,0,0,0)
-			poseData, north, east, up, yaw, pitch, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], 2, -(tvec[2][0]- int(self.parameters["getDistanceAway"])),-math.degrees(rotationDifference),0,0)
+			poseData, north, east, up, yaw, pitch, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0] + .7, -(tvec[2][0]- int(self.parameters["getDistanceAway"])),(rotationDifference),0,0)
 			#self.movementController.relativeMoveXYZ(self.orientation+self.position, 0, tvec[1][0], 1,0,0,0)
-			print "Errors were", north, east, up, yaw, pitch, roll
+			#print "Errors were", north, east, up, yaw, pitch, roll
 			self.movementController.advancedMove(poseData, north, east, up, yaw, pitch, roll)
 
 	elif self.hitBuoy == True:
