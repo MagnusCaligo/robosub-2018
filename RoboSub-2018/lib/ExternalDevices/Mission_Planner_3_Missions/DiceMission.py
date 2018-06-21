@@ -124,6 +124,7 @@ class DiceMission(AbstractMission):
 			#Solve PNP returns the rotation vector and translation vector of the object
 			rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(img_pts).astype('float32'),np.array(cameraMatrix).astype('float32'), None)[-2:]
 			#print "Tvec was", tvec
+			tvec[0][0]==.25 #Camera isn't centered with Percy, so move it over a bit
 			
 			center = detection[1] + (detection[3]/2)
 			
@@ -157,26 +158,28 @@ class DiceMission(AbstractMission):
 
 			#self.movementController.relativeMoveXYZ(self.orientation+self.position, 0, tvec[1][0], 1,0,0,0)
 			#print "Errors were", north, east, up, yaw, pitch, roll
-			self.movementController.advancedMove(poseData, north, east, up, 0, yaw, 0)
+			self.moveToWaypoint([north, east, up, yaw, pitch, roll])
+			#self.movementController.advancedMove(poseData, north, east, up, 0, yaw, 0)
 
 	elif self.hitBuoy == True:
 		print "Trying to hit buoy"
 		if self.hitBuoyTimer == None:
 			self.hitBuoyTimer = time.time()
 			self.writeDebugMessage("Moving Forward...")
+			p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, self.position[2] - self.depthAtRelativeMove, -int(self.parameters["getDistanceAway"]), 0, 0, 0)
+			self.diceWaypoint = [n,e,u,y,p,r]
 		if time.time() - self.hitBuoyTimer >= self.hitBuoyMaxTime:
 			if self.movingForward == False:
 				return 1 #Finished the mission
 			self.movingForward = False
 			self.writeDebugMessage("Moving Backward...")
+			p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, self.position[2] - self.depthAtRelativeMove, 3*int(self.parameters["getDistanceAway"]), 0, 0, 0)
+			self.diceWaypoint = [n,e,u,y,p,r]
 			self.hitBuoyTimer = time.time()
-		distance = -1
-		if not self.movingForward:
-			distance = 1
 		if self.depthAtRelativeMove == None:
 			self.depthAtRelativeMove = self.position[2]
-		poseData, north, east, up, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, self.position[2] - self.depthAtRelativeMove, distance, 0, 0, 0)
-		self.movementController.advancedMove(poseData, north, east, up, 0, yaw, 0)
+		#self.movementController.advancedMove(poseData, north, east, up, 0, yaw, 0)
+		self.moveToWaypoint(self.diceWaypoint)
 
 
 
