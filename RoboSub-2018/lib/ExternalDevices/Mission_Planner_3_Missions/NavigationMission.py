@@ -10,14 +10,15 @@ class NavigationMission(AbstractMission):
         AbstractMission.__init__(self, parameters)
 
     def initalizeOnMissionStart(self):
-	AbstractMission.initalizeOnMissionStart(self)
+        self.writeDebugMessage("Inits")
+        AbstractMission.initalizeOnMissionStart(self)
 
         self.atWaypoint = False #Way of telling if we are within error of the waypoint
         self.atWaypointStartTime = None #Sets the start time from the moment we are at the waypoint so we can stay there for as long as we need to
 
         self.sentMessage1 = False
-	self.atWaypointPreviousTime= None
-	self.waypointTimeSum = 0
+        self.atWaypointPreviousTime= None
+        self.waypointTimeSum = 0
         
 
     def update(self):

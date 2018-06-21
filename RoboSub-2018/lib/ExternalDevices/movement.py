@@ -587,8 +587,6 @@ class MovementController():
         northComp = -northCompX - northCompY
         eastComp = eastCompX - eastCompY
 
-	print "XYZ", eastComp, eastCompX, eastCompY
-
         return self.relativeMoveNEU(poseData, northComp, eastComp, y, pitch, yaw, roll)
 
     def relativeMoveNEU(self, poseData, relNorthTranslateDesired, relEastTranslateDesired, relUpTranslateDesired,  relXRotateDesired, relYRotateDesired,

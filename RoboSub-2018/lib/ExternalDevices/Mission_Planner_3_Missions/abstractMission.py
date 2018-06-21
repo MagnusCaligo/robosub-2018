@@ -70,43 +70,20 @@ class AbstractMission(QtCore.QObject):
     def initalizeOnMissionStart(self):
         #If we are using relative waypoints we need to adjust them only when the mission is starting
         if self.parameters["useRelativeWaypoint"] in ["True", 'true']: #If we are using relativeWaypoint we need to modify the waypoint based on our current position
-            newWaypoint = []
-	    heading = self.orientation[0]
+			
+            pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, self.generalWaypoint[1],self.generalWaypoint[2],self.generalWaypoint[0],
+				self.generalWaypoint[3],self.generalWaypoint[4],self.generalWaypoint[5])
 
-	    velNcompX = (self.generalWaypoint[1]) * (math.cos(math.radians(heading)))
-	    velNcompY = (self.generalWaypoint[0]) * (math.sin(math.radians(heading)))
-
-	    velEcompX = (self.generalWaypoint[1]) * -(math.sin(math.radians(heading)))
-	    velEcompY = (self.generalWaypoint[0]) * (math.cos(math.radians(heading))) 
-
-	    lastDistanceTraveledN = velNcompX + velNcompY #  1000 / 1.74
-	    lastDistanceTraveledE = velEcompX + velEcompY # * 1000 / 1.74
-
-            newWaypoint.append(self.position[0] + lastDistanceTraveledE)
-            newWaypoint.append(self.position[1] + lastDistanceTraveledN)
-            newWaypoint.append(self.position[2] + self.generalWaypoint[2])
-            
-            newWaypoint.append((self.orientation[0] + self.generalWaypoint[3]) % 360)
-            newWaypoint.append(self.orientation[1] + self.generalWaypoint[4]) #I don't mod by 360 because I'm going to assume we aren't going to be doing ridiculous angles
-            newWaypoint.append(self.orientation[2] + self.generalWaypoint[5]) # ^
-            
-	    print "Final waypoint", self.finalWaypoint
-	    print "Gineral Waypoint", self.generalWaypoint
-            self.finalWaypoint = newWaypoint
+            self.finalWaypoint = [n,e,u,y,p,r]
+			
+            self.writeDebugMessage("Waypoint is " + str(self.finalWaypoint))
 
         elif self.parameters["useRelativeWorld"] in ["True", 'true']:
-            newWaypoint = []
-            
-            newWaypoint.append(self.position[0] + self.generalWaypoint[0])
-            newWaypoint.append(self.position[1] + self.generalWaypoint[1])
-            newWaypoint.append(self.position[2] + self.generalWaypoint[2])
+            pose, n, e, u, p, y, r = self.movementController.relativeMoveNEU(self.orientation + self.position, self.generalWaypoint[0],self.generalWaypoint[1],self.generalWaypoint[2],
+				self.generalWaypoint[3],self.generalWaypoint[4],self.generalWaypoint[5])
 
-            newWaypoint.append(self.generalWaypoint[3])
-            newWaypoint.append(self.generalWaypoint[4])
-            newWaypoint.append(self.generalWaypoint[5])
-
-            
-            self.finalWaypoint = newWaypoint
+            self.finalWaypoint = [n,e,u, y,p,r]
+            self.writeDebugMessage("Waypoint is " + str(self.finalWaypoint))
         else:
             self.finalWaypoint = self.generalWaypoint #If not using any relativity, then we can assume that the waypoint is absolute coordinate
     
