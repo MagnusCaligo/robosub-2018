@@ -1,0 +1,6 @@
+classes= 20
+train  = /home/mechatronics/darknet/6_15_test/train.txt
+valid = /home/mechatronics/darknet/6_15_test/test.txt
+names = test.names
+backup = /home/mechatronics/darknet/6_15_test/weights/
+
