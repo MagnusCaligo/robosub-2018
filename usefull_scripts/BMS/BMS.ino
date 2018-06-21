@@ -133,7 +133,7 @@ void loop() {
     }
   }
 
-  while(mcp2515.checkError()){
+  if(mcp2515.checkError()){
       Serial.println("There was an error");
       mcp2515.reset();
       mcp2515.setBitrate(CAN_500KBPS);
