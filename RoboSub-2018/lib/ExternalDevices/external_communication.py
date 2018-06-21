@@ -68,7 +68,7 @@ class ExternalComm(QtCore.QObject):
         self.batteryVoltage = None
         self.pressureSensor = None
         self.externalCommThread = ExternalCommThread(self, mainWindow)
-        self.externalCommThread.initBackplaneComms()
+        #self.externalCommThread.initBackplaneComms()
         self.timer = QtCore.QTimer()
         self.guiDataToSend = {}
         self.cvDataToSend = {}
@@ -441,7 +441,13 @@ class ExternalCommThread(QtCore.QThread):
             return
         self.currentMission = mission
 		
-    def initBackplaneComms(self):
+
+    def __initSensors__(self):
+        """
+        Initialized sensors and data packets to be ran in the run loop.
+        :return:
+        """
+	print "Starting Backplane Comms..."
         try:
 			
 			self.motherSerial = serial.Serial("/dev/ttyUSB0", 9600)
@@ -452,12 +458,6 @@ class ExternalCommThread(QtCore.QThread):
 			
         except:
             print "Unable to connect to Mother Board" 
-
-    def __initSensors__(self):
-        """
-        Initialized sensors and data packets to be ran in the run loop.
-        :return:
-        """
         if True or platform.platform() == 'Linux-4.4.15-aarch64-with-Ubuntu-16.04-xenial':
                self.computerVisionProcess.start()
                pass
@@ -695,12 +695,12 @@ class ExternalCommThread(QtCore.QThread):
                 if self.computerVisionConnected:
                 	self.computerVisionComm.sendParameters()
 
+                self.detectionData = self.computerVisionComm.detectionData
                 self.getSensorData()
                 self.emit(QtCore.SIGNAL("Data Updated"))
                 self.emit(QtCore.SIGNAL("requestCurrentMission"))
                 if self.currentMission != None:
                     self.emit(QtCore.SIGNAL("gotPositionData(PyQt_PyObject, PyQt_PyObject)"), self.position+self.orientation, self.currentMission.generalWaypoint)
-		self.detectionData = self.computerVisionComm.detectionData
 		
 		# Reconnect to the maestro after the kill switch
 		'''
@@ -798,7 +798,7 @@ class ExternalCommThread(QtCore.QThread):
 				                      [ 0, 1, 0],
 									  [ 0, 0, 1]]'''
 				
-				self.ahrsData1[1] = -self.ahrsData1[1]
+				self.ahrsData1[1] = -self.ahrsData1[1] + 5
 				self.ahrsData1[2] = -self.ahrsData1[2]
 				self.ahrsData1[0] = (self.ahrsData1[0] + 180) %360
                 #self.ahrsData1[0] = (self.ahrsData1[0] + 169)%360
@@ -876,9 +876,12 @@ class ExternalCommThread(QtCore.QThread):
                     depth3 = self.motherMessage[3]
                     depth = np.median([depth3])
                     self.position[2] = float((depth-95))/9.2
-                if(motherMessage[0] == 656):
-					print "Starting autonomous..."
-					self.mainWindow.startButtonPressed()
+                if(self.motherMessage[0] == 656):
+                    if self.mainWindow.subwin_mainWidget.debugCheck.isChecked():
+			    print "Starting autonomous..."
+			    self.mainWindow.subwin_mainWidget.debugCheck.setChecked(False)
+                            self.mainWindow.changeText()
+			    self.mainWindow.startPressed()
                 elif(self.motherMessage[0] == 648):#Voltage Data	
 					self.batteryVoltage = self.motherMessage[1]
                 #print self.motherMessage
