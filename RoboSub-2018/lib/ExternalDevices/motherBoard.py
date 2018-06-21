@@ -442,6 +442,7 @@ class motherBoardResponse(threading.Thread):
                     elif idFrame == 504:
                         pass
                     elif idFrame == 656:
+			print "Got BMS Start Message..."
                         message = [idFrame]
                     elif idFrame == 648:
 						firstPart = float(payload[0])

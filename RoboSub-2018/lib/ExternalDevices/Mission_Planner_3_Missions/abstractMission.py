@@ -90,6 +90,8 @@ class AbstractMission(QtCore.QObject):
             newWaypoint.append(self.orientation[1] + self.generalWaypoint[4]) #I don't mod by 360 because I'm going to assume we aren't going to be doing ridiculous angles
             newWaypoint.append(self.orientation[2] + self.generalWaypoint[5]) # ^
             
+	    print "Final waypoint", self.finalWaypoint
+	    print "Gineral Waypoint", self.generalWaypoint
             self.finalWaypoint = newWaypoint
 
         elif self.parameters["useRelativeWorld"] in ["True", 'true']:
