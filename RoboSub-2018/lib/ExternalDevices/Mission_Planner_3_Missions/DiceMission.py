@@ -166,14 +166,14 @@ class DiceMission(AbstractMission):
 		if self.hitBuoyTimer == None:
 			self.hitBuoyTimer = time.time()
 			self.writeDebugMessage("Moving Forward...")
-			p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, self.position[2] - self.depthAtRelativeMove, -int(self.parameters["getDistanceAway"]), 0, 0, 0)
+			p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, 0, -int(self.parameters["getDistanceAway"]), 0, 0, 0)
 			self.diceWaypoint = [n,e,u,y,p,r]
 		if time.time() - self.hitBuoyTimer >= self.hitBuoyMaxTime:
 			if self.movingForward == False:
 				return 1 #Finished the mission
 			self.movingForward = False
 			self.writeDebugMessage("Moving Backward...")
-			p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, self.position[2] - self.depthAtRelativeMove, 3*int(self.parameters["getDistanceAway"]), 0, 0, 0)
+			p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, 0, 3*int(self.parameters["getDistanceAway"]), 0, 0, 0)
 			self.diceWaypoint = [n,e,u,y,p,r]
 			self.hitBuoyTimer = time.time()
 		if self.depthAtRelativeMove == None:

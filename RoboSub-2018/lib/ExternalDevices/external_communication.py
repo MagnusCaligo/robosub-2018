@@ -20,6 +20,7 @@ import widget_config_logger
 import time
 import mission_planner_2
 import mission_planner_3
+from yoloPython import yoloComputerVision
 import platform
 import subprocess
 import sparton_ahrs
@@ -366,24 +367,6 @@ class ExternalCommThread(QtCore.QThread):
         self.killSwitchResponseThread = None
         self.kill = None
 
-        # For TCB
-        self.thrusterPWMs = [0, 0, 0, 0, 0, 0, 0, 0]
-        self.tcb1Motor1Payload = [0, 0, 0]
-        self.tcb1Motor2Payload = [0, 0, 0]
-        self.tcb1Motor3Payload = [0, 0, 0]
-        self.tcb1Motor4Payload = [0, 0, 0]
-        self.tcb2Motor1Payload = [0, 0, 0]
-        self.tcb2Motor2Payload = [0, 0, 0]
-        self.tcb2Motor3Payload = [0, 0, 0]
-        self.tcb2Motor4Payload = [0, 0, 0]
-        self.thrusterPWMs = [0, 0, 0, 0, 0, 0, 0, 0]
-
-        # For PMUD
-        self.pmudGuiData = [0, 0]
-        self.powerStatus = 0
-        self.batteryVoltage = 0
-        self.batteryCurrent = 0
-
         # For SIB
         self.sibGuiData = [0, 0, 0]
         self.internalTemp1, self.internalTemp2, self.internalTemp3 = 0, 0, 0
@@ -424,6 +407,8 @@ class ExternalCommThread(QtCore.QThread):
             'useImage': False, 'useVideo': False,'useCameras':True, "frameSkip":"0",
             'imagePath':'i','videoPath': 'v'}
         self.computerVisionConnected = True
+	self.yoloPython = yoloComputerVision()
+	self.yoloPython.start()
         self.detectionData = {}
         #self.detectionData["classNumbers"] = []
         self.frameSkip = 15
@@ -614,6 +599,7 @@ class ExternalCommThread(QtCore.QThread):
         :return:
         """
         self.isRunning = False
+	self.yoloPython.killThread()
         if self.spartonResponseThread1 != None:
         	self.spartonResponseThread1.killThread()
         if self.spartonResponseThread2 != None:
@@ -680,7 +666,10 @@ class ExternalCommThread(QtCore.QThread):
                 self.getSensorData()
                 self.emit(QtCore.SIGNAL("requestCurrentMission"))
                 self.emit(QtCore.SIGNAL("Data Updated"))
-                self.detectionData = self.computerVisionComm.detectionData
+                #self.detectionData = self.computerVisionComm.detectionData
+		if len(self.yoloPython.getList) > 0:
+			self.detectionData = self.yoloPython.getList.pop()
+		self.detectionData = self.yoloPython
                 data = {"ahrs": self.ahrsData, "dvl": self.dvlGuiData, "pmud": self.pmudGuiData,
                         "sib": self.sibGuiData,
                         "hydras": self.hydrasPingerData}
@@ -1121,6 +1110,6 @@ class ComputerVisionProcess(QtCore.QThread):
         self.os = platform.platform()
 
     def run(self):
-        if True or self.os == 'Linux-4.4.15-aarch64-with-Ubuntu-16.04-xenial':
+        if False or self.os == 'Linux-4.4.15-aarch64-with-Ubuntu-16.04-xenial':
             print "Starting computer vision process..."
             subprocess.call('/media/sub_data/robosub-2018/MechaVision/yolo_cpp/MechaVision')
