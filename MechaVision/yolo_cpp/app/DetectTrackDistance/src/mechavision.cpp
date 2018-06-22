@@ -523,7 +523,7 @@ int MechaVision::initCameras()
 	BusManager busMgr;
 	PGRGuid guid;
 
-	error = busMgr.GetCameraFromIndex(1, &guid);	
+	error = busMgr.GetCameraFromIndex(0, &guid);	
 	error = fl_camera.Connect( &guid );
 	error = fl_camera.GetCameraInfo( &camInfo );
 	error = fl_camera.StartCapture();

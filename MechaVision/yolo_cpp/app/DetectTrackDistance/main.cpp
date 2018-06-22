@@ -71,7 +71,7 @@ int main( int argc, char** argv)
 
 	Yolo yolo;
 	yolo.setConfigFilePath("/media/sub_data/cfg/yolo-allObstacles.cfg");
-	yolo.setDataFilePath("/media/nvidia/sub_data/data/allObstacles.data");
+	yolo.setDataFilePath("/media/sub_data/data/allObstacles.data");
 	yolo.setWeightFilePath("/media/sub_data/yolo-allObstacles_8000.weights");
 	yolo.setAlphabetPath("/media/sub_data/data/labels/");
 	yolo.setNameListFile("/media/sub_data/data/allObstacles.names");
@@ -160,6 +160,7 @@ int main( int argc, char** argv)
 
 			//std::cout << "Before: " << (std::clock() - start) / (double)(CLOCKS_PER_SEC /1000) << " ms " << std::endl << std::flush;
 			detections = detect(std::ref(mechaVision), std::ref(yolo), std::ref(rawImg));
+		     //mechaVision->drawDetections(yolo,img, detections); 
 			//auto td_detect = std::async(detect, std::ref(mechaVision), std::ref(yolo), std::ref(rawImg));
 			//detections = detect(std::ref(mechaVision), std::ref(yolo), std::ref(img));
 			//auto td_stereo = std::async(stereoVision, std::ref(mechaVision), std::ref(context), std::ref(disparity), std::ref(color_disp));   
@@ -185,7 +186,7 @@ int main( int argc, char** argv)
 
 	    }
 		if (detections.size() > 0){
-			//std::cout << "Yay!" << std::endl;
+	//		std::cout << "Yay!" << std::endl;
 			Json::Value value;
 			Json::StyledWriter writer;
 			

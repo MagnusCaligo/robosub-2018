@@ -586,9 +586,7 @@ class MovementController():
         
         northComp = -northCompX - northCompY
         eastComp = eastCompX - eastCompY
-	print "Values", eastComp, eastCompX, eastCompY	
 
-        
         return self.relativeMoveNEU(poseData, northComp, eastComp, y, pitch, yaw, roll)
 
     def relativeMoveNEU(self, poseData, relNorthTranslateDesired, relEastTranslateDesired, relUpTranslateDesired,  relXRotateDesired, relYRotateDesired,
@@ -614,6 +612,7 @@ class MovementController():
         yaw, pitch, roll = poseData[0], poseData[1], poseData[2]
         northPosition, eastPosition, upPosition = poseData[3], poseData[4], poseData[5]
         
+	print "east", eastPosition, relEastTranslateDesired
                 
         dynamicNorth = relNorthTranslateDesired + northPosition
         dynamicEast = relEastTranslateDesired + eastPosition    
@@ -622,7 +621,8 @@ class MovementController():
         dynamicXRotate = (relXRotateDesired + pitch)%360
         dynamicYRotate = (relYRotateDesired + yaw)%360
         dynamicZRotate = (relZRotateDesired + roll)%360
-          
+
+        print "Yaw", dynamicYRotate, relYRotateDesired, yaw 
         
         return poseData, dynamicNorth, dynamicEast, dynamicUp, dynamicXRotate, dynamicYRotate, dynamicZRotate
         #return self.advancedMove(self, poseData, dynamicNorth, dynamicEast, dynamicUp,  dynamicXRotate, dynamicYRotate,
