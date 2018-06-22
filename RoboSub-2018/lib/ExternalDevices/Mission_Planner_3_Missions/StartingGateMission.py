@@ -3,7 +3,7 @@ import cv2
 import time
 import numpy as np
 
-
+ 
 class StartingGateMission(AbstractMission):
     
     defaultParameters = AbstractMission.defaultParameters + "Gate_Side = Left\n" + "Gate_Color = Red\n"#"Test = False\n" + "sColor = UNSPEC"; # Add Any Necessary Parameters
@@ -50,13 +50,16 @@ class StartingGateMission(AbstractMission):
 #----------------------END----------------------------#
     """ Takes unKnown Arms and Sorts them then returns them as 'Left' 'Right' """
     def Determine_Left_From_Right(Arm1, Arm2):
-        if(Arm1[3] > Arm2[3]):
+        if(Arm1 > Arm2):
             return Arm2, Arm1;
         else:
             return Arm1, Arm2;
 
+    def Error_Redux(self):
+	
+
 #----------------------END----------------------------#
-    def Gate_Vizualization():
+    def Gate_Vizualization(self):
         __gate = []; """Basic List to contain updated components"""
         Arm_Count = 0;
         Part_Count = 0;
@@ -95,21 +98,30 @@ class StartingGateMission(AbstractMission):
 
         self.UNORDERED_GATE_COMPONENTS = __gate;
 
-    #----------------------END----------------------------#
+    #----------------------MISSION LOGIC I----------------------------#
 
 
-    def Christians_Method(Gate_Side):
+    def Christians_Method(self, Gate_Side):
         if(self.Arms_In_Sight):
-            pass
+	#------If In Defined Pixel Range------#
+			
+		if(self.Left_Side[2] < 40 and self.Left_Side[3] > -40 ):
+			#Strafe_Right();
+		elif(self.Right_Side[2] >768 and self.Right_Side[3] < -568):
+			#Strafe_Left();
+		elif(self.Left_Side[2] < 40 and self.Left_Side[3] > -40 and self.Right_Side[2] >768 and self.Right_Side[3] < -568):
+		
+		else:
+			pass;
+			#orient based on error i.e Move based on error	
 
-            #use data from left to move
 
         else:
             pass
             #Straif Left Around Fixed Point
             #1) Update YAW 
             #2) relativeMoveXYZ
-            
+    #----------------------MISSION LOGIC II----------------------------#        
     def algorithm2(self):
         detections = []
         for detection in self.detectionData:
