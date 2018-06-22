@@ -58,6 +58,7 @@ class StartingGateMission(AbstractMission):
             return Arm1, Arm2;
 
     def Error_Redux(self):
+	posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position,0,0,-1, 45, 0,0);
 	
 
 #----------------------END----------------------------#
