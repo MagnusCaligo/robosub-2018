@@ -47,10 +47,8 @@ class DiceMission(AbstractMission):
     def checkIfFoundObstacles(self):
 	if self.detectionData == None:
 		return False
-	if not 'classNumbers' in self.detectionData:
-		return False
-        for i,v in enumerate(self.detectionData['classNumbers']):
-            if v == self.diceClassNumber:
+        for i,v in enumerate(self.detectionData):
+            if v[0] == int(self.parameters["dice#"]):
                 return True
         return False
 

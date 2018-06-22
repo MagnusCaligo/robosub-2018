@@ -284,6 +284,8 @@ class ExternalCommThread(QtCore.QThread):
         
         self.mainWindow = mainWindow
 
+	self.detectionDictionary = {"Dice 1":1, "Dice 2":2, "Dice 3":3, "Dice 4":4, "Dice 5":5, "Dice 6":6, "Qualificaiton Gate Top":16, "Qualification Gate Arm":15, "Entry Gate Top":18, "Entry Gate Arm":17}
+
         self.isRunning = True
 	self.usingDebugValues = False
         self.prevAhrsData = None
@@ -668,9 +670,18 @@ class ExternalCommThread(QtCore.QThread):
                 self.emit(QtCore.SIGNAL("Data Updated"))
                 #self.detectionData = self.computerVisionComm.detectionData
 		if len(self.yoloPython.getList) > 0:
-			self.detectionData = self.yoloPython.getList.pop()
-		self.detectionData = self.yoloPython
-                data = {"ahrs": self.ahrsData, "dvl": self.dvlGuiData, "pmud": self.pmudGuiData,
+			detectionData = self.yoloPython.getList.pop()
+			fixedDetections = []
+			for det in detectionData:
+				classNum = self.detectionDictionary[det[0]]
+				pos = det[2]
+				fixedDetections.append([classNum, pos[0], pos[1], pos[2], pos[3]])
+			self.detectionData = fixedDetections
+				
+				
+			
+			
+                data = {"ahrs": self.ahrsData, "dvl": self.dvlGuiData, 
                         "sib": self.sibGuiData,
                         "hydras": self.hydrasPingerData}
 
@@ -719,7 +730,7 @@ class ExternalCommThread(QtCore.QThread):
                 
                 self.emit(QtCore.SIGNAL("requestGuiData()"))
                 
-                data = {"ahrs": self.ahrsGuiData, "dvl": self.dvlGuiData, "pmud": self.pmudGuiData,
+                data = {"ahrs": self.ahrsGuiData, "dvl": self.dvlGuiData, 
                         "sib": self.sibGuiData,
                         "hydras": self.hydrasPingerData}
                 
