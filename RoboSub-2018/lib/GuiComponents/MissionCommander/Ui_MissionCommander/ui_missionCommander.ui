@@ -135,6 +135,11 @@
          <string>Octogon</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>Entry Gate v3</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item row="5" column="0">
