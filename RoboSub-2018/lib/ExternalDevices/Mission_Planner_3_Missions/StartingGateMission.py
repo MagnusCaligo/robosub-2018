@@ -75,10 +75,14 @@ class StartingGateMission(AbstractMission):
 
     def Christians_Method(Gate_Side):
 	if(self.Arms_In_Sight):
+	
 
-		
+		#use data from left to move
 
 	else:
+		#Straif Left Around Fixed Point
+		#1) Update YAW 
+		#2) relativeMoveXYZ
 		
 #----------------------MAIN_FUNCTION------------------#
 
@@ -97,7 +101,7 @@ class StartingGateMission(AbstractMission):
 
 	if( (Gate_In_Sight is False) and (self.Waypoint_Reached is True) ):
 		#REORIENT (*spin*)
-		posedata, X, Y, Z, pitch, yaw, roll = self.relativeMove([self.orientation + self.position,0,0,0, 45, 0,0);
+		posedata, X, Y, Z, pitch, yaw, roll = self.relativeMoveXYZ([self.orientation + self.position,0,0,0, 45, 0,0);
 		self.moveToWaypoint([posedata, X, Y, Z, yaw, pitch, roll]);
 
 	if( (Gate_In_Sight is True) and (self.Waypoint_Reached is True) ):
