@@ -376,6 +376,8 @@ class MissionCommander(QtCore.QObject):
             mission = Missions.Octogon(parameters)
         elif missionType == "Navigation v3":
             mission = NavigationMission(parameters)
+        elif missionType == "Entry Gate v3":
+            mission = StartingGateMission(parameters)
             
         mission.parameters["missionType"] = missionType
         mission.name = str(parameters["name"])
@@ -487,6 +489,8 @@ class MissionCommander(QtCore.QObject):
                 mission = Missions.Octogon(parameters)
             elif missionType == "Navigation v3":
                 mission = NavigationMission(parameters)
+            elif missionType == "Entry Gate v3":
+                mission = StartingGateMission(parameters)
                 
             if mission == None:
                 print "Didn't load correctly: " + missionType

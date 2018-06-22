@@ -1,6 +1,7 @@
 from abstractMission import AbstractMission
 import cv2
 import time
+import numpy as np
 
 
 class StartingGateMission(AbstractMission):
@@ -10,10 +11,12 @@ class StartingGateMission(AbstractMission):
     def __init__(self, parameters): #Waypoint Handling of events
         AbstractMission.__init__(self, parameters)
 
+
+    def initalizeOnMissionStart(self):
+
         self.Waypoint_Reached = False #Way of telling if we are within error of the waypoint
         self.atWaypointStartTime = None #Sets the start time from the moment we are at the waypoint so we can stay there for as long as we need to
 
-    def initalizeOnMissionStart(self):
         #---Relevant Gate Info---#
         self.Gate_In_Sight = False;
         self.Gate_Side = "Left";
@@ -124,7 +127,7 @@ class StartingGateMission(AbstractMission):
                 leftArmDetection = detections[1]
                 rightArmDetection = detections[0]
                 
-            if leftArmDetection[1] + leftArmDetection[3] < 608 - 30: #We need to check that we can see the entire post; if not then we can't use solvePnP
+            if leftArmDetection[2] + leftArmDetection[4] < 608 - 30 and leftArmDetection[3] > 30: #We need to check that we can see the entire post; if not then we can't use solvePnP
                 img_pts = [(leftArmDetection[1], leftArmDetection[2]), (detection[1] + detection[3], detection[2]), (detection[1] + detection[3], + detection[2] + detection[4]), (detection[1], detection[2] + detection[4])]
                 rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(img_pts).astype('float32'),np.array(cameraMatrix).astype('float32'), None)[-2:]
                 tvec[0][0]-=.25 #Camera isn't centered with Percy, so move it over a bit
@@ -143,7 +146,7 @@ class StartingGateMission(AbstractMission):
                 uAvg /= len(self.leftArmPosSum)
                 self.leftArmPosEst = [nAvg, eAvg, uAvg]
 
-            if rightArmDetection[1] + rightArmDetection[3] < 608 - 30: #We need to check that we can see the entire post; if not then we can't use solvePnP
+            if rightArmDetection[2] + rightArmDetection[4] < 608 - 30 and rightArmDetection[2] > 30: #We need to check that we can see the entire post; if not then we can't use solvePnP
                 img_pts = [(rightArmDetection[1], rightArmDetection[2]), (detection[1] + detection[3], detection[2]), (detection[1] + detection[3], + detection[2] + detection[4]), (detection[1], detection[2] + detection[4])]
                 rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(img_pts).astype('float32'),np.array(cameraMatrix).astype('float32'), None)[-2:]
                 tvec[0][0]-=.25 #Camera isn't centered with Percy, so move it over a bit
@@ -179,7 +182,8 @@ class StartingGateMission(AbstractMission):
             tvec[0][0]-=.25 #Camera isn't centered with Percy, so move it over a bit
             tvec[1][0]+=2.5 #tvec is from top left corner, so we want to move a bit deeper
             tvec[2][0] *= -1 #Z decreases towards the front of the sub, so if we want to move forward this needs to be negative
-            pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0][0], tvec[1][0], tvec[2][0], 0, 0, 0)
+            rotationDifference = math.degrees(math.atan2(tvec[0], tvec[2]))
+            pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0][0], tvec[1][0], tvec[2][0], 0, rotationDifference, 0)
             waypoint = [n,e,u, self.finalWaypoint[3], 0, 0]
             self.moveToWaypoint(waypoint)
 

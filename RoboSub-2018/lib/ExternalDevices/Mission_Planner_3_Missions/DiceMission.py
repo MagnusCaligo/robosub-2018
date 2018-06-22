@@ -55,13 +55,12 @@ class DiceMission(AbstractMission):
         return False
 
     def sortThroughDetections(self):
-	if not 'classNumbers' in self.detectionData:
-		return None
         detections = []
         if self.detectionData != None:
-            for i,v in enumerate(self.detectionData['classNumbers']):
-                if v == self.diceClassNumber:
-			detections.append([self.detectionData["classNumbers"][i], self.detectionData["xLocations"][i],self.detectionData["yLocations"][i],self.detectionData["widths"][i],self.detectionData["heights"][i]])
+            for det in self.detectionData:
+                if det[0] == int(self.parameters["dice#"]):
+                    detections.append(det)
+            print "Detections are", detections
             return detections
         else:
             return None
