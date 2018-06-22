@@ -10,6 +10,7 @@ from lib.Utils.SlideEdit import SlideEdit
 from lib.ExternalDevices.movement import MovementController, JoystickMovementController
 from lib.ExternalDevices.Mission_Planner_3_Missions.NavigationMission import NavigationMission
 from lib.ExternalDevices.Mission_Planner_3_Missions.DiceMission import DiceMission 
+from lib.ExternalDevices.Mission_Planner_3_Missions.StartingGateMission import StartingGateMission
 
 class MissionCommander(QtCore.QObject):
     """
@@ -131,6 +132,8 @@ class MissionCommander(QtCore.QObject):
             mission = Missions.Octogon
         elif missionType == "Navigation v3":
             mission = NavigationMission
+        elif missionType == "Entry Gate v3":
+            mission = StartingGateMission
             
         if hasattr(mission, "defaultParameters"):
             self.ui_missionCommander.parameterStringInputs.clear()
@@ -175,6 +178,8 @@ class MissionCommander(QtCore.QObject):
             self.ui_missionCommander.missionTypeCB.setCurrentIndex(11)
         elif isinstance(mission, Missions.Octogon):
             self.ui_missionCommander.missionTypeCB.setCurrentIndex(14)
+        elif isinstance(mission, StartingGateMission):
+            self.ui_missionCommander.missionTypeCB.setCurrentIndex(15)
         
         #Modify the TextLine Edits
         self.ui_missionCommander.missionNameLineEdit.setText(mission.name)
@@ -371,6 +376,8 @@ class MissionCommander(QtCore.QObject):
             mission = Missions.Octogon(parameters)
         elif missionType == "Navigation v3":
             mission = NavigationMission(parameters)
+        elif missionType == "Entry Gate v3":
+            mission = StartingGateMission(parameters)
             
         mission.parameters["missionType"] = missionType
         mission.name = str(parameters["name"])
@@ -482,6 +489,8 @@ class MissionCommander(QtCore.QObject):
                 mission = Missions.Octogon(parameters)
             elif missionType == "Navigation v3":
                 mission = NavigationMission(parameters)
+            elif missionType == "Entry Gate v3":
+                mission = StartingGateMission(parameters)
                 
             if mission == None:
                 print "Didn't load correctly: " + missionType
