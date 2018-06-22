@@ -47,10 +47,8 @@ class DiceMission(AbstractMission):
     def checkIfFoundObstacles(self):
 	if self.detectionData == None:
 		return False
-	if not 'classNumbers' in self.detectionData:
-		return False
-        for i,v in enumerate(self.detectionData['classNumbers']):
-            if v == self.diceClassNumber:
+        for i,v in enumerate(self.detectionData):
+            if v[0] == int(self.parameters["dice#"]):
                 return True
         return False
 
@@ -165,7 +163,7 @@ class DiceMission(AbstractMission):
 		if self.hitBuoyTimer == None:
 			self.hitBuoyTimer = time.time()
 			self.writeDebugMessage("Moving Forward...")
-			p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0.5, self.position[2] - self.depthAtRelativeMove, -int(self.parameters["getDistanceAway"]), 0, 0, 0)
+			p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, 0, -int(self.parameters["getDistanceAway"]), 0, 0, 0)
 			self.diceWaypoint = [n,e,u,y,p,r]
 		if time.time() - self.hitBuoyTimer >= self.hitBuoyMaxTime:
 			if self.movingForward == False:
