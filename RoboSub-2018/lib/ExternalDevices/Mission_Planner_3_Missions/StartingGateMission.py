@@ -58,7 +58,17 @@ class StartingGateMission(AbstractMission):
             return Arm1, Arm2;
 
     def Error_Redux(self):
-	posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position,0,0,-1, 45, 0,0);
+	if(self.Left[2] > 40):
+		posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position, self.Left - 5 ,0,0, 45, 0,0);
+		Error = [posedata, n,e,u, pitch, yaw, roll];
+		self.moveToWaypoint(Error)
+	if(self.Right[2] < 768)
+		posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position, self.Right + 5 ,0,0, 45, 0,0);
+		Error = [posedata, n,e,u, pitch, yaw, roll];
+		self.moveToWaypoint(Error)
+	else:
+		print("READY AND COMPLETE"):
+		return 1;
 	
 
 #----------------------END----------------------------#
@@ -107,20 +117,22 @@ class StartingGateMission(AbstractMission):
     def Christians_Method(self, Gate_Side):
         if(self.Arms_In_Sight):
 	#------If In Defined Pixel Range------#
-			
+		'''	
 		if(self.Left_Side[2] < 40 and self.Left_Side[3] > -40 ):
 			#Strafe_Right();
 		elif(self.Right_Side[2] >768 and self.Right_Side[3] < -568):
 			#Strafe_Left();
 		elif(self.Left_Side[2] < 40 and self.Left_Side[3] > -40 and self.Right_Side[2] >768 and self.Right_Side[3] < -568):
-		
+
 		else:
-			pass;
-			#orient based on error i.e Move based on error	
+		'''
+
+		Error_Redux();	
 
 
         else:
-            pass
+        	print("Arms not in sight...")
+		return -1;
             #Straif Left Around Fixed Point
             #1) Update YAW 
             #2) relativeMoveXYZ
