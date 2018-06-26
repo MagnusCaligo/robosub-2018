@@ -284,7 +284,6 @@ class ExternalCommThread(QtCore.QThread):
         
         self.mainWindow = mainWindow
 
-	self.detectionDictionary = {"Dice 1":1, "Dice 2":2, "Dice 3":3, "Dice 4":4, "Dice 5":5, "Dice 6":6, "Qualificaiton Gate Top":16, "Qualification Gate Arm":15, "Entry Gate Top":18, "Entry Gate Arm":17}
 
         self.isRunning = True
 	self.usingDebugValues = False
@@ -478,7 +477,7 @@ class ExternalCommThread(QtCore.QThread):
                         maestroPort = port[0]
             self.maestroSerial = serial.Serial(maestroPort, 9600)
         except:
-            self.maestroSerial = serial.Serial("/dev/ttyACM1", 9600)			                						     																		    
+            self.maestroSerial = serial.Serial("/dev/ttyACM0", 9600)			                						     																		    
             print "Maestro was not found"
             
         if False:
@@ -491,7 +490,7 @@ class ExternalCommThread(QtCore.QThread):
         else:
             pass
         
-        if True:
+        if False:
             try:
                 self.arduinoDisplaySerial = serial.Serial("/dev/ttyACM0", 115200)
                 self.arduinoDisplayDataPackets = displayArduino.displayArduino(self.arduinoDisplaySerial)
@@ -673,9 +672,8 @@ class ExternalCommThread(QtCore.QThread):
 			detectionData = self.yoloPython.getList.pop()
 			fixedDetections = []
 			for det in detectionData:
-				classNum = self.detectionDictionary[det[0]]
 				pos = det[2]
-				fixedDetections.append([classNum, pos[0], pos[1], pos[2], pos[3]])
+				fixedDetections.append([det[0], pos[0], pos[1], pos[2], pos[3]])
 			self.detectionData = fixedDetections
 				
 				
@@ -879,8 +877,9 @@ class ExternalCommThread(QtCore.QThread):
                 if(self.motherMessage[0] == 656):
                     if self.mainWindow.subwin_mainWidget.debugCheck.isChecked():
 			    print "Starting autonomous..."
+			    time.sleep(1)
 			    self.mainWindow.subwin_mainWidget.debugCheck.setChecked(False)
-                            self.mainWindow.changeText()
+                            #self.mainWindow.changeText()
 			    self.mainWindow.startPressed()
                 elif(self.motherMessage[0] == 648):#Voltage Data	
 					self.batteryVoltage = self.motherMessage[1]

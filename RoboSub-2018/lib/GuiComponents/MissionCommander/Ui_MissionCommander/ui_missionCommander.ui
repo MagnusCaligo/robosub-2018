@@ -67,72 +67,12 @@
        </item>
        <item>
         <property name="text">
-         <string>Navigation</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
          <string>Navigation v3</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Qualification Gate</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Bouys - Red</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Bouys - Green</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Bouys - Yellow</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Football Gate</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Torpedo Board - Locate</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Torpedo Board - Grab Handle</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Torpedo Board - Fire Torpedos</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Dropper - Locate</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Dropper - Grab Handle</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Dropper - Drop</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Octogon</string>
+         <string>Dice Mission</string>
         </property>
        </item>
        <item>

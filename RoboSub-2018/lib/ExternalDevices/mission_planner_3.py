@@ -30,6 +30,7 @@ class MissionPlanner(QtCore.QThread):
 
         self.debug = True
         self.manualMode = False
+	self.manualDepthValue = 0
         
         self.joystickController = None
         

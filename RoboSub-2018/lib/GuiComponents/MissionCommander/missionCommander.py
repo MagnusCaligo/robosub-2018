@@ -104,34 +104,10 @@ class MissionCommander(QtCore.QObject):
 
         mission = None
         #Creates the mission by the type
-        if missionType == "Navigation":
-            mission = Missions.NavigationMission
-        elif missionType == "Qualification Gate":
-            mission = Missions.QualificationGate
-        elif missionType == "Bouys - Red":
-            mission = DiceMission
-        elif missionType == "Buoys - Green":
-            mission = Missions.Buoys
-        elif missionType == "Buoys - Yellow":
-            mission = Missions.Buoys
-        elif missionType == "Football Gate":
-            mission = Missions.FootballGate
-        elif missionType == "Torpedo Board - Locate":
-            mission = Missions.TorpedoBoard
-        elif missionType == "Torpedo Board - Grab Handle":
-            mission = Missions.TorpedoBoard
-        elif missionType == "Torpedo Board - Fire Torpedos":
-            mission = Missions.TorpedoBoard
-        elif missionType == "Dropper - Locate":
-            mission = Missions.Dropper
-        elif missionType == "Dropper - Grab Handle":
-            mission = Missions.Dropper
-        elif missionType == "Dropper - Drop":
-            mission = Missions.Dropper
-        elif missionType == "Octogon":
-            mission = Missions.Octogon
-        elif missionType == "Navigation v3":
+        if missionType == "Navigation v3":
             mission = NavigationMission
+        elif missionType == "Dice Mission":
+            mission = DiceMission
         elif missionType == "Entry Gate v3":
             mission = StartingGateMission
             
@@ -162,24 +138,12 @@ class MissionCommander(QtCore.QObject):
         
         
         #Change the combo box to work for the correct mission 
-        if isinstance(mission, Missions.NavigationMission):
+        if isinstance(mission, NavigationMission):
             self.ui_missionCommander.missionTypeCB.setCurrentIndex(1)
-        elif isinstance(mission, Missions.QualificationGate):
-            self.ui_missionCommander.missionTypeCB.setCurrentIndex(3)
-        elif isinstance(mission, NavigationMission):
-            self.ui_missionCommander.missionTypeCB.setCurrentIndex(2)
         elif isinstance(mission, DiceMission):
-            self.ui_missionCommander.missionTypeCB.setCurrentIndex(4)
-        elif isinstance(mission, Missions.FootballGate):
-            self.ui_missionCommander.missionTypeCB.setCurrentIndex(7)
-        elif isinstance(mission, Missions.TorpedoBoard):
-            self.ui_missionCommander.missionTypeCB.setCurrentIndex(8)
-        elif isinstance(mission, Missions.Dropper):
-            self.ui_missionCommander.missionTypeCB.setCurrentIndex(11)
-        elif isinstance(mission, Missions.Octogon):
-            self.ui_missionCommander.missionTypeCB.setCurrentIndex(14)
+            self.ui_missionCommander.missionTypeCB.setCurrentIndex(2)
         elif isinstance(mission, StartingGateMission):
-            self.ui_missionCommander.missionTypeCB.setCurrentIndex(15)
+            self.ui_missionCommander.missionTypeCB.setCurrentIndex(3)
         
         #Modify the TextLine Edits
         self.ui_missionCommander.missionNameLineEdit.setText(mission.name)
@@ -348,32 +312,8 @@ class MissionCommander(QtCore.QObject):
         
         #Creates the mission by the type
         print "Mission is", missionType 
-        if missionType == "Navigation":
-            mission = Missions.NavigationMission(parameters)
-        elif missionType == "Qualification Gate":
-            mission = Missions.QualificationGate(parameters)
-        elif missionType == "Bouys - Red":
+        if missionType == "Dice Mission":
             mission = DiceMission(parameters)
-        elif missionType == "Buoys - Green":
-            mission = Missions.Buoys(parameters)
-        elif missionType == "Buoys - Yellow":
-            mission = Missions.Buoys(parameters)
-        elif missionType == "Football Gate":
-            mission = Missions.FootballGate(parameters)
-        elif missionType == "Torpedo Board - Locate":
-            mission = Missions.TorpedoBoard(parameters)
-        elif missionType == "Torpedo Board - Grab Handle":
-            mission = Missions.TorpedoBoard(parameters)
-        elif missionType == "Torpedo Board - Fire Torpedos":
-            mission = Missions.TorpedoBoard(parameters)
-        elif missionType == "Dropper - Locate":
-            mission = Missions.Dropper(parameters)
-        elif missionType == "Dropper - Grab Handle":
-            mission = Missions.Dropper(parameters)
-        elif missionType == "Dropper - Drop":
-            mission = Missions.Dropper(parameters)
-        elif missionType == "Octogon":
-            mission = Missions.Octogon(parameters)
         elif missionType == "Navigation v3":
             mission = NavigationMission(parameters)
         elif missionType == "Entry Gate v3":
@@ -461,32 +401,8 @@ class MissionCommander(QtCore.QObject):
                 
             mission = None
             
-            if missionType == "Navigation":
-                mission = Missions.NavigationMission(parameters)
-            elif missionType == "Qualification Gate":
-                mission = Missions.QualificationGate(parameters)
-            elif missionType == "Bouys - Red":
+            if missionType == "Dice Mission":
                 mission = DiceMission(parameters)
-            elif missionType == "Buoys - Green":
-                mission = Missions.Buoys(parameters)
-            elif missionType == "Buoys - Yellow":
-                mission = Missions.Buoys(parameters)
-            elif missionType == "Football Gate":
-                mission = Missions.FootballGate(parameters)
-            elif missionType == "Torpedo Board - Locate":
-                mission = Missions.TorpedoBoard(parameters)
-            elif missionType == "Torpedo Board - Grab Handle":
-                mission = Missions.TorpedoBoard(parameters)
-            elif missionType == "Torpedo Board - Fire Torpedos":
-                mission = Missions.TorpedoBoard(parameters)
-            elif missionType == "Dropper - Locate":
-                mission = Missions.Dropper(parameters)
-            elif missionType == "Dropper - Grab Handle":
-                mission = Missions.Dropper(parameters)
-            elif missionType == "Dropper - Drop":
-                mission = Missions.Dropper(parameters)
-            elif missionType == "Octogon":
-                mission = Missions.Octogon(parameters)
             elif missionType == "Navigation v3":
                 mission = NavigationMission(parameters)
             elif missionType == "Entry Gate v3":

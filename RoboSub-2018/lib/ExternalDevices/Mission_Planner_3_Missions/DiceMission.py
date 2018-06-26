@@ -19,7 +19,7 @@ class DiceMission(AbstractMission):
 	self.lastKnownDepth = self.finalWaypoint[2]
 
         self.foundObstacles = False
-        self.diceClassNumber = 0
+        self.diceClassNumber = int(self.parameters["dice#"])
 
         self.sentMessage1 = False
         self.sentMessage2 = False
@@ -55,10 +55,10 @@ class DiceMission(AbstractMission):
     def sortThroughDetections(self):
         detections = []
         if self.detectionData != None:
+	    print "Detection Data is", self.detectionData
             for det in self.detectionData:
                 if det[0] == int(self.parameters["dice#"]):
                     detections.append(det)
-            print "Detections are", detections
             return detections
         else:
             return None
@@ -145,10 +145,10 @@ class DiceMission(AbstractMission):
 
 	    
 			#print "Up and Down are", tvec[1][0] +.7, "rotationDifference:", rotationDifference, "Distance Away:", -(tvec[2][0]- int(self.parameters["getDistanceAway"]))
-			print "TVec", tvec
 			#print "Distance: ", self.parameters["getDistanceAway"]
 			#poseData, north, east, up, yaw, pitch, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0], ,0,0,0)
-			poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0] + .7, -(tvec[2][0]- int(self.parameters["getDistanceAway"])),rotationDifference,0,0)
+			print "Rotation difference was", rotationDifference
+			poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0] + 1, -(tvec[2][0]- int(self.parameters["getDistanceAway"])),rotationDifference,0,0)
 
 			print "Errors were", north, east, up, yaw
 			print "Location is", self.position[0], self.position[1], self.position[2]
@@ -163,7 +163,7 @@ class DiceMission(AbstractMission):
 		if self.hitBuoyTimer == None:
 			self.hitBuoyTimer = time.time()
 			self.writeDebugMessage("Moving Forward...")
-			p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, 0, -int(self.parameters["getDistanceAway"]), 0, 0, 0)
+			p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, 0, -int(self.parameters["getDistanceAway"])-1, 0, 0, 0)
 			self.diceWaypoint = [n,e,u,y,p,r]
 		if time.time() - self.hitBuoyTimer >= self.hitBuoyMaxTime:
 			if self.movingForward == False:

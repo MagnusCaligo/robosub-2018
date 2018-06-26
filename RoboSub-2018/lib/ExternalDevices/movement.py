@@ -231,7 +231,7 @@ class MovementController():
         maxRoll = 20
         minRoll = -20
         maxDepth = 8
-        minDepth = 3
+        minDepth = -1
         drivingMode = 0
         if len(userVariables) > 0:
             drivingMode = userVariables[0]
