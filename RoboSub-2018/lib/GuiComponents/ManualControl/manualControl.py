@@ -48,6 +48,7 @@ class ManualControl(QtCore.QObject):
             """
             #self.worker_thread.start()
             if self.externalComm.isDebug == False:
+		
                 self.ui_manualControl.startButton.setText("Stop")
                 self.startPressed = True
                 self.externalComm.missionPlanner.startManualControl()

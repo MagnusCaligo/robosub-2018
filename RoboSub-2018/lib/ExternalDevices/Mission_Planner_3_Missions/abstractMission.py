@@ -86,6 +86,7 @@ class AbstractMission(QtCore.QObject):
             self.writeDebugMessage("Waypoint is " + str(self.finalWaypoint))
         else:
             self.finalWaypoint = self.generalWaypoint #If not using any relativity, then we can assume that the waypoint is absolute coordinate
+
     
 
     def setMovementController(self, movementController):

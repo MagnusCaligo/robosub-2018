@@ -284,6 +284,7 @@ class ExternalCommThread(QtCore.QThread):
         
         self.mainWindow = mainWindow
 
+
         self.isRunning = True
 	self.usingDebugValues = False
         self.prevAhrsData = None
@@ -476,7 +477,7 @@ class ExternalCommThread(QtCore.QThread):
                         maestroPort = port[0]
             self.maestroSerial = serial.Serial(maestroPort, 9600)
         except:
-            self.maestroSerial = serial.Serial("/dev/ttyACM1", 9600)			                						     																		    
+            self.maestroSerial = serial.Serial("/dev/ttyACM0", 9600)			                						     																		    
             print "Maestro was not found"
             
         if False:
@@ -489,7 +490,7 @@ class ExternalCommThread(QtCore.QThread):
         else:
             pass
         
-        if True:
+        if False:
             try:
                 self.arduinoDisplaySerial = serial.Serial("/dev/ttyACM0", 115200)
                 self.arduinoDisplayDataPackets = displayArduino.displayArduino(self.arduinoDisplaySerial)
@@ -668,9 +669,17 @@ class ExternalCommThread(QtCore.QThread):
                 self.emit(QtCore.SIGNAL("Data Updated"))
                 #self.detectionData = self.computerVisionComm.detectionData
 		if len(self.yoloPython.getList) > 0:
-			self.detectionData = self.yoloPython.getList.pop()
-		self.detectionData = self.yoloPython
-                data = {"ahrs": self.ahrsData, "dvl": self.dvlGuiData, "pmud": self.pmudGuiData,
+			detectionData = self.yoloPython.getList.pop()
+			fixedDetections = []
+			for det in detectionData:
+				pos = det[2]
+				fixedDetections.append([det[0], pos[0], pos[1], pos[2], pos[3]])
+			self.detectionData = fixedDetections
+				
+				
+			
+			
+                data = {"ahrs": self.ahrsData, "dvl": self.dvlGuiData, 
                         "sib": self.sibGuiData,
                         "hydras": self.hydrasPingerData}
 
@@ -719,7 +728,7 @@ class ExternalCommThread(QtCore.QThread):
                 
                 self.emit(QtCore.SIGNAL("requestGuiData()"))
                 
-                data = {"ahrs": self.ahrsGuiData, "dvl": self.dvlGuiData, "pmud": self.pmudGuiData,
+                data = {"ahrs": self.ahrsGuiData, "dvl": self.dvlGuiData, 
                         "sib": self.sibGuiData,
                         "hydras": self.hydrasPingerData}
                 
@@ -868,8 +877,9 @@ class ExternalCommThread(QtCore.QThread):
                 if(self.motherMessage[0] == 656):
                     if self.mainWindow.subwin_mainWidget.debugCheck.isChecked():
 			    print "Starting autonomous..."
+			    time.sleep(1)
 			    self.mainWindow.subwin_mainWidget.debugCheck.setChecked(False)
-                            self.mainWindow.changeText()
+                            #self.mainWindow.changeText()
 			    self.mainWindow.startPressed()
                 elif(self.motherMessage[0] == 648):#Voltage Data	
 					self.batteryVoltage = self.motherMessage[1]

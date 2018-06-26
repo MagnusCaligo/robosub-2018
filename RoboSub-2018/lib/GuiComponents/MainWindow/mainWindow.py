@@ -22,6 +22,8 @@ class MainWindow(QtGui.QMainWindow):
         self.ui_MainWindow.setupUi(self)
         self.ui_MainWindow.mdiArea.tileSubWindows()
         self.setWindowTitle('RoboSub GUI 2017')
+	
+	self.startedAuto = False
 
         # Create widget instances
         self.mainWindowWidget = None
@@ -238,19 +240,23 @@ class MainWindow(QtGui.QMainWindow):
 	if self.externalCommClass.running == True:
 		self.stopPressed()
 		time.sleep(1)
+		if self.startedAuto == True:
+			return
+		self.startedAuto = True
 	self.resetButtonClicked()
         if self.subwin_mainWidget.debugCheck.isChecked():
-            self.externalCommClass.externalCommThread.isDebug = True
+            self.externalCommClass.externalCommThread.isDebug = False
+	    self.externalCommClass.isDebug = False
             self.systemOutput.insertPlainText("Starting Debug Mode\n")
             self.externalCommClass.running = True
             self.externalCommClass.externalCommThread.guiData = self.externalCommClass.guiDataToSend
             self.externalCommClass.externalCommThread.isRunning = True
             self.externalCommClass.externalCommThread.start()
-            self.externalCommClass.missionPlanner.startAutonomousRun(True)
+            #self.externalCommClass.missionPlanner.startAutonomousRun(True)
             if self.externalCommClass.externalCommThread.dvlResponseThread != None:
 				pass#self.externalCommClass.externalCommThread.dvlResponseThread.clearDistanceTraveled()
         else:
-            #time.sleep(10)
+            time.sleep(5)
             print "Starting"
             self.systemOutput.insertPlainText("Starting Vehicle\n")
             if self.externalCommClass.externalCommThread.dvlResponseThread != None:
