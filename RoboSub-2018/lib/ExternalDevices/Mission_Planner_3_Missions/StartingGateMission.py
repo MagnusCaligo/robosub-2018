@@ -62,12 +62,12 @@ class StartingGateMission(AbstractMission):
 		posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position, self.Left - 5 ,0,0, 45, 0,0);
 		Error = [posedata, n,e,u, pitch, yaw, roll];
 		self.moveToWaypoint(Error)
-	if(self.Right[2] < 768)
+	if(self.Right[2] < 768):
 		posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position, self.Right + 5 ,0,0, 45, 0,0);
 		Error = [posedata, n,e,u, pitch, yaw, roll];
 		self.moveToWaypoint(Error)
 	else:
-		print("READY AND COMPLETE"):
+		print("READY AND COMPLETE")
 		return 1;
 	
 
