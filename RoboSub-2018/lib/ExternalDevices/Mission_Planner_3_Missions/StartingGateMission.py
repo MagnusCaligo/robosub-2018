@@ -59,15 +59,15 @@ class StartingGateMission(AbstractMission):
 
     def Error_Redux(self):
 	if(self.Left[2] > 40):
-		posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position, self.Left - .5 ,0,0, 45, 0,0);
+		posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position, self.Left - 5 ,0,0, 45, 0,0);
 		Error = [posedata, n,e,u, pitch, yaw, roll];
 		self.moveToWaypoint(Error)
-	if(self.Right[2] < 768):
-		posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position, self.Right + .5 ,0,0, 45, 0,0);
+	if(self.Right[2] < 768)
+		posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position, self.Right + 5 ,0,0, 45, 0,0);
 		Error = [posedata, n,e,u, pitch, yaw, roll];
 		self.moveToWaypoint(Error)
 	else:
-		print("READY AND COMPLETE")
+		print("READY AND COMPLETE"):
 		return 1;
 	
 
@@ -306,3 +306,4 @@ class StartingGateMission(AbstractMission):
             self.atWaypointStartTime = None
 
 	--------------------------------------------------"""
+>>>>>>> 03e0a7c6523d91d5e5ffb3ebc88ef13cf85bf6bf
