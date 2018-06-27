@@ -102,6 +102,8 @@ void setup() {
 
 void loop() {
   //digitalWrite(LED1, HIGH);
+  //Serial.println("Loop Start");
+  //Serial.flush();
   digitalWrite(PowerOn, HIGH);
   if (killToggle == true)
   {
@@ -144,6 +146,7 @@ void loop() {
   {
     //if(digitalRead(LED1) == HIGH)digitalWrite(LED2,LOW);
     //else if(digitalRead(LED1) == HIGH)digitalWrite(LED2,HIGH);
+    //Serial.println("Update Block Reached");
     TIMSK2 = 0; //Pause Timer2 Interrupt
     readVoltages();
     readCurrent();
@@ -199,7 +202,7 @@ void loop() {
     }*/
     TIMSK2 |= (1 << TOIE2); //Resume Timer2 Interrupt
   }
-  //delay(0);
+  delay(1);
 }
 
 void serialCommand()
@@ -390,6 +393,7 @@ void alarm(int state)
 
 void updateDisplay()
 {
+  //Serial.println("Updating Display");
   display.clearDisplay();
   if (displayState == 0)
   {
@@ -545,6 +549,7 @@ void toggleAuto(){
   canAutoMsg.can_id = 656;
   canAutoMsg.can_dlc = 0;
   MCP2515::ERROR rc = mcp2515.sendMessage(&canAutoMsg);
+  Serial.println("Auto");
 }
 
 
