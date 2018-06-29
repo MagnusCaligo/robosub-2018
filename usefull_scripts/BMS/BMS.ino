@@ -52,7 +52,9 @@ volatile int temperature1;
 volatile int temperature2;
 volatile int temperature3;
 volatile int displayState = 0;
-volatile int killTimer = 0;
+unsigned long previousTime = 0;
+unsigned long currentTime = 0;
+int killTime = 500;//Pressing the kill button more than once in 300 ms won't activate it.
 static float overCurrentLimit = 150.0;
 volatile int overCurrentCounter;
 
@@ -101,19 +103,10 @@ void setup() {
 }
 
 void loop() {
-  //digitalWrite(LED1, HIGH);
-  digitalWrite(PowerOn, HIGH);
-  if (killToggle == true)
-  {
-    kill();
-  }
-  else if (killToggle == false)
-  {
-    unkill();
-  }
 
   if(Total_Voltage <= 12){
     killToggle = true;
+    kill();
   }
   
   if(mcp2515.readMessage(&canRxMsg) == MCP2515::ERROR_OK){
@@ -144,6 +137,7 @@ void loop() {
   {
     //if(digitalRead(LED1) == HIGH)digitalWrite(LED2,LOW);
     //else if(digitalRead(LED1) == HIGH)digitalWrite(LED2,HIGH);
+    //Serial.println("Update Block Reached");
     TIMSK2 = 0; //Pause Timer2 Interrupt
     readVoltages();
     readCurrent();
@@ -151,11 +145,6 @@ void loop() {
     sendData();
     updateDisplay();
     serialCommand();
-
-    if(killTimer > 0)
-    {
-      killTimer = 0;
-    }
     
     /*if (digitalRead(PB1) == HIGH)
     {
@@ -199,7 +188,7 @@ void loop() {
     }*/
     TIMSK2 |= (1 << TOIE2); //Resume Timer2 Interrupt
   }
-  //delay(0);
+  delay(1);
 }
 
 void serialCommand()
@@ -390,6 +379,7 @@ void alarm(int state)
 
 void updateDisplay()
 {
+  //Serial.println("Updating Display");
   display.clearDisplay();
   if (displayState == 0)
   {
@@ -533,11 +523,27 @@ void updateAll(void)
 void toggleKS()
 {
   digitalWrite(PowerOn, HIGH);
-  if(killTimer == 0)
+  currentTime = millis();
+  if(currentTime - previousTime > killTime)
   {
     if (killToggle == true) killToggle = false;
     else if (killToggle == false) killToggle = true;
-    killTimer ++;
+    previousTime = currentTime;
+  }
+
+  //if (killToggle == true) killToggle = false;
+  //else if (killToggle == false) killToggle = true;
+  //killTimer ++;
+
+  if (killToggle == true)
+  {
+    kill();
+    Serial.println("Killed");
+  }
+  else if (killToggle == false)
+  {
+    unkill();
+    Serial.println("Alive");
   }
 }
 
@@ -545,6 +551,7 @@ void toggleAuto(){
   canAutoMsg.can_id = 656;
   canAutoMsg.can_dlc = 0;
   MCP2515::ERROR rc = mcp2515.sendMessage(&canAutoMsg);
+  Serial.println("Auto");
 }
 
 
