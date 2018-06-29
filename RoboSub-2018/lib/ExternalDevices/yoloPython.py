@@ -1,4 +1,4 @@
-onLinux = False
+onLinux = True
 if onLinux:
 	import darknet as dn
 	import PyCapture2 as pc2
@@ -198,15 +198,15 @@ class yoloSimplified:
 
 			#if seeFruits[8] + seeFruits[9] + seeFruits[10] + seeFruits[11] == 4:
 			if seeFruits[11] == 1:
-				'''cherry = seeFruits[12]
+				cherry = seeFruits[12]
 				banana = seeFruits[13]
-				grape = seeFruits[14]'''
+				grape = seeFruits[14]
 				board = seeFruits[15]
-				'''bx = int(board[2][0] - (board[2][2]/2))
-				by = int(board[2][1] - (board[2][3]/2))
-				imgPoints = [(int(cherry[2][0]), int(cherry[2][1])),(int(banana[2][0]), int(banana[2][1])),(int(grape[2][0]), int(grape[2][1])), (bx,by)]'''
+				bx = int(board[2][0])
+				by = int(board[2][1])
+				imgPoints = [(int(cherry[2][0]), int(cherry[2][1])),(int(banana[2][0]), int(banana[2][1])),(int(grape[2][0]), int(grape[2][1])), (bx,by)]
 				
-				x1 = int(board[2][0] - (board[2][2] * .5))
+				'''x1 = int(board[2][0] - (board[2][2] * .5))
 				y1 = int(board[2][1] - (board[2][3] * .5))
 				x2 = int(board[2][0] + (board[2][2] * .5))
 				y2 = int(board[2][1] + (board[2][3] * .5))
@@ -241,7 +241,7 @@ class yoloSimplified:
 					if len(approx) == 4:
 						total.append(approx)
 				cv2.drawContours(roi, total, -1, (255, 0, 0), 3)
-				'''lines = cv2.HoughLinesP(roi,1,np.pi/180,200, 100, 10)
+				lines = cv2.HoughLinesP(roi,1,np.pi/180,200, 100, 10)
 				print "Lines:", lines
 				if lines != None:
 					for x1, y1, x2, y2 in lines[0]:
@@ -249,10 +249,10 @@ class yoloSimplified:
 
 				'''
 				
-				'''rvec, tvec = cv2.solvePnP(np.array(self.srcPoints).astype("float32"), np.array(imgPoints).astype("float32"), np.array(self.camMat).astype("float32"), np.zeros((4,1)))[-2:]
+				rvec, tvec = cv2.solvePnP(np.array(self.srcPoints).astype("float32"), np.array(imgPoints).astype("float32"), np.array(self.camMat).astype("float32"), np.zeros((4,1)))[-2:]
 
 				(pose, jacobian) = cv2.projectPoints(np.array([(0,0,1.0)]), rvec, tvec, np.array(self.camMat).astype("float32"), None)
-				cv2.line(img, (int(banana[2][0]), int(banana[2][1])), (int(pose[0][0][0]), int(pose[0][0][1])), (255,0,0), 2)'''
+				cv2.line(img, (int(banana[2][0]), int(banana[2][1])), (int(pose[0][0][0]), int(pose[0][0][1])), (255,0,0), 2)
 
 
 
