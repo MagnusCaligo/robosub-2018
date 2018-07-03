@@ -30,6 +30,7 @@ class MissionPlanner(QtCore.QThread):
 
         self.debug = True
         self.manualMode = False
+	self.manualDepthValue = 0
         
         self.joystickController = None
         
@@ -134,12 +135,14 @@ class MissionPlanner(QtCore.QThread):
         self.connect(self.controlSystemClass, QtCore.SIGNAL("updatePIDValues(PyQt_PyObject)"), lambda val: self.changePIDValues(False, val))
         self.connect(self.externalCommClass, QtCore.SIGNAL("stopThread"), self.stopThread)
         self.connect(self.externalCommClass, QtCore.SIGNAL("waypointChanged(PyQt_PyObject, PyQt_PyObject, PyQt_PyObject)"), lambda val1, val2, val3: self.changeWaypoint(val1, val2, val3))
+        self.connect(self.missionCommander, QtCore.SIGNAL("nextOrPreviousMission(PyQt_PyObject)"), self.nextOrPreviousMission)
         
         for i,v in enumerate(self.missionList):
             self.connect(v, QtCore.SIGNAL("debugMessage(PyQt_PyObject)"), self.sendDebugMessage)
     
     #Changes the Mission Debug Value on the Fly
     def setDebugMissionMode(self, value):
+	print "Writing Debug Message", value
         self.missionDebug = False
     
     def nextOrPreviousMission(self, next):

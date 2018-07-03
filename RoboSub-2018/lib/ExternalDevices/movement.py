@@ -162,7 +162,7 @@ class MovementController():
                 self.serialStream.write(bytearray([0xFF, 1, thrust]))
                 #print "1:" + str(thrusterPWMs[0])
             if thrusterPWMs[1] != self.previousPwm[1]:
-               thrust = np.interp(-thrusterPWMs[1],[-100,100],[0,254])
+               thrust = np.interp(thrusterPWMs[1],[-100,100],[0,254])
                thrust = int(thrust)
                self.serialStream.write(bytearray([0xFF, 2, thrust]))
                #print "2:" + str(thrusterPWMs[1])
@@ -221,6 +221,7 @@ class MovementController():
         **Returns**: \n
         * **thrusterPWMs** - List of final PWMs assigned to each thruster.
         * **[pos[0][0], pos[1][0], pos[2][0], pitchError, yawError, rollError]** - Remaining error in position, pitch, yaw, and roll.
+	     pose[0] = East, post[1] = Up, pos[2] = north
         * **yRotateDesired** - Desired yaw.\n
         '''
         yaw, pitch, roll = poseData[0], poseData[1], poseData[2]
@@ -229,7 +230,7 @@ class MovementController():
         minPitch = -20
         maxRoll = 20
         minRoll = -20
-        maxDepth = 6
+        maxDepth = 8
         minDepth = 3
         drivingMode = 0
         if len(userVariables) > 0:
@@ -332,7 +333,7 @@ class MovementController():
             
         #USER VARIABLE
         if abs(pos[0][0]) > 5 or abs(pos[2][0]) > 5:
-            if drivingMode == 2:
+            if True or drivingMode == 2:
                 yawError = -150 #clockwise
             elif drivingMode == 3:
                 yawError = 150 #Counter clockwise
@@ -570,9 +571,26 @@ class MovementController():
         
         return thrusterPWMs, [pos[0][0], pos[1][0], pos[2][0], pitchError, yawError, rollError], yRotateDesired
     
-    
-    def relativeMove(self, poseData, relNorthTranslateDesired, relEastTranslateDesired, relUpTranslateDesired,  relXRotateDesired, relYRotateDesired,
-                     relZRotateDesired, *xyz): #Translation in feet with respect to NSEW, rotation in degrees with respect to NSEW
+    def relativeMoveXYZ(self, poseData, x, y, z, yaw, pitch, roll):
+        #X is to the left and right of the sub
+        #Z is the front and back of the sub
+        #Y is depth
+        
+        heading = poseData[0]
+        
+        eastCompX = (x) * (math.cos(math.radians(heading)))
+        eastCompY= (z) * (math.sin(math.radians(heading)))
+
+        northCompX = (x) * -(math.sin(math.radians(heading)))
+        northCompY= (z) * (math.cos(math.radians(heading))) 
+        
+        northComp = -northCompX - northCompY
+        eastComp = eastCompX - eastCompY
+
+        return self.relativeMoveNEU(poseData, northComp, eastComp, y, pitch, yaw, roll)
+
+    def relativeMoveNEU(self, poseData, relNorthTranslateDesired, relEastTranslateDesired, relUpTranslateDesired,  relXRotateDesired, relYRotateDesired,
+                     relZRotateDesired): #Translation in feet with respect to NSEW, rotation in degrees with respect to NSEW
         '''
         Moves the Sub based on desired NESW coordinates and desired yaw, pitch, and roll.
         
@@ -594,50 +612,20 @@ class MovementController():
         yaw, pitch, roll = poseData[0], poseData[1], poseData[2]
         northPosition, eastPosition, upPosition = poseData[3], poseData[4], poseData[5]
         
-        if len(xyz) > 0:
-            try: 
-          
-                Nc = (xyz[2] * math.cos(math.radians(yaw))) + (xyz[0] * math.cos(math.radians(90 + yaw)))
-                Ec = (xyz[2] * math.sin(math.radians(yaw))) + (xyz[0] * math.sin(math.radians(90 + yaw)))
-                Uc = (xyz[1] * math.sin(math.radians(90-pitch))) + (xyz[2] * math.sin(math.radians(pitch)))
-                #Uc = xyz[2]
-                #Nc = 0
-                #Ec = 0
-                #Uc = 0
+	print "east", eastPosition, relEastTranslateDesired
                 
-                #yComp = math.pow(math.pow(xyz[2],2) - math.pow(xyz[0],2),.5)
-                #a = 90 - math.degrees(math.atan2(yComp, xyz[0]))
-        
-                dynamicNorth = Nc + northPosition
-                dynamicEast = Ec + eastPosition    
-                dynamicUp = Uc + upPosition
-                
-                #dynamicEast = -dynamicEast
-                #dynamicNorth = - dynamicNorth
-                
-                relXRotateDesired = 0
-                relYRotateDesired = xyz[4]
-                relZRotateDesired = 0
-                
-                #print "Angle Difference: " , a
-                
-            except:
-                print "Couldn't calculate relative waypoint, returning current position"
-                return poseData, poseData[3], poseData[4], poseData[5], poseData[1], poseData[0], poseData[2]
-                
-        else:                
-            dynamicNorth = relNorthTranslateDesired + northPosition
-            dynamicEast = relEastTranslateDesired + eastPosition    
-            dynamicUp = relUpTranslateDesired + upPosition
+        dynamicNorth = relNorthTranslateDesired + northPosition
+        dynamicEast = relEastTranslateDesired + eastPosition    
+        dynamicUp = relUpTranslateDesired + upPosition
         
         dynamicXRotate = (relXRotateDesired + pitch)%360
         dynamicYRotate = (relYRotateDesired + yaw)%360
         dynamicZRotate = (relZRotateDesired + roll)%360
-          
+
         
         return poseData, dynamicNorth, dynamicEast, dynamicUp, dynamicXRotate, dynamicYRotate, dynamicZRotate
-        #return advancedMove(self, poseData, dynamicNorth, dynamicEast, upTranslateDesired,  xRotateDesired, yRotateDesired,
-        #             zRotateDesired, userVariables)
+        #return self.advancedMove(self, poseData, dynamicNorth, dynamicEast, dynamicUp,  dynamicXRotate, dynamicYRotate,
+                     #dynamicZRotate)
         
     def trajectoryPlanningAndGeneration(self, desiredPosX, desiredPosY, desiredPosZ, desiredAngleX, desiredAngleY, desiredAngleZ, finalTime, ahrsData):
         '''

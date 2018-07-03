@@ -20,6 +20,7 @@ import widget_config_logger
 import time
 import mission_planner_2
 import mission_planner_3
+from yoloPython import yoloComputerVision
 import platform
 import subprocess
 import sparton_ahrs
@@ -68,6 +69,7 @@ class ExternalComm(QtCore.QObject):
         self.batteryVoltage = None
         self.pressureSensor = None
         self.externalCommThread = ExternalCommThread(self, mainWindow)
+        #self.externalCommThread.initBackplaneComms()
         self.timer = QtCore.QTimer()
         self.guiDataToSend = {}
         self.cvDataToSend = {}
@@ -99,6 +101,8 @@ class ExternalComm(QtCore.QObject):
 
     def resetPosition(self):
         self.externalCommThread.position = [0,0,0]
+        if self.externalCommThread.dvlResponseThread != None:
+            self.externalCommThread.dvlResponseThread.getList = []
 
     def writeMessage(self, string):
         self.mainWindowClass.systemOutput.insertPlainText(string + "\n")
@@ -280,7 +284,9 @@ class ExternalCommThread(QtCore.QThread):
         
         self.mainWindow = mainWindow
 
+
         self.isRunning = True
+	self.usingDebugValues = False
         self.prevAhrsData = None
         self.prevDvlData = None
         self.prevHydrasData = None
@@ -309,6 +315,7 @@ class ExternalCommThread(QtCore.QThread):
         self.velocity = [0, 0, 0]
         self.orientation = [0, 0, 0]
         self.dvlMiscData = [0, 0, 0]
+        self.timeSinceLastComm = None
         self.clearDVLDataInitial = True
         self.dvlAhrsDummyThread = None
         self.dvlResponseThread = None
@@ -361,24 +368,6 @@ class ExternalCommThread(QtCore.QThread):
         self.killSwitchResponseThread = None
         self.kill = None
 
-        # For TCB
-        self.thrusterPWMs = [0, 0, 0, 0, 0, 0, 0, 0]
-        self.tcb1Motor1Payload = [0, 0, 0]
-        self.tcb1Motor2Payload = [0, 0, 0]
-        self.tcb1Motor3Payload = [0, 0, 0]
-        self.tcb1Motor4Payload = [0, 0, 0]
-        self.tcb2Motor1Payload = [0, 0, 0]
-        self.tcb2Motor2Payload = [0, 0, 0]
-        self.tcb2Motor3Payload = [0, 0, 0]
-        self.tcb2Motor4Payload = [0, 0, 0]
-        self.thrusterPWMs = [0, 0, 0, 0, 0, 0, 0, 0]
-
-        # For PMUD
-        self.pmudGuiData = [0, 0]
-        self.powerStatus = 0
-        self.batteryVoltage = 0
-        self.batteryCurrent = 0
-
         # For SIB
         self.sibGuiData = [0, 0, 0]
         self.internalTemp1, self.internalTemp2, self.internalTemp3 = 0, 0, 0
@@ -419,6 +408,8 @@ class ExternalCommThread(QtCore.QThread):
             'useImage': False, 'useVideo': False,'useCameras':True, "frameSkip":"0",
             'imagePath':'i','videoPath': 'v'}
         self.computerVisionConnected = True
+	self.yoloPython = yoloComputerVision()
+	self.yoloPython.start()
         self.detectionData = {}
         #self.detectionData["classNumbers"] = []
         self.frameSkip = 15
@@ -435,12 +426,24 @@ class ExternalCommThread(QtCore.QThread):
         if mission == "None":
             return
         self.currentMission = mission
+		
 
     def __initSensors__(self):
         """
         Initialized sensors and data packets to be ran in the run loop.
         :return:
         """
+	print "Starting Backplane Comms..."
+        try:
+			
+			self.motherSerial = serial.Serial("/dev/ttyUSB0", 9600)
+			self.motherPackets = motherboard.motherBoardDataPackets(self.motherSerial)
+			
+			self.motherResponseThread = motherboard.motherBoardResponse(self.motherSerial)
+			self.motherResponseThread.start()
+			
+        except:
+            print "Unable to connect to Mother Board" 
         if True or platform.platform() == 'Linux-4.4.15-aarch64-with-Ubuntu-16.04-xenial':
                self.computerVisionProcess.start()
                pass
@@ -474,7 +477,7 @@ class ExternalCommThread(QtCore.QThread):
                         maestroPort = port[0]
             self.maestroSerial = serial.Serial(maestroPort, 9600)
         except:
-            self.maestroSerial = serial.Serial("/dev/ttyACM1", 9600)			                						     																		    
+            self.maestroSerial = serial.Serial("/dev/ttyACM0", 9600)			                						     																		    
             print "Maestro was not found"
             
         if False:
@@ -487,7 +490,7 @@ class ExternalCommThread(QtCore.QThread):
         else:
             pass
         
-        if True:
+        if False:
             try:
                 self.arduinoDisplaySerial = serial.Serial("/dev/ttyACM0", 115200)
                 self.arduinoDisplayDataPackets = displayArduino.displayArduino(self.arduinoDisplaySerial)
@@ -537,16 +540,7 @@ class ExternalCommThread(QtCore.QThread):
         except:
             print "Unable to connect to AHRS3"
         
-        try:
-			
-			self.motherSerial = serial.Serial("/dev/ttyUSB0", 9600)
-			self.motherPackets = motherboard.motherBoardDataPackets(self.motherSerial)
-			
-			self.motherResponseThread = motherboard.motherBoardResponse(self.motherSerial)
-			self.motherResponseThread.start()
-			
-        except:
-            print "Unable to connect to Mother Board" 
+        
 		#Pitch
         try:
             pass
@@ -587,6 +581,7 @@ class ExternalCommThread(QtCore.QThread):
         self.connect(self.externalCommClass, QtCore.SIGNAL("stopThread"), self.stopThread)
         
     def setDebugValues(self, data):
+	self.usingDebugValues = True
         self.position = data[:3]
         self.orientation = data[3:]
 
@@ -605,6 +600,7 @@ class ExternalCommThread(QtCore.QThread):
         :return:
         """
         self.isRunning = False
+	self.yoloPython.killThread()
         if self.spartonResponseThread1 != None:
         	self.spartonResponseThread1.killThread()
         if self.spartonResponseThread2 != None:
@@ -671,8 +667,19 @@ class ExternalCommThread(QtCore.QThread):
                 self.getSensorData()
                 self.emit(QtCore.SIGNAL("requestCurrentMission"))
                 self.emit(QtCore.SIGNAL("Data Updated"))
-                self.detectionData = self.computerVisionComm.detectionData
-                data = {"ahrs": self.ahrsData, "dvl": self.dvlGuiData, "pmud": self.pmudGuiData,
+                #self.detectionData = self.computerVisionComm.detectionData
+		if len(self.yoloPython.getList) > 0:
+			detectionData = self.yoloPython.getList.pop()
+			fixedDetections = []
+			for det in detectionData:
+				pos = det[2]
+				fixedDetections.append([det[0], pos[0], pos[1], pos[2], pos[3]])
+			self.detectionData = fixedDetections
+				
+				
+			
+			
+                data = {"ahrs": self.ahrsData, "dvl": self.dvlGuiData, 
                         "sib": self.sibGuiData,
                         "hydras": self.hydrasPingerData}
 
@@ -686,12 +693,12 @@ class ExternalCommThread(QtCore.QThread):
                 if self.computerVisionConnected:
                 	self.computerVisionComm.sendParameters()
 
+                self.detectionData = self.computerVisionComm.detectionData
                 self.getSensorData()
                 self.emit(QtCore.SIGNAL("Data Updated"))
                 self.emit(QtCore.SIGNAL("requestCurrentMission"))
                 if self.currentMission != None:
                     self.emit(QtCore.SIGNAL("gotPositionData(PyQt_PyObject, PyQt_PyObject)"), self.position+self.orientation, self.currentMission.generalWaypoint)
-		self.detectionData = self.computerVisionComm.detectionData
 		
 		# Reconnect to the maestro after the kill switch
 		'''
@@ -721,7 +728,7 @@ class ExternalCommThread(QtCore.QThread):
                 
                 self.emit(QtCore.SIGNAL("requestGuiData()"))
                 
-                data = {"ahrs": self.ahrsGuiData, "dvl": self.dvlGuiData, "pmud": self.pmudGuiData,
+                data = {"ahrs": self.ahrsGuiData, "dvl": self.dvlGuiData, 
                         "sib": self.sibGuiData,
                         "hydras": self.hydrasPingerData}
                 
@@ -766,6 +773,8 @@ class ExternalCommThread(QtCore.QThread):
         return ahrsDataMedian
 
     def getSensorData(self):
+	if self.usingDebugValues == True:
+		return
 
         #print "Getting Sensor Data"
         if self.killSwitchSerial != None:
@@ -787,7 +796,7 @@ class ExternalCommThread(QtCore.QThread):
 				                      [ 0, 1, 0],
 									  [ 0, 0, 1]]'''
 				
-				self.ahrsData1[1] = -self.ahrsData1[1]
+				self.ahrsData1[1] = -self.ahrsData1[1] + 5
 				self.ahrsData1[2] = -self.ahrsData1[2]
 				self.ahrsData1[0] = (self.ahrsData1[0] + 180) %360
                 #self.ahrsData1[0] = (self.ahrsData1[0] + 169)%360
@@ -865,6 +874,13 @@ class ExternalCommThread(QtCore.QThread):
                     depth3 = self.motherMessage[3]
                     depth = np.median([depth3])
                     self.position[2] = float((depth-95))/9.2
+                if(self.motherMessage[0] == 656):
+                    if self.mainWindow.subwin_mainWidget.debugCheck.isChecked():
+			    print "Starting autonomous..."
+			    time.sleep(1)
+			    self.mainWindow.subwin_mainWidget.debugCheck.setChecked(False)
+                            #self.mainWindow.changeText()
+			    self.mainWindow.startPressed()
                 elif(self.motherMessage[0] == 648):#Voltage Data	
 					self.batteryVoltage = self.motherMessage[1]
                 #print self.motherMessage
@@ -985,6 +1001,8 @@ class ExternalCommThread(QtCore.QThread):
             self.startArduinoDisplay = time.time()
 
     def getDVLData(self, ahrsData):
+        if self.timeSinceLastComm == None:
+            self.timeSinceLastComm = time.time()
         """
         Communicates with the boards to accept sensor, feedback, control the SUB's movement, and communicate with the GUI
         :param ahrsData: Orientation data from the AHRS
@@ -999,15 +1017,20 @@ class ExternalCommThread(QtCore.QThread):
                 self.velocity = [xVel, yVel, zVel]
                 heading = ahrsData[0]
                 timeVelEstX, timeVelEstY, timeVelEstZ = ensemble[1]
+                timeDifference = self.timeSinceLastComm - time.time()
+                timeDifference = 1/float(8)
+                timeVelEstX = timeDifference
+                timeVelEstY= timeDifference
+                timeVelEstZ = timeDifference
                 #print "Values are", self.velocity, ensemble[1]
                 #Probably have to fix the following equations
                 if not(xVel < -32):# If no error in DVL, indicated by velocity being less than 32
                     degToRad = 3.1415926535 / 180
-                    velNcompX = (xVel) * round(math.cos(heading * degToRad))
-                    velNcompY = (yVel) * -round(math.sin((heading) * degToRad))
+                    velNcompX = (xVel) * (math.cos(math.radians(heading)))
+                    velNcompY = (yVel) * (math.sin(math.radians(heading)))
 
-                    velEcompX = (xVel) * -round(math.sin(heading * degToRad))
-                    velEcompY = (yVel) * round(math.cos((heading) * degToRad))
+                    velEcompX = (xVel) * -(math.sin(math.radians(heading)))
+                    velEcompY = (yVel) * (math.cos(math.radians(heading))) 
 
                     '''velNcompX = xVel * math.cos(heading * degToRad)
                     velNcompY = yVel * math.sin(heading *degToRad)
@@ -1016,17 +1039,18 @@ class ExternalCommThread(QtCore.QThread):
                     velEcompY = yVel * math.cos(heading * degToRad)'''
 
 
-                    lastDistanceTraveledN = (velNcompX * timeVelEstX*100) + (
-                                velNcompY * timeVelEstY*100)# * 1000 / 1.74
-                    lastDistanceTraveledE = (velEcompX * timeVelEstX*100) + (
-                                velEcompY * timeVelEstY*100)# * 1000 / 1.74
+                    lastDistanceTraveledN = (velNcompX * timeVelEstX) + (
+                                velNcompY * timeVelEstY)#  1000 / 1.74
+                    lastDistanceTraveledE = (velEcompX * timeVelEstX) + (
+                                velEcompY * timeVelEstY)# * 1000 / 1.74
                     lastDistanceTraveledD = zVel * timeVelEstZ
 
                     #Add distance traveled to last known position
                     #North
-                    self.position[0] = self.position[0] - lastDistanceTraveledN
+		    #Equation works for north component using East equation
+                    self.position[0] = self.position[0] - (lastDistanceTraveledE * float(73)/float(21))
                     #East
-                    self.position[1] = self.position[1] + lastDistanceTraveledE
+                    self.position[1] = self.position[1] - (lastDistanceTraveledN * float(73)/float(21))
 
                 else:
                     print "DVL Error"
@@ -1096,6 +1120,6 @@ class ComputerVisionProcess(QtCore.QThread):
         self.os = platform.platform()
 
     def run(self):
-        if True or self.os == 'Linux-4.4.15-aarch64-with-Ubuntu-16.04-xenial':
+        if False or self.os == 'Linux-4.4.15-aarch64-with-Ubuntu-16.04-xenial':
             print "Starting computer vision process..."
             subprocess.call('/media/sub_data/robosub-2018/MechaVision/yolo_cpp/MechaVision')

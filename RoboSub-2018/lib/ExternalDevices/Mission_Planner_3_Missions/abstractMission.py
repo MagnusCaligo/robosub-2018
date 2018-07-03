@@ -1,4 +1,5 @@
 from PyQt4 import QtCore, QtGui
+import math
 '''
 This is class contains the abstraction of a mission
 All missions will look something like this
@@ -17,8 +18,8 @@ class AbstractMission(QtCore.QObject):
         self.name = parameters["name"]
         self.parameters = {}
         
-        self.generalDistanceError = 2
-        self.generalRotationError = 5
+        self.generalDistanceError = 1
+        self.generalRotationError = 6
         
         
         self.waypointError = None
@@ -69,33 +70,23 @@ class AbstractMission(QtCore.QObject):
     def initalizeOnMissionStart(self):
         #If we are using relative waypoints we need to adjust them only when the mission is starting
         if self.parameters["useRelativeWaypoint"] in ["True", 'true']: #If we are using relativeWaypoint we need to modify the waypoint based on our current position
-            newWaypoint = []
-            
-            newWaypoint.append(self.position[0] + (self.generalWaypoint[0] * math.cos(math.radians(self.orientation[0]))))
-            newWaypoint.append(self.position[1] + (self.generalWaypoint[1] * math.sin(math.radians(self.orientation[0]))))
-            newWaypoint.append(self.position[2] + self.generalWaypoint[2])
-            
-            newWaypoint.append((self.orientation[0] + self.generalWaypoint[0]) % 360)
-            newWaypoint.append(self.orientation[1] + self.generalWaypoint[1]) #I don't mod by 360 because I'm going to assume we aren't going to be doing ridiculous angles
-            newWaypoint.append(self.orientation[2] + self.generalWaypoint[2]) # ^
-            
-            self.finalWaypoint = newWaypoint
+			
+            pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, self.generalWaypoint[1],self.generalWaypoint[2],self.generalWaypoint[0],
+				self.generalWaypoint[3],self.generalWaypoint[4],self.generalWaypoint[5])
+
+            self.finalWaypoint = [n,e,u,y,p,r]
+			
+            self.writeDebugMessage("Waypoint is " + str(self.finalWaypoint))
 
         elif self.parameters["useRelativeWorld"] in ["True", 'true']:
-            newWaypoint = []
-            
-            newWaypoint.append(self.position[0] + self.generalWaypoint[0])
-            newWaypoint.append(self.position[1] + self.generalWaypoint[1])
-            newWaypoint.append(self.position[2] + self.generalWaypoint[2])
+            pose, n, e, u, p, y, r = self.movementController.relativeMoveNEU(self.orientation + self.position, self.generalWaypoint[0],self.generalWaypoint[1],self.generalWaypoint[2],
+				self.generalWaypoint[3],self.generalWaypoint[4],self.generalWaypoint[5])
 
-            newWaypoint.append(self.generalWaypoint[3])
-            newWaypoint.append(self.generalWaypoint[4])
-            newWaypoint.append(self.generalWaypoint[5])
-
-            
-            self.finalWaypoint = newWaypoint
+            self.finalWaypoint = [n,e,u, y,p,r]
+            self.writeDebugMessage("Waypoint is " + str(self.finalWaypoint))
         else:
             self.finalWaypoint = self.generalWaypoint #If not using any relativity, then we can assume that the waypoint is absolute coordinate
+
     
 
     def setMovementController(self, movementController):
@@ -106,10 +97,11 @@ class AbstractMission(QtCore.QObject):
 
     def moveToWaypoint(self, waypoint):
         self.waypointError = self.movementController.advancedMove(self.orientation+self.position, waypoint[0], waypoint[1], waypoint[2], 
-                      waypoint[4], waypoint[3], waypoint[5], self.parameters["drivingMode"])[1]
+                      waypoint[4], waypoint[3], waypoint[5])[1]
+	#print "Waypoint Error:", self.waypointError
         
         reachedWaypoint = True #Assume we reached the waypoint, check the math to see if we are within the error
-        if abs(self.waypointError[0]) < self.generalDistanceError and abs(self.waypointError[1]) < self.generalDistanceError and abs(self.waypointError[2]) < self.generalDistanceError:
+        if abs(self.waypointError[0]) < self.generalDistanceError and abs(self.waypointError[1]) < self.generalDistanceError + 5 and abs(self.waypointError[2]) < self.generalDistanceError:
             pass #This will only be called if we are actually at the waypoint in terms of position
         else:
             reachedWaypoint = False
@@ -119,8 +111,6 @@ class AbstractMission(QtCore.QObject):
             #print "Not there orientation"
         else:
             reachedWaypoint = False
-            
-        
         return reachedWaypoint
 
 
