@@ -231,7 +231,7 @@ class MovementController():
         maxRoll = 20
         minRoll = -20
         maxDepth = 8
-        minDepth = -1
+        minDepth = 3
         drivingMode = 0
         if len(userVariables) > 0:
             drivingMode = userVariables[0]
@@ -333,7 +333,7 @@ class MovementController():
             
         #USER VARIABLE
         if abs(pos[0][0]) > 5 or abs(pos[2][0]) > 5:
-            if drivingMode == 2:
+            if True or drivingMode == 2:
                 yawError = -150 #clockwise
             elif drivingMode == 3:
                 yawError = 150 #Counter clockwise
@@ -622,7 +622,6 @@ class MovementController():
         dynamicYRotate = (relYRotateDesired + yaw)%360
         dynamicZRotate = (relZRotateDesired + roll)%360
 
-        print "Yaw", dynamicYRotate, relYRotateDesired, yaw 
         
         return poseData, dynamicNorth, dynamicEast, dynamicUp, dynamicXRotate, dynamicYRotate, dynamicZRotate
         #return self.advancedMove(self, poseData, dynamicNorth, dynamicEast, dynamicUp,  dynamicXRotate, dynamicYRotate,

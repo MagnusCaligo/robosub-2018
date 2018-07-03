@@ -18,9 +18,9 @@ class yoloComputerVision(QtCore.QThread):
 		if not onLinux:
 			return
 
-		self.dataFile = "/media/sub_data/data/test.data"
-		self.weightFile = "/media/sub_data/6_15_test_40000.weights"
-		self.cfgFile = "/media/sub_data/cfg/6_15_test.cfg"
+		self.dataFile = "/media/sub_data/data/justGates.data"
+		self.weightFile = "/media/sub_data/weights/tinyYolov3.backup"
+		self.cfgFile = "/media/sub_data/cfg/tinyYoloV3-justGates.cfg"
 
 		self.srcPoints = [(0,0,0), (1,0,0), (2,0,0), (1, -.5, 0)]
 
@@ -184,7 +184,7 @@ class yoloSimplified:
 			img = cv2.flip(img, -1)
 			#t, img = video.read()
 			yoloImage = dn.IMAGE()
-			detections = dn.detect_np(self.net, self.meta, img)
+			detections = dn.detect_np(self.net, self.meta, img, thesh=.11, hier_thresh = .11)
 			newDetections = []
 			seeFruits = {8:0, 9:0, 10:0, 11:0}
 			for detection in detections:

@@ -240,8 +240,6 @@ class MainWindow(QtGui.QMainWindow):
 	if self.externalCommClass.running == True:
 		self.stopPressed()
 		time.sleep(1)
-		if self.startedAuto == True:
-			return
 		self.startedAuto = True
 	self.resetButtonClicked()
         if self.subwin_mainWidget.debugCheck.isChecked():
