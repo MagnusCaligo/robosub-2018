@@ -8,7 +8,7 @@ import copy
  
 class StartingGateMission(AbstractMission):
     
-    defaultParameters = AbstractMission.defaultParameters + "Gate_Side = Left\n" + "Gate_Color = Red\n"#"Test = False\n" + "sColor = UNSPEC"; # Add Any Necessary Parameters
+    defaultParameters = AbstractMission.defaultParameters + "Gate_Side = Left\n" + "Gate_Color = Red\n distanceThrough = 10\n"#"Test = False\n" + "sColor = UNSPEC"; # Add Any Necessary Parameters
 
     def __init__(self, parameters): #Waypoint Handling of events
         AbstractMission.__init__(self, parameters)
@@ -161,7 +161,12 @@ class StartingGateMission(AbstractMission):
                 rightArmDetection = detections[0]
                 
             if leftArmDetection[2] + (.5 * leftArmDetection[4]) < 608 - self.pixelError and leftArmDetection[3] > self.pixelError: #We need to check that we can see the entire post; if not then we can't use solvePnP
-                img_pts = [(leftArmDetection[1], leftArmDetection[2]), (detection[1] + detection[3], detection[2]), (detection[1] + detection[3], + detection[2] + detection[4]), (detection[1], detection[2] + detection[4])]
+                #img_pts = [(leftArmDetection[1], leftArmDetection[2]), (detection[1] + detection[3], detection[2]), (detection[1] + detection[3], + detection[2] + detection[4]), (detection[1], detection[2] + detection[4])]
+		p1 = (leftArmDetection[1], leftArmDetection[2])
+		p2 = (leftArmDetection[1] + leftArmDetection[3], leftArmDetection[2])
+		p3 = (leftArmDetection[1] + leftArmDetection[3], leftArmDetection[2] + leftArmDetection[4])
+		p4 = (leftArmDetection[1], leftArmDetection[2] + leftArmDetection[4])
+		img_pts = (p1,p2,p3,p4)	
                 rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
                 tvec[0][0]-=.25 #Camera isn't centered with Percy, so move it over a bit
                 tvec[1][0]-=.5 #tvec is from top left corner, so we want to move a bit deeper
@@ -170,7 +175,7 @@ class StartingGateMission(AbstractMission):
                 nAvg = 0
                 eAvg = 0
                 uAvg = 0
-		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0] + 1, 0,0,0,0)
+		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0], tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
                 self.rightArmPosSum.append([north,east,up])
                 for values in self.leftArmPosSum:
                     nAvg += values[0]
@@ -200,13 +205,13 @@ class StartingGateMission(AbstractMission):
                 tvec[0][0]-=1.25 #Camera isn't centered with Percy, so move it over a bit
                 tvec[1][0]+=.3 #tvec is from top left corner, so we want to move a bit deeper
                 tvec[2][0] *= -1 #Z decreases towards the front of the sub, so if we want to move forward this needs to be negative
-		tvec[2][0] -= 30
+		#tvec[2][0] -= float(self.parameters["distanceThrough"]
 		print "Right Tvec is", tvec
 		
                 nMedian = []
                 eMedian = []
                 uMedian = []
-		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0], tvec[2][0],0,0,0)
+		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0], tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
 		print "Single position calculation", north, east, up
                 self.rightArmPosSum.append([north,east,up])
 		
