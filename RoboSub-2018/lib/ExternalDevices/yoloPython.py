@@ -184,7 +184,7 @@ class yoloSimplified:
 			img = cv2.flip(img, -1)
 			#t, img = video.read()
 			yoloImage = dn.IMAGE()
-			detections = dn.detect_np(self.net, self.meta, img, thesh=.15, hier_thresh = .15)
+			detections = dn.detect_np(self.net, self.meta, img, thesh=.2, hier_thresh = .2)
 			newDetections = []
 			seeFruits = {8:0, 9:0, 10:0, 11:0}
 			for detection in detections:
