@@ -8,7 +8,7 @@ Roll_Ki,0.0
 scanlinesmask_Torpedo,0.0
 XPosition_Kd,0.0
 YPosition_Integration Min,10.0
-Roll_Kp,0.5
+Roll_Kp,0.20000000298023224
 P1_Torpedo,0.0
 YPosition_Kd,4.650000095367432
 previousWidgetConfig,0
@@ -42,6 +42,7 @@ Roll_Controller,0.0
 Pitch_Integration Min,0.0
 Pitch_Controller,0.0
 ZPosition_Ki,0.0
+YPosition_Controller,0.7850000262260437
 Pitch_Ki,0.0
 XPosition_Integration Min,0.0
 YawForward_Controller,0.0
@@ -60,14 +61,13 @@ ZPosition_Integration Max,0.0
 ZPosition_Integration Min,0.0
 >>>>>>> bd129f4210720261d482e1776a7a65390ef7ca7b,
 valueMin_Torpedo,0.0
-YPosition_Controller,0.7850000262260437
+YawBackward_Ki,0.0
 XPosition_Controller,0.0
 Pitch_Integration Max,0.0
 DoneWriting,True
 thresholdMax_Torpedo,0.0
 YawBackward_Kp,0.0
-valueMax_Torpedo,0.0
 YPosition_Integration Max,27.66670036315918
 Roll_Integration Min,0.0
-YawBackward_Ki,0.0
+valueMax_Torpedo,0.0
 DoneWriting,True

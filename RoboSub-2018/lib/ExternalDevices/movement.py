@@ -333,7 +333,7 @@ class MovementController():
             
         #USER VARIABLE
         if abs(pos[0][0]) > 5 or abs(pos[2][0]) > 5:
-            if True or drivingMode == 2:
+            if False or drivingMode == 2:
                 yawError = -150 #clockwise
             elif drivingMode == 3:
                 yawError = 150 #Counter clockwise
@@ -612,7 +612,6 @@ class MovementController():
         yaw, pitch, roll = poseData[0], poseData[1], poseData[2]
         northPosition, eastPosition, upPosition = poseData[3], poseData[4], poseData[5]
         
-	print "east", eastPosition, relEastTranslateDesired
                 
         dynamicNorth = relNorthTranslateDesired + northPosition
         dynamicEast = relEastTranslateDesired + eastPosition    
