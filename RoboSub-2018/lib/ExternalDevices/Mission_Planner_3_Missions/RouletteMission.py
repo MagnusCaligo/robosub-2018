@@ -15,10 +15,13 @@ class RouletteMission(AbstractMission):
     def initalizeOnMissionStart(self):
 	AbstractMission.initalizeOnMissionStart(self)
 
-	#
-	self.useBottomCamera()
+#	Camera Type to Use
+
+	USE_BOTTOMCAM = self.useBottomCamera; 
+	USE_FRONTCAM = self.useFrontCamera;
+
 	self.calculatedWaypoint = None
-	#self.useFrontCamera()
+	
 
 #       ********Roulette Detections********           
 	self.FrontCam_RouletteFound = False
@@ -64,12 +67,19 @@ class RouletteMission(AbstractMission):
 #-----------------------END------------------------#
     def UPDATE_VIZUALS(self):
 #	FRONT CAMERA VIZUALS
+	USE_FRONTCAM # see top for function
 	self.FrontCam_RouletteFound = False
 	for det in self.detectionData:
 		if det[0] == self.Roulette_ClassNumber:
 			self.FrontCam_RouletteFound = True
+	
+#	BOTTOM CAMERA VIZUALS
+	USE_BOTTOMCAM; # see top for function
 
-#TODO	BOTTOM CAMERA VIZUALS
+	self.BottomCam_RouletteFound = False
+	for det in self.detectionData:
+		if det[0] == self.Roulette_ClassNumber:
+			self.BottomCam_RouletteFound = True
 
 
 #-----The UPDATE: Essentially the main-------#
