@@ -126,6 +126,7 @@ class yoloSimplified:
 
                     if len(self.imgPoints) >= 4:
                         rvec, tvec = cv2.solvePnP(np.array(self.srcPoints).astype("float32"), np.array(self.imgPoints).astype("float32"), np.array(self.camMat).astype("float32"), np.zeros((4,1)))[-2:]
+                        print "Found more than four targets, values are", rvec, tvec
 
                     for detection in detections:
                             loc = detection[2]
