@@ -137,7 +137,7 @@ def nparray_to_image(img):
 
     return image
 
-def detect(net, meta, image, thresh=.1, hier_thresh=.1, nms=.45):
+def detect(net, meta, image, thresh=.2, hier_thresh=.2, nms=.45):
     im = load_image(image, 0, 0)
     num = c_int(0)
     pnum = pointer(num)
@@ -157,7 +157,7 @@ def detect(net, meta, image, thresh=.1, hier_thresh=.1, nms=.45):
     free_detections(dets, num)
     return res
 
-def detect_np(net, meta, np_img, thresh=.1, hier_thresh=.1, nms=.45):
+def detect_np(net, meta, np_img, thresh=.0, hier_thresh=.0, nms=.45):
     im = nparray_to_image(np_img)
     num = c_int(0)
     pnum = pointer(num)
