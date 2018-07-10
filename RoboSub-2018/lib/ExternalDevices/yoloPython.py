@@ -10,7 +10,7 @@ import cv2
 import numpy as np
 import time
 
-useVideo = True
+useVideo = False
 videoFile = "/media/sub_data/example3.mp4"
 
 
@@ -27,7 +27,8 @@ class yoloComputerVision(QtCore.QThread):
 
 		self.srcPoints = [(0,0,0), (1,0,0), (2,0,0), (1, -.5, 0)]
 
-		self.camMat = [[808, 0, 408],
+		self.activeCamera = None
+		self.activeCameraMat = [[808, 0, 408],
 			       [0, 608, 304],
 			       [0,   0, 1]]
 
@@ -37,6 +38,20 @@ class yoloComputerVision(QtCore.QThread):
 
 		self.getList = []
 		self.running = True
+
+        def useBottomCamera(self):
+            if self.activeCamera != None:
+                self.activeCamera.stopCapture()
+	    bus = pc2.BusManager()
+            self.activeCamera.connect(bus.getCameraFromIndex(1))
+            self.activeCamera.startCapture()
+
+        def useFrontCamera(self):
+            if self.activeCamera != None:
+                self.activeCamera.stopCapture()
+	    bus = pc2.BusManager()
+            self.activeCamera.connect(bus.getCameraFromIndex(0))
+            self.activeCamera.startCapture()
 
 	def run(self):
 		if not onLinux:
@@ -71,9 +86,9 @@ class yoloComputerVision(QtCore.QThread):
 			video = cv2.VideoCapture(videoFile)
 		else:
 			bus = pc2.BusManager()
-			self.cam = pc2.Camera()
-			self.cam.connect(bus.getCameraFromIndex(0))
-			self.cam.startCapture()
+			self.activeCamera = pc2.Camera()
+			self.activeCamera.connect(bus.getCameraFromIndex(0))
+			self.activeCamera.startCapture()
 
 
 
@@ -84,7 +99,7 @@ class yoloComputerVision(QtCore.QThread):
 					video = cv2.VideoCapture(videoFile)
 					continue
 			else:
-				self.image = self.cam.retrieveBuffer()
+				self.image = self.activeCamera.retrieveBuffer()
 				self.image = self.image.convert(pc2.PIXEL_FORMAT.BGR)
 				img = np.array(self.image.getData(), dtype="uint8").reshape((self.image.getRows(), self.image.getCols(), 3))
 				img = cv2.flip(img, -1)
@@ -111,16 +126,16 @@ class yoloComputerVision(QtCore.QThread):
 
 				imgPoints = [(int(cherry[2][0]), int(cherry[2][1])),(int(banana[2][0]), int(banana[2][1])),(int(grape[2][0]), int(grape[2][1])), (bx,by)]
 				
-				rvec, tvec = cv2.solvePnP(np.array(self.srcPoints).astype("float32"), np.array(imgPoints).astype("float32"), np.array(self.camMat).astype("float32"), np.zeros((4,1)))[-2:]
+				rvec, tvec = cv2.solvePnP(np.array(self.srcPoints).astype("float32"), np.array(imgPoints).astype("float32"), np.array(self.activeCameraMat).astype("float32"), np.zeros((4,1)))[-2:]
 
-				(pose, jacobian) = cv2.projectPoints(np.array([(0,0,1.0)]), rvec, tvec, np.array(self.camMat).astype("float32"), None)
+				(pose, jacobian) = cv2.projectPoints(np.array([(0,0,1.0)]), rvec, tvec, np.array(self.activeCameraMat).astype("float32"), None)
 				cv2.line(img, (int(banana[2][0]), int(banana[2][1])), (int(pose[0][0][0]), int(pose[0][0][1])), (255,0,0), 2)
 
 
 
 			self.getList.append(newDetections)
 			cv2.imshow("Vision", img)
-		self.cam.stopCapture()
+		self.activeCamera.stopCapture()
 
 	def killThread(self):
 		self.running = False

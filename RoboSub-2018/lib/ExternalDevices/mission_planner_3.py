@@ -139,6 +139,8 @@ class MissionPlanner(QtCore.QThread):
         
         for i,v in enumerate(self.missionList):
             self.connect(v, QtCore.SIGNAL("debugMessage(PyQt_PyObject)"), self.sendDebugMessage)
+	    self.connect(v, QtCore.SIGNAL("useFrontCamera"), self.externalCommClass.externalCommThread.yoloPython.useFrontCamera)
+	    self.connect(v, QtCore.SIGNAL("useBottomCamera"), self.externalCommClass.externalCommThread.yoloPython.useBottomCamera)
     
     #Changes the Mission Debug Value on the Fly
     def setDebugMissionMode(self, value):

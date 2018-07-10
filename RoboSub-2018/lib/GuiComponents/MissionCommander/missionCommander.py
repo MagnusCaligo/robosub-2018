@@ -11,6 +11,7 @@ from lib.ExternalDevices.movement import MovementController, JoystickMovementCon
 from lib.ExternalDevices.Mission_Planner_3_Missions.NavigationMission import NavigationMission
 from lib.ExternalDevices.Mission_Planner_3_Missions.DiceMission import DiceMission 
 from lib.ExternalDevices.Mission_Planner_3_Missions.StartingGateMission import StartingGateMission
+from lib.ExternalDevices.Mission_Planner_3_Missions.RouletteMission import RouletteMission
 
 class MissionCommander(QtCore.QObject):
     """
@@ -110,6 +111,8 @@ class MissionCommander(QtCore.QObject):
             mission = DiceMission
         elif missionType == "Entry Gate v3":
             mission = StartingGateMission
+	elif missionType == "Roulette":
+	    mission = RouletteMission
             
         if hasattr(mission, "defaultParameters"):
             self.ui_missionCommander.parameterStringInputs.clear()
@@ -144,6 +147,9 @@ class MissionCommander(QtCore.QObject):
             self.ui_missionCommander.missionTypeCB.setCurrentIndex(2)
         elif isinstance(mission, StartingGateMission):
             self.ui_missionCommander.missionTypeCB.setCurrentIndex(3)
+        elif isinstance(mission, RouletteMission):
+            self.ui_missionCommander.missionTypeCB.setCurrentIndex(4)
+	
         
         #Modify the TextLine Edits
         self.ui_missionCommander.missionNameLineEdit.setText(mission.name)
@@ -318,6 +324,8 @@ class MissionCommander(QtCore.QObject):
             mission = NavigationMission(parameters)
         elif missionType == "Entry Gate v3":
             mission = StartingGateMission(parameters)
+        elif missionType == "Roulette":
+            mission = RouletteMission(parameters)
             
         mission.parameters["missionType"] = missionType
         mission.name = str(parameters["name"])
@@ -407,6 +415,8 @@ class MissionCommander(QtCore.QObject):
                 mission = NavigationMission(parameters)
             elif missionType == "Entry Gate v3":
                 mission = StartingGateMission(parameters)
+            elif missionType == "Roulette":
+                mission = RouletteMission(parameters)
                 
             if mission == None:
                 print "Didn't load correctly: " + missionType

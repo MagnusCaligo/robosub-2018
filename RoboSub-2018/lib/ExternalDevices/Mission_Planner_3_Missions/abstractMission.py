@@ -57,6 +57,12 @@ class AbstractMission(QtCore.QObject):
         for i,v in parameters.iteritems():
             self.parameters[i] = v
 
+    def useFrontCamera(self):
+	self.emit(QtCore.SIGNAL("useFrontCamera"))
+
+    def useBottomCamera(self):
+	self.emit(QtCore.SIGNAL("useBottomCamera"))
+
     def updateDetectionData(self, detections):
         self.detectionData = detections
 
@@ -68,6 +74,7 @@ class AbstractMission(QtCore.QObject):
         pass
     
     def initalizeOnMissionStart(self):
+	self.useFrontCamera()
         #If we are using relative waypoints we need to adjust them only when the mission is starting
         if self.parameters["useRelativeWaypoint"] in ["True", 'true']: #If we are using relativeWaypoint we need to modify the waypoint based on our current position
 			

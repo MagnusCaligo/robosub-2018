@@ -276,6 +276,7 @@ class Ui_MissionCommander(object):
         self.missionTypeCB.setItemText(1, _translate("MissionCommander", "Navigation v3", None))
         self.missionTypeCB.setItemText(2, _translate("MissionCommander", "Dice Mission", None))
         self.missionTypeCB.setItemText(3, _translate("MissionCommander", "Entry Gate v3", None))
+        self.missionTypeCB.setItemText(3, _translate("MissionCommander", "Roulette", None))
         self.lookLeft.setText(_translate("MissionCommander", "Look to the Left", None))
         self.lookRight.setText(_translate("MissionCommander", "Look to the Right", None))
         self.label.setText(_translate("MissionCommander", "Max Time in Seconds", None))

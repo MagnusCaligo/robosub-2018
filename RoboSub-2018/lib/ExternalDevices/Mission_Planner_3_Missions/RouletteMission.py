@@ -15,6 +15,11 @@ class RouletteMission(AbstractMission):
     def initalizeOnMissionStart(self):
 	AbstractMission.initalizeOnMissionStart(self)
 
+	#
+	self.useBottomCamera()
+	self.calculatedWaypoint = None
+	#self.useFrontCamera()
+
 #       ********Roulette Detections********           
 	self.FrontCam_RouletteFound = False
 	self.BottomCam_RouletteFound= False
@@ -23,7 +28,7 @@ class RouletteMission(AbstractMission):
 	self.Roulette_ClassNumber = None
 
 	#Location of Roulette board
-	self.Roulette_Waypoint
+	self.Roulette_Waypoint= None
 
 
 	#--Timing Stuff--#
@@ -72,17 +77,17 @@ class RouletteMission(AbstractMission):
     def update(self):
 
 
-	UPDATE_VIZUALS();
+	self.UPDATE_VIZUALS();
 
 	if( self.FrontCam_RouletteFound or self.BottomCam_RouletteFound ):
 	    if( self.BottomCam_RouletteFound ):
-		Orient_Above_Board();
+		self.Orient_Above_Board();
 	    else:
 		self.writeDebugMessage("Will Spin Above Target...")
-		Move_Above_Board();
+		self.Move_Above_Board();
 
 	else:
-	    Search_RouletteBoard()
+	    self.Search_RouletteBoard()
 
 
 
