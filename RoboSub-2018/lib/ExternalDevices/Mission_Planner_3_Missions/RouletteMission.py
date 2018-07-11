@@ -26,12 +26,21 @@ class RouletteMission(AbstractMission):
 #       ********Roulette Detections********           
 	self.FrontCam_RouletteFound = False
 	self.BottomCam_RouletteFound= False
+	
+#	********Roulette MiddlePosition****
 
 	#TODO Change this number to actual value
 	self.Roulette_ClassNumber = None
+	self.src_pts = [(0,0,0),(0,990.6,0),(990.6,990.6,0),(0,0,990.6)]
+	self.
 
 	#Location of Roulette board
 	self.Roulette_Waypoint= None
+
+#	Fake Camera Matrix
+	self.cameraMatrix = [[808,     0, 404],
+			     [   0, 608 , 304],
+			     [   0,    0, 1.0],]
 
 
 	#--Timing Stuff--#
@@ -62,19 +71,26 @@ class RouletteMission(AbstractMission):
 	self.moveToWaypoint(self.Roulette_Waypoint)
 
 
-#TODO    def Orient_Above_Board(self):
+    def Orient_Above_Board(self):
+	self.writeDebugMessage("Lining up with Board...")
+	if(self.detectionData == )
+		rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(self.img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
+		p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0], -tvec[2], -tvec[1], 0, 0, 0)
+		self.Roulette_Waypoint = [n,e,u,y,p,r]
+		self.moveToWaypoint(self.Roulette_Waypoint)
+	
 	
 #-----------------------END------------------------#
     def UPDATE_VIZUALS(self):
 #	FRONT CAMERA VIZUALS
-	USE_FRONTCAM # see top for function
+	USE_FRONTCAM()#  see top for function
 	self.FrontCam_RouletteFound = False
 	for det in self.detectionData:
 		if det[0] == self.Roulette_ClassNumber:
 			self.FrontCam_RouletteFound = True
 	
 #	BOTTOM CAMERA VIZUALS
-	USE_BOTTOMCAM; # see top for function
+	USE_BOTTOMCAM()#  see top for function
 
 	self.BottomCam_RouletteFound = False
 	for det in self.detectionData:
