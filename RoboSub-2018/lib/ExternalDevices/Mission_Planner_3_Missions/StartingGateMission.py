@@ -40,8 +40,8 @@ class StartingGateMission(AbstractMission):
         self.rightArmPosSum = []
 	self.movementDestination = None
         
-        self.armClassNumber = 0
-        self.topClassNumber = 1
+        self.armClassNumber = 10
+        self.topClassNumber = 11
 
         
         
@@ -165,10 +165,10 @@ class StartingGateMission(AbstractMission):
                 
             if leftArmDetection[2] + (.5 * leftArmDetection[4]) < 608 - self.pixelError and leftArmDetection[3] > self.pixelError: #We need to check that we can see the entire post; if not then we can't use solvePnP
                 #img_pts = [(leftArmDetection[1], leftArmDetection[2]), (detection[1] + detection[3], detection[2]), (detection[1] + detection[3], + detection[2] + detection[4]), (detection[1], detection[2] + detection[4])]
-		p1 = (leftArmDetection[1], leftArmDetection[2])
-		p2 = (leftArmDetection[1] + leftArmDetection[3], leftArmDetection[2])
-		p3 = (leftArmDetection[1] + leftArmDetection[3], leftArmDetection[2] + leftArmDetection[4])
-		p4 = (leftArmDetection[1], leftArmDetection[2] + leftArmDetection[4])
+		p1 = (leftArmDetection[1] - (.5* leftArmDetection[3]), leftArmDetection[2]- (.5* leftArmDetection[4]))
+		p2 = (leftArmDetection[1] + (.5 * leftArmDetection[3]), leftArmDetection[2] - (.5 * leftArmDetection[4]))
+		p3 = (leftArmDetection[1] + (.5 * leftArmDetection[3]), leftArmDetection[2] + (.5 * leftArmDetection[4]))
+		p4 = (leftArmDetection[1] - (.5 * leftArmDetection[3]), leftArmDetection[2] + (.5 * leftArmDetection[4]))
 		img_pts = (p1,p2,p3,p4)	
                 rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
                 tvec[0][0]-=.25 #Camera isn't centered with Percy, so move it over a bit
@@ -195,14 +195,15 @@ class StartingGateMission(AbstractMission):
 	    print "Right arm pixels are", rightArmDetection
             if rightArmDetection[2] + (.5 * rightArmDetection[4]) < 608 - self.pixelError and rightArmDetection[2] > self.pixelError: #We need to check that we can see the entire post; if not then we can't use solvePnP
                 #img_pts = [(rightArmDetection[1], rightArmDetection[2]), (detection[1] + detection[3], detection[2]), (detection[1] + detection[3], + detection[2] + detection[4]), (detection[1], detection[2] + detection[4])]
-		'''p1 = (rightArmDetection[1]) - (.5 * rightArmDetection[3]), rightArmDetection[2] - (.5* rightArmDetection[4]))
+		p1 = (rightArmDetection[1] - (.5 * rightArmDetection[3]), rightArmDetection[2] - (.5* rightArmDetection[4]))
 		p2 = (rightArmDetection[1] + (.5 * rightArmDetection[3]), rightArmDetection[2] - (.5* rightArmDetection[4]))
 		p3 = (rightArmDetection[1] + (.5 * rightArmDetection[3]), rightArmDetection[2] + (.5* rightArmDetection[4]))
-		p4 = (rightArmDetection[1] - (.5 * rightArmDetection[3]), rightArmDetection[2] - (.5* rightArmDetection[4]))'''
-		p1 = (rightArmDetection[1], rightArmDetection[2])
+		p4 = (rightArmDetection[1] - (.5 * rightArmDetection[3]), rightArmDetection[2] - (.5* rightArmDetection[4]))
+		'''p1 = (rightArmDetection[1], rightArmDetection[2])
 		p2 = (rightArmDetection[1] + rightArmDetection[3], rightArmDetection[2])
 		p3 = (rightArmDetection[1] + rightArmDetection[3], rightArmDetection[2] + rightArmDetection[4])
 		p4 = (rightArmDetection[1], rightArmDetection[2] + rightArmDetection[4])
+		'''
 		img_pts = (p1,p2,p3,p4)	
                 rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
                 tvec[0][0]-=.25 #Camera isn't centered with Percy, so move it over a bit
@@ -214,7 +215,7 @@ class StartingGateMission(AbstractMission):
                 nMedian = []
                 eMedian = []
                 uMedian = []
-		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0] - 1, tvec[1][0], tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
+		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0] - 1, tvec[1][0]-10, tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
 		print "Single position calculation", north, east, up
                 self.rightArmPosSum.append([north,east,up])
 		
@@ -226,6 +227,8 @@ class StartingGateMission(AbstractMission):
 		eMedian = np.median(eMedian)
 		uMedian = np.median(uMedian)
 		self.rightArmPosEst = [nMedian, eMedian, uMedian]
+		#self.rightArmPosEst = [north, east, up]
+
 
             
             if self.parameters["Gate_Side"] in ["Left", "left", "l"]:
@@ -286,7 +289,7 @@ class StartingGateMission(AbstractMission):
 	
         #---Vizualization Questions---#
 
-        self.Gate_Vizualization();
+        #self.Gate_Vizualization();
 	
 	self.Gate_In_Site = False
 	for det in self.detectionData:
@@ -325,8 +328,8 @@ class StartingGateMission(AbstractMission):
 
         if( (self.Gate_In_Sight is True) and (self.Waypoint_Reached is True) ):
             #METHOD INPUT-----START:
-            self.Christians_Method(self.Gate_Side); """Who needs naming conventions anyway..."""
-            #self.algorithm2()
+            #self.Christians_Method(self.Gate_Side); """Who needs naming conventions anyway..."""
+            self.algorithm2()
             #METHOD INPUT-----END:
 
 #----------------------END----------------------------#		

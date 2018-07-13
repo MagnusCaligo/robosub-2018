@@ -17,22 +17,23 @@ class RouletteMission(AbstractMission):
 
 #	Camera Type to Use
 
+	'''
 	USE_BOTTOMCAM = self.useBottomCamera; 
 	USE_FRONTCAM = self.useFrontCamera;
-
+	'''
 	self.calculatedWaypoint = None
 	
 
 #       ********Roulette Detections********           
 	self.FrontCam_RouletteFound = False
 	self.BottomCam_RouletteFound= False
+	self.ROULETTEBOARD = None
 	
 #	********Roulette MiddlePosition****
 
-	#TODO Change this number to actual value
-	self.Roulette_ClassNumber = None
+	self.Roulette_ClassNumber = 7
 	self.src_pts = [(0,0,0),(0,990.6,0),(990.6,990.6,0),(0,0,990.6)]
-	self.
+	self.img_pts = None
 
 	#Location of Roulette board
 	self.Roulette_Waypoint= None
@@ -72,29 +73,35 @@ class RouletteMission(AbstractMission):
 
 
     def Orient_Above_Board(self):
+	TOP_LEFT_CORNER = (self.ROULETTEBOARD[1] - 990.6/2, self.ROULETTEBOARD[2]- 990.6/2)
+	TOP_RIGHT_CORNER = (self.ROULETTEBOARD[1] + 990.6/2,self.ROULETTEBOARD[2] - 990.6/2)
+	BOTTOM_LEFT_CORNER = (self.ROULETTEBOARD[1] - 990.6/2 , self.ROULETTEBOARD[2] + 990.6/2 )
+	BOTTOM_RIGHT_CORNER = (self.ROULETTEBOARD[1] + 990.6/2 ,self.ROULETTEBOARD[2] + 990.6/2 )
+	self.img_pts = [TOP_LEFT_CORNER, TOP_RIGHT_CORNER, BOTTOM_LEFT_CORNER, BOTTOM_RIGHT_CORNER];
 	self.writeDebugMessage("Lining up with Board...")
-	if(self.detectionData == )
-		rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(self.img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
-		p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0], -tvec[2], -tvec[1], 0, 0, 0)
-		self.Roulette_Waypoint = [n,e,u,y,p,r]
-		self.moveToWaypoint(self.Roulette_Waypoint)
+	rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(self.img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
+	p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0], -tvec[2], -tvec[1], 0, 0, 0)
+	self.Roulette_Waypoint = [n,e,u,y,p,r]
+	self.moveToWaypoint(self.Roulette_Waypoint)
 	
 	
 #-----------------------END------------------------#
     def UPDATE_VIZUALS(self):
 #	FRONT CAMERA VIZUALS
-	USE_FRONTCAM()#  see top for function
+	self.useFrontCamera()#  see top for function
 	self.FrontCam_RouletteFound = False
 	for det in self.detectionData:
 		if det[0] == self.Roulette_ClassNumber:
+			self.ROULETTEBOARD = det;
 			self.FrontCam_RouletteFound = True
 	
 #	BOTTOM CAMERA VIZUALS
-	USE_BOTTOMCAM()#  see top for function
+	self.useBottomCamera()#  see top for function
 
 	self.BottomCam_RouletteFound = False
 	for det in self.detectionData:
 		if det[0] == self.Roulette_ClassNumber:
+			self.ROULETTEBOARD = det;
 			self.BottomCam_RouletteFound = True
 
 
@@ -102,17 +109,17 @@ class RouletteMission(AbstractMission):
 
     def update(self):
 
-
+	
 	self.UPDATE_VIZUALS();
-
+	self.writeDebugMessage("Vizuals updated...Beginning logic\n")
 	if( self.FrontCam_RouletteFound or self.BottomCam_RouletteFound ):
 	    if( self.BottomCam_RouletteFound ):
 		self.Orient_Above_Board();
 	    else:
-		self.writeDebugMessage("Will Spin Above Target...")
 		self.Move_Above_Board();
 
 	else:
+	    self.writeDebugMessage("Target not found...spinning")
 	    self.Search_RouletteBoard()
 
 

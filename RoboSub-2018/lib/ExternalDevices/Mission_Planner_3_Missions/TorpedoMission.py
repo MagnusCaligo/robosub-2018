@@ -6,166 +6,96 @@ import time
 
 class TorpedoMission(AbstractMission):
 
-    defaultParameters = AbstractMission.defaultParameters + "torpedo target = 0\ngetDistanceAway = 4\n"
+    defaultParameters = AbstractMission.defaultParameters + "Torpedo Target = TL\ngetDistanceAway = 2\n"
 
     def __init__(self, parameters):
         AbstractMission.__init__(self, parameters)
+	
+	#Top Left, Top Right, Full Board, Bottom Hole, Cherry, Grape, Banana, Corner
+	self.classNumbers = [7, 8, 6,9,3,4,5,13]
+	self.minimumToSee = 3
+
+	self.reachedFinalWaypoint = False
+	
+
+        self.torpedoSrcPoints = [(0,0,0), (12,0,0), (5.5, -35.5, 0), (-.25, -.5, 0), (.5, -.5, 0), (1, -.5, 0)] 
+        self.cornerLocations = [(3, -5, 0), (3, 5, 0), (-3, 5, 0), (-3, 5, 0), (12, -3, 0), (12, 3, 0), (9, 3, 0), (9, -3,0), (9, -32, 0), (9, -39,0), (2, -39, 0), (2, -32,0)]
+        self.torpedoSrcPoints = self.torpedoSrcPoints + self.cornerLocations
+	self.srcPoints = []
+	self.imgPoints = []
 
     def initalizeOnMissionStart(self):
 	AbstractMission.initalizeOnMissionStart(self)
-        
-	self.atWaypoint = False
-        self.detectionData = None
 
-        self.foundObstacles = False
-        self.diceClassNumber = 0
+    def checkIfSeeObstacles(self):
+	numWeSee = 0
+	for detection in self.detectionData:
+		if detection[0] in self.classNumbers:
+			numWeSee += 1
+	if numWeSee >= self.minimumToSee:
+		return True
+	return False
 
-        self.sentMessage1 = False
-        self.sentMessage2 = False
-        self.sentMessage3 = False
-	self.sentMessage4 = False
-	self.sentMessage5 = False
-
-	self.targetAcquired = False
-	self.movingForward = True
-
-	self.atBuoyTimer = None
-	self.lookingForObstaclesTimer = None
-	self.targetAcquiredTimer = None
-
-	self.depthAtRelativeMove = None
-	self.lookingMaxTime = 10
-	self.targetAcquiredMaxTime = 5
-
-	self.lookingAngle = 0
-	self.lookingDifference = 10
-
-        self.src_pts = [(0,0,0),(.58,0,0),(.58,.58,0),(0,.58,0)]
-
-
-    def checkIfFoundObstacles(self):
-	if not 'classNumbers' in self.detectionData:
-		return False
-        for i,v in enumerate(self.detectionData['classNumbers']):
-            if v == self.diceClassNumber:
-                return True
-        return False
-
-    def sortThroughDetections(self):
-	if not 'classNumbers' in self.detectionData:
-		return None
-        detections = []
-        if self.detectionData != None:
-            for i,v in enumerate(self.detectionData['classNumbers']):
-                if v == self.diceClassNumber:
-			detections.append([self.detectionData["classNumbers"][i], self.detectionData["xLocations"][i],self.detectionData["yLocations"][i],self.detectionData["widths"][i],self.detectionData["heights"][i]])
-            return detections
-        else:
-            return None
+    def isolateDetections(self):
+	    for detection in self.detectionData:
+		    if detection[0] in self.classNumbers:
+			if detection[0] != self.classNumbers[-1]
+				self.imgPoints.append((detection[2][0], detection[2][1]))
+				self.srcPoints.append(self.torpedoSrcPoints[self.torpedoDictionary[detection[0]]])
+			elif detection[0] == self.classNumbers[-1]:
+				print "Found a corner"
+				pixelError = 20
+				'''cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (255,0,0), -1)
+				while True:
+					cv2.imshow("Vision", img)
+					if cv2.waitKey(1) == ord(" "):
+						break'''
+				for secondDet in detections:
+					'''cv2.rectangle(img, (int(secondDet[2][0] - (.5 * secondDet[2][2]) - pixelError ),int(secondDet[2][1] - (.5 * secondDet[2][3]) - pixelError)), (int(secondDet[2][0] - (.5 * secondDet[2][2]) + pixelError),int(secondDet[2][1] - (.5 * secondDet[2][3]) + pixelError)), (255, 0, 0), 3)
+					cv2.rectangle(img, (int(secondDet[2][0]-(.5 * secondDet[2][2])), int(secondDet[2][1]- (.5 * secondDet[2][3]))), (int(secondDet[2][0] + (.5*secondDet[2][2])), int(secondDet[2][1] + (.5*secondDet[2][3]))), (0,0,255))
+					while True:
+						cv2.imshow("Vision", img)
+						if cv2.waitKey(1) == ord(" "):
+							break'''
+					if secondDet[0] in self.torpedoDictionary:
+						index = None
+						if detection[2][0] >= secondDet[2][0] - (.5 * secondDet[2][2]) - pixelError and detection[2][0] <= secondDet[2][0] - (.5 * secondDet[2][2]) + pixelError:
+							if detection[2][1] <= secondDet[2][1] - (.5 * secondDet[2][3]) + pixelError and detection[2][1] > secondDet[2][1] - (.5 * secondDet[2][3]) - pixelError:
+								print "In top left corner of", secondDet[0]
+								cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (255,0,0), -1)
+								index = self.torpedoDictionary[secondDet[0]]
+								index += 6
+						elif detection[2][0] >= secondDet[2][0] + (.5 * secondDet[2][2]) - pixelError and detection[2][0] <= secondDet[2][0] + (.5 * secondDet[2][2]) + pixelError:
+							if detection[2][1] <= secondDet[2][1] - (.5 * secondDet[2][3]) + pixelError and detection[2][1] > secondDet[2][1] - (.5 * secondDet[2][3]) - pixelError:
+								print "In top right corner of", secondDet[0]
+								cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (0,255,0), -1)
+								index = self.torpedoDictionary[secondDet[0]]
+								index += 3
+						if detection[2][0] >= secondDet[2][0] - (.5 * secondDet[2][2]) - pixelError and detection[2][0] <= secondDet[2][0] - (.5 * secondDet[2][2]) + pixelError:
+							if detection[2][1] <= secondDet[2][1] + (.5 * secondDet[2][3]) + pixelError and detection[2][1] > secondDet[2][1] + (.5 * secondDet[2][3]) - pixelError:
+								print "In bottom left corner of", secondDet[0]
+								cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (0,0,255), -1)
+								index = self.torpedoDictionary[secondDet[0]]
+								index += 5
+						elif detection[2][0] >= secondDet[2][0] + (.5 * secondDet[2][2]) - pixelError and detection[2][0] <= secondDet[2][0] + (.5 * secondDet[2][2]) + pixelError:
+							if detection[2][1] <= secondDet[2][1] + (.5 * secondDet[2][3]) + pixelError and detection[2][1] > secondDet[2][1] + (.5 * secondDet[2][3]) - pixelError:
+								print "In bottom right corner of", secondDet[0]
+								cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (255,0,255), -1)
+								index = self.torpedoDictionary[secondDet[0]]
+								index += 4
+						if index == None:
+							pass
+						else:
+							index += 3
+							self.srcPoints.append(self.torpedoSrcPoints[index])
+							self.imgPoints.append((int(detection[2][0]), int(detection[2][1])))
 
     def update(self):
-        #Approach General Waypoint
-        if self.atWaypoint == False:
-            atWaypoint = self.moveToWaypoint(self.finalWaypoint)
-            if atWaypoint:
-                if self.sentMessage1 == False:
-                    self.writeDebugMessage("At Waypoint")
-                    self.sentMessage1 = True
-                    self.atWaypoint = True
-            else:
-                self.atWaypoint = False
-                self.sentMessage1 = False
-                self.atWaypointStartTime = None
-                print "Not there"
-                return -1
-        
-        #Look For obstacles
-	if self.targetAcquired == False:
-		if self.atWaypoint == True:
-		    if not self.checkIfFoundObstacles():
-			self.sentMessage3 = False
-			if self.sentMessage2 == False:
-			    self.writeDebugMessage("Couldn't Find Obstacles")
-			    self.sentMessage2 = True
-			if self.lookingForObstaclesTimer == None:
-				self.lookingForObstaclesTimer = time.time()
-				self.lookingAngle += self.lookingDifference
-				print "Incrementing Angle"
-			if time.time() - self.lookingForObstaclesTimer >= self.lookingMaxTime:
-				self.lookingForObstaclesTimer = None
-			waypoint = self.position + self.orientation
-			waypoint[3] += self.lookingAngle
-			self.moveToWaypoint(waypoint)
-		    else:
-			self.sentMessage2 = False
-			if self.sentMessage3 == False:
-			    self.writeDebugMessage("Found Obstacles!")
-			    self.sentMessage3 = True
+	#Move to waypoint or move on if you see the board
+	if not self.reachedFinalWaypoint and not self.checkIfSeeObstacles:
+		self.reachedFinalWaypoint = self.moveToWaypoint(self.finalWaypoint)
+		return -1
+	else:
+		self.reachedFinalWaypoint = True
 
-			detections = self.sortThroughDetections()
-			detection = detections[0] #We only need one detection so we assume that its the first one
-
-
-			#These are the image points of the buoy in the image, this will be with the source points to get buoy depth
-			img_pts = [(detection[1], detection[2]), (detection[1] + detection[3], detection[2]), (detection[1] + detection[3], + detection[2] + detection[4]), (detection[1], detection[2] + detection[4])]
-
-			#Fake camera matrix
-			cameraMatrix = [[808,     0, 404],
-						[   0, 608, 304],
-						[   0,     0,  1.0],]
-
-
-			#Solve PNP returns the rotation vector and translation vector of the object
-			rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(img_pts).astype('float32'),np.array(cameraMatrix).astype('float32'), None)[-2:]
-			print "Tvec was", tvec
-			
-			center = detection[1] + (detection[3]/2)
-			
-			rotationDifference = math.degrees(math.atan2(tvec[0], tvec[2]))
-	    
-			if abs(tvec[2]) - int(self.parameters["getDistanceAway"]) <= self.generalDistanceError:
-				self.atBuoyLocation = True
-				if self.sentMessage4 == False:
-					self.writeDebugMessage("Found Target")
-					self.sentMessage4 = True
-					self.sentMessage5 =  False
-				if self.atBuoyTimer == None:
-					self.atBuoyTimer = time.time()
-				if time.time() - self.atBuoyTimer > float(self.parameters["waitTime"]):
-					self.targetAcquired = True
-			else:
-				if self.sentMessage5 == False:
-					self.writeDebugMessage("Not at Target Location")
-					self.sentMessage5 = True
-					self.sentMessage4 = False
-
-	    
-			print "rotationDifference:", rotationDifference, "Distance Away:", -(tvec[2][0]- int(self.parameters["getDistanceAway"]))
-			#print "Distance: ", self.parameters["getDistanceAway"]
-			#poseData, north, east, up, yaw, pitch, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0], ,0,0,0)
-			poseData, north, east, up, yaw, pitch, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], 2, -(tvec[2][0]- int(self.parameters["getDistanceAway"])),-math.degrees(rotationDifference),0,0)
-			#self.movementController.relativeMoveXYZ(self.orientation+self.position, 0, tvec[1][0], 1,0,0,0)
-			print "Errors were", north, east, up, yaw, pitch, roll
-			self.movementController.advancedMove(poseData, north, east, up, yaw, pitch, roll)
-
-	elif self.targetAcquired == True:
-		if self.targetAcquiredTimer == None:
-			self.targetAcquiredTimer = time.time()
-			self.writeDebugMessage("Moving Forward...")
-		if time.time() - self.targetAcquiredTimer >= self.targetAcquiredMaxTime:
-			if self.movingForward == False:
-				#FIRE TORPEDOS
-				self.writeDebugMessage("FIRE FIRE FIRE")
-				return 1 #Finished the mission
-			self.movingForward = False
-			self.writeDebugMessage("Moving Backward...")
-			self.targetAcquiredTimer = time.time()
-		distance = 1
-		if not self.movingForward:
-			distance = -1
-		if self.depthAtRelativeMove == None:
-			self.depthAtRelativeMove = self.position[2]
-		self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, self.position[2] - self.depthAtRelativeMove, distance, 0, 0, 0)
-
-
-
+		
