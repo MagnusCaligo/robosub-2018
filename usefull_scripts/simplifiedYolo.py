@@ -17,12 +17,16 @@ class yoloSimplified:
             self.dataFile = "/home/mechatronics/darknet/7_13_2/test.data"
             self.weightFile = "/home/mechatronics/darknet/7_13_2/weights/yolov3-tiny.backup"
             self.cfgFile = "/home/mechatronics/darknet/7_13_2/yolov3-tiny.cfg"
+            self.rvec = np.zeros((1,3)).astype("float32")
+            self.tvec = np.zeros((1,3)).astype("float32")
 
-            self.useVideo = True 
+            self.useVideo = False
             self.videoPath = "Downloads/example3.mp4"
 
 	    self.usePicture = True
-	    self.picturePath = "darknet/allLabeledImages/99.jpg"
+            self.pictureId = 3227
+	    self.picturePath = "darknet/allLabeledImages/" + str(self.pictureId) + ".jpg"
+	    self.picturePathSrc = "darknet/allLabeledImages/"
 
             self.activeCamera = None
 
@@ -36,7 +40,15 @@ class yoloSimplified:
 
             dn.set_gpu(0)
             self.fourcc = cv2.VideoWriter_fourcc(*"H264")
-            self.outputVideo = cv2.VideoWriter("output.avi", self.fourcc, 30, (808, 608))
+            self.outputVideo = cv2.VideoWriter("output.avi", self.fourcc, 1, (808, 608))
+            cv2.namedWindow("Vision")
+
+            def nothing(x):
+                pass
+            cv2.createTrackbar("H Red Min", "Vision", 90, 255, nothing)
+            cv2.createTrackbar("H Red Max", "Vision", 255, 255,nothing)
+            cv2.createTrackbar("H Yel Min", "Vision", 40, 255,nothing)
+            cv2.createTrackbar("H Yel Max", "Vision", 90, 255,nothing)
 
 
             self.detectionDictionary = {}
@@ -97,6 +109,7 @@ class yoloSimplified:
                 elif self.useVideo == True:
                     self.activeCamera = cv2.VideoCapture(self.videoPath)
 		elif self.usePicture == True:
+                    print "using image at location", self.picturePath
 		    self.sourceImg = cv2.imread(self.picturePath)
 	
 
@@ -113,21 +126,24 @@ class yoloSimplified:
                         if t == False:
                             break
 		    else:
-			img = copy.copy(self.sourceImg)
+                        img = cv2.imread(self.picturePath)
                     #yoloImage = dn.IMAGE()
 		    h,w, c = img.shape
-                    print "SIZE:", h, w
                     detections = dn.detect_np(self.net, self.meta, img, thresh=.1, hier_thresh = .1)
                     newDetections = []
+                    corners = []
+                    print "=================="
                     for detection in detections:
                             fixedClassNumber = self.detectionDictionary[detection[0]]
                             newDetections.append([fixedClassNumber, detection[1], detection[2]])
                             if detection[0] == "Torpedo Hole":
+                                print "Drawing...."
                                 error = 20
                                 x1 = int(detection[2][0] - (.5 * detection[2][2])) - error
                                 x2 = int(detection[2][0] + (.5 * detection[2][2])) + error
                                 y1 = int(detection[2][1] - (.5 * detection[2][3])) - error
                                 y2 = int(detection[2][1] + (.5 * detection[2][3])) + error
+                                h,w, c = img.shape
                                 if x1 < 0:
                                     x1 = 0
                                 if y1 < 0:
@@ -136,6 +152,14 @@ class yoloSimplified:
                                     x2 = w -1
                                 if y2 >= h:
                                     y2 = h -1
+                                if y2 < y1:
+                                    t = y2
+                                    y2 = y1
+                                    y1 = t
+                                if x2 < x1:
+                                    t = x2
+                                    x2 = x1
+                                    x1 = t
                                 subImg = copy.copy(img[y1:y2, x1:x2])
                                 if np.prod(subImg.shape) == 0:
                                     continue
@@ -143,20 +167,28 @@ class yoloSimplified:
                                 #kernel = np.ones((5,4), np.float32)/25
                                 #binImg = cv2.filter2D(res, -1, kernel)
 
-                                print "Sub shape", subImg.shape
-                                print "Res shape", res.shape
-                                mask = cv2.inRange(res, np.array([120, 0,0]), np.array([130,255,255]))
-                                binImg = cv2.bitwise_and(subImg, subImg, mask=mask)
+                                
+                                print "Value.............", int(cv2.getTrackbarPos("H Red Min", "Vision"))
+                                mask1 = cv2.inRange(res, np.array([int(cv2.getTrackbarPos("H Red Min", "Vision")), 0,0]), np.array([int(cv2.getTrackbarPos("H Red Max", "Vision")),255,255]))
+                                mask2 = cv2.inRange(res, np.array([int(cv2.getTrackbarPos("H Yel Min", "Vision")), 0,0]), np.array([int(cv2.getTrackbarPos("H Yel Max", "Vision")),255,255]))
+                                mask = cv2.bitwise_or(mask1,mask2)
+                                binImg = cv2.bitwise_or(subImg, subImg, mask=mask)
                                 cv2.imshow("Binary", binImg)
 
-                                cannyImg = cv2.Canny(binImg, 300, 700, 3)
+                                cannyImg = cv2.Canny(binImg, 00, 700, 3)
                                 #subImg = copy.copy(cannyImg)
                                 cv2.imshow("Canny", cannyImg)
                                 h,w = subImg.shape[:2]
                                 center = (w/2, h/2)
                                 pose = [[[center[0], center[1]]]]
+                                cv2.circle(subImg, center, 4, (255,255,0), -1)
 
                                 _, contours, hierarchy = cv2.findContours(cannyImg, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                                allConts = copy.copy(subImg)
+                                cv2.drawContours(allConts, contours, -1, (0,255,0), 1)
+                                cv2.imshow("All Contours", allConts)
+                                if len(contours) == 0:
+                                    print "NO CONTOURS"
                                 if len(contours) > 0:
                                     app = contours[0]
                                     largestArea = 0
@@ -164,13 +196,15 @@ class yoloSimplified:
                                         a = cv2.contourArea(cont)
                                         if a > largestArea:
                                             app = cont
+                                            largestArea = a
 
 
-                                    val = .01
+                                    val = .00
                                     epsilon = val * cv2.arcLength(app, True)
                                     app = cv2.approxPolyDP(app, epsilon, True)
                                     app = [app]
                                     cv2.drawContours(subImg, app, -1, (0,255,0), 1)
+                                    cv2.imshow("Sub", subImg)
 
                                     topLeft = []
                                     topRight = []
@@ -221,16 +255,21 @@ class yoloSimplified:
 
 
                                         imgPoints = np.array([topLeft, topRight, botRight, botLeft])
+                                        corners.append(np.insert(imgPoints, 0, (center[0] + x1, center[1] + y1), axis=0))
                                         srcPoints = np.array([(-.5, -.5, 0), (.5, -.5, 0), (.5, .5, 0), (-.5, .5, 0)])
 
                                         mat = np.array([[808, 0, 404],
                                                         [0, 608, 304],
                                                         [0, 0,   1]])
 
-                                        print "Stuff", srcPoints.astype("float32"), imgPoints.astype("float32"), mat.astype("float32"), np.zeros((4,1)).astype("float32")
-                                        rvec = np.zeros((1,3)).astype("float32")
-                                        tvec = np.zeros((1,3)).astype("float32")
-                                        rvec, tvec = cv2.solvePnP(srcPoints.astype("float32"), imgPoints.astype("float32"), mat.astype("float32"), np.zeros((4,1)).astype("float32"), rvec, tvec, useExtrinsicGuess=True)[-2:]
+
+                                        if abs(math.degrees(self.rvec[0][1])) > 50:
+                                            self.rvec[0][0] = 0.0
+                                            self.rvec[0][1] = 0.0
+                                            self.rvec[0][2] = 0.0
+                                        self.rvec, self.tvec = cv2.solvePnP(srcPoints.astype("float32"), imgPoints.astype("float32"), mat.astype("float32"), np.zeros((4,1)).astype("float32"), self.rvec, self.tvec, useExtrinsicGuess=True)[-2:]
+                                        #self.rvec[0][0] = 0.0
+                                        #self.rvec[0][2] = 0.0
                                         '''R = cv2.Rodrigues(rvec)[0]
                                         if 0 < R[1,1] < 1:
                                                 T = tvec[0,0]
@@ -249,28 +288,81 @@ class yoloSimplified:
                                                 axis = np.cross(tnorm, forward)
                                                 angle = -2*math.acos(tnorm * forward)
                                                 R = cv2.Rodrigues(angle * axis)[0] * R'''
-                                        print "Rvec", rvec
-                                        print "Tvec", tvec
                                         x = 0.0
                                         y = 0.0
-                                        z = 1.0
+                                        z = 2.0
 
-                                        (pose, jacobian) = cv2.projectPoints(np.array([(x,y,z)]), rvec, tvec, mat.astype("float32"), None)
+                                        (pose, jacobian) = cv2.projectPoints(np.array([(x,y,z)]), self.rvec, self.tvec, mat.astype("float32"), None)
                                         cv2.line(img, (center[0] + x1, center[1] + y1), (int(pose[0][0][0]), int(pose[0][0][1])), (255,0,0), 3)
-                                        cv2.imshow("Sub", subImg)
+                            #cv2.waitKey(-1)
 
                     for detection in detections:
                             loc = detection[2]
-                            cv2.rectangle(img, (int(loc[0]-(.5 * loc[2])), int(loc[1]- (.5 * loc[3]))), (int(loc[0] + (.5*loc[2])), int(loc[1] + (.5*loc[3]))), (0,0,255))
+                            if detection[0] == "Torpedo Hole":
+                                cv2.rectangle(img, (int(loc[0]-(.5 * loc[2])), int(loc[1]- (.5 * loc[3]))), (int(loc[0] + (.5*loc[2])), int(loc[1] + (.5*loc[3]))), (0,255,0))
+                            else:
+                                cv2.rectangle(img, (int(loc[0]-(.5 * loc[2])), int(loc[1]- (.5 * loc[3]))), (int(loc[0] + (.5*loc[2])), int(loc[1] + (.5*loc[3]))), (0,0,255))
+
+                    if len(corners) >= 3:
+                        topLeft = []
+                        topRight = []
+                        bot = []
+                        center = [0,0]
+                        for c in corners:
+                            center[0] += c[0][0]
+                            center[1] += c[0][1]
+                        center[0] /= float(len(corners))
+                        center[0] = int(center[0])
+                        center[1] /= float(len(corners))
+                        center[1] = int(center[1])
+                        cv2.circle(img, tuple(center), 4, (0,0,0), -1)
+
+                        for c in corners:
+                            if c[0][1] in  range(0, center[1]):
+                                if c[0][0] in range(0, center[0]) and len(topLeft) == 0:
+                                    print "Top Left", c
+                                    topLeft = c[1:]
+                                elif len(topRight) == 0:
+                                    topRight= c[1:]
+                            elif len(bot) == 0:
+                                bot = c[1:]
+
+                        if len(topLeft) != 0 and len(topRight) != 0 and len(bot) != 0:
+                            srcPoints = [(-8.5, -20.75,0), (-2.75, -20.75, 0), (-2.75, -13, 0), (-8.5, -13, 0), (2, -19.75, 0), (7.75, -19.75, 0), (7.75, -14.125, 0), (2, -14.125, 0), (-4.5, 13.25,0), (3.5, 13.25,0), (3.5, 21, 0), (-4.25, 21, 0)]
+                            srcPoints = np.array(srcPoints)
+                            imgPoints = np.concatenate((topLeft, topRight, bot))
+                            '''imgPoints = imgPoints.tolist()
+                            for i,v in enumerate(imgPoints):
+                                imgPoints[i] = (v[0], v[1])
+                            imgPoints = np.array(imgPoints)
+                            print imgPoints'''
+                            print type(imgPoints), type(srcPoints), type(np.array(self.camMat))
+                            rvec, tvec = cv2.solvePnP(srcPoints.astype("float32"), imgPoints.astype("float32"), np.array(self.camMat).astype("float32"), np.zeros((4,1)).astype("float32"))[-2:]
+                            print "Board rvec and tvec........................."
+                            print rvec, "Degrees:", math.degrees(rvec[1][0]), "\n"
+                            print tvec
+                            (pose, jacobian) = cv2.projectPoints(np.array([(0.0,0.0,2)]), rvec, tvec, np.array(self.camMat).astype("float32"), None)
+                            cv2.line(img, (center[0], center[1]), (int(pose[0][0][0]), int(pose[0][0][1])), (0,92,255), 3)
+
+
+
 
                     self.getList.append(newDetections)
                     cv2.imshow("Vision", img)
-                    key = cv2.waitKey(1)
+                    key = cv2.waitKey(-1)
                     self.outputVideo.write(img)
                     if key == ord('q'):
-                            self.running = False
+                        self.running = False
                     elif key == ord(' '):
-                            continue
+                        if self.usePicture == True:
+                            self.pictureId += 1
+                            if self.pictureId >= 3347:
+                                self.running = False
+                            self.picturePath = self.picturePathSrc + str(self.pictureId) + ".jpg"
+                            print "New path", self.picturePath
+                        continue
+                    elif key == ord('s'):
+                        cv2.imwrite("output.png", img)
 		#self.activeCamera.stopCapture()
                 self.outputVideo.release()
 
