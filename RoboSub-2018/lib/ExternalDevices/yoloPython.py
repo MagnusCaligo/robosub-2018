@@ -114,7 +114,7 @@ class yoloComputerVision(QtCore.QThread):
                     else:
 			t, img = self.activeCamera.read()
                     #yoloImage = dn.IMAGE()
-                    detections = dn.detect_np(self.net, self.meta, img, thresh=.2, hier_thresh = .2)
+                    detections = dn.detect_np(self.net, self.meta, img, thresh=.1, hier_thresh = .1)
                     newDetections = []
                     self.imgPoints = []
                     self.srcPoints = []
