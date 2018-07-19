@@ -2,6 +2,7 @@ onLinux = True
 import math
 if onLinux:
 	import darknet as dn
+	import PyCapture2 as pc2
 import copy
 from PyQt4 import QtCore, QtGui
 import sys
@@ -14,16 +15,16 @@ class yoloSimplified:
 
 	def __init__(self):
 
-            self.dataFile = "/home/mechatronics/darknet/7_13_2/test.data"
-            self.weightFile = "/home/mechatronics/darknet/7_13_2/weights/yolov3-tiny.backup"
-            self.cfgFile = "/home/mechatronics/darknet/7_13_2/yolov3-tiny.cfg"
+            self.dataFile = "/media/sub_data/data/7_2.data"
+            self.weightFile = "/media/sub_data/weights/7_9_v2.weights"
+            self.cfgFile = "/media/sub_data/cfg/7_9_v2.cfg"
             self.rvec = np.zeros((1,3)).astype("float32")
             self.tvec = np.zeros((1,3)).astype("float32")
 
             self.useVideo = False
             self.videoPath = "Downloads/example3.mp4"
 
-	    self.usePicture = True
+	    self.usePicture = False
             self.pictureId = 3227
 	    self.picturePath = "darknet/allLabeledImages/" + str(self.pictureId) + ".jpg"
 	    self.picturePathSrc = "darknet/allLabeledImages/"
@@ -39,7 +40,7 @@ class yoloSimplified:
                            [0,   0, 1]]
 
             dn.set_gpu(0)
-            self.fourcc = cv2.VideoWriter_fourcc(*"H264")
+            self.fourcc = cv2.cv.FOURCC(*"H264")
             self.outputVideo = cv2.VideoWriter("output.avi", self.fourcc, 1, (808, 608))
             cv2.namedWindow("Vision")
 
@@ -131,12 +132,21 @@ class yoloSimplified:
 		    h,w, c = img.shape
                     detections = dn.detect_np(self.net, self.meta, img, thresh=.1, hier_thresh = .1)
                     newDetections = []
+		    grape = []
+		    banana = []
+	 	    cherry = []
                     corners = []
                     print "=================="
                     for detection in detections:
                             fixedClassNumber = self.detectionDictionary[detection[0]]
                             newDetections.append([fixedClassNumber, detection[1], detection[2]])
-                            if detection[0] == "Torpedo Hole":
+			    if detection[0] == "Grape":
+				grape = detection[2]
+			    elif detection[0] == "Banana":
+				banana = detection[2]
+			    elif detection[0] == "Cherry":
+				cherry = detection[2]
+                            if detection[0] in ["Top Left Hole", "Top Right Hole", "Bottom Hole"]:
                                 print "Drawing...."
                                 error = 20
                                 x1 = int(detection[2][0] - (.5 * detection[2][2])) - error
@@ -183,7 +193,7 @@ class yoloSimplified:
                                 pose = [[[center[0], center[1]]]]
                                 cv2.circle(subImg, center, 4, (255,255,0), -1)
 
-                                _, contours, hierarchy = cv2.findContours(cannyImg, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+                                contours, hierarchy = cv2.findContours(cannyImg, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
                                 allConts = copy.copy(subImg)
                                 cv2.drawContours(allConts, contours, -1, (0,255,0), 1)
                                 cv2.imshow("All Contours", allConts)
@@ -255,7 +265,7 @@ class yoloSimplified:
 
 
                                         imgPoints = np.array([topLeft, topRight, botRight, botLeft])
-                                        corners.append(np.insert(imgPoints, 0, (center[0] + x1, center[1] + y1), axis=0))
+                                        corners.append(np.insert(imgPoints, 0, (center[0] + x1, center[1] + y1, 0)))
                                         srcPoints = np.array([(-.5, -.5, 0), (.5, -.5, 0), (.5, .5, 0), (-.5, .5, 0)])
 
                                         mat = np.array([[808, 0, 404],
@@ -263,10 +273,12 @@ class yoloSimplified:
                                                         [0, 0,   1]])
 
 
-                                        if abs(math.degrees(self.rvec[0][1])) > 50:
-                                            self.rvec[0][0] = 0.0
-                                            self.rvec[0][1] = 0.0
-                                            self.rvec[0][2] = 0.0
+					print "Rvec", self.rvec
+					if self.rvec.shape == (1,3):
+						if abs(math.degrees(self.rvec[0][1])) > 50:
+						    self.rvec[0][0] = 0.0
+						    self.rvec[0][1] = 0.0
+						    self.rvec[0][2] = 0.0
                                         self.rvec, self.tvec = cv2.solvePnP(srcPoints.astype("float32"), imgPoints.astype("float32"), mat.astype("float32"), np.zeros((4,1)).astype("float32"), self.rvec, self.tvec, useExtrinsicGuess=True)[-2:]
                                         #self.rvec[0][0] = 0.0
                                         #self.rvec[0][2] = 0.0
@@ -298,39 +310,70 @@ class yoloSimplified:
 
                     for detection in detections:
                             loc = detection[2]
-                            if detection[0] == "Torpedo Hole":
+                            if detection[0] in ["Top Left Hole", "Top Right Hole", "Bottom Hole"]:
                                 cv2.rectangle(img, (int(loc[0]-(.5 * loc[2])), int(loc[1]- (.5 * loc[3]))), (int(loc[0] + (.5*loc[2])), int(loc[1] + (.5*loc[3]))), (0,255,0))
                             else:
                                 cv2.rectangle(img, (int(loc[0]-(.5 * loc[2])), int(loc[1]- (.5 * loc[3]))), (int(loc[0] + (.5*loc[2])), int(loc[1] + (.5*loc[3]))), (0,0,255))
 
+		    if len(banana) != 0:
+			newAr = [(banana[0], banana[1], 1)] 
+			corners.append(newAr)
+		    if len(cherry) != 0:
+			newAr = [(cherry[0], cherry[1], 2)]
+			corners.append(newAr)
+		    if len(grape) != 0:
+			newAr = [(grape[0], grape[1], 3)]
+			corners.append(newAr)
+
                     if len(corners) >= 3:
+			print "Corners:", corners
                         topLeft = []
                         topRight = []
                         bot = []
                         center = [0,0]
                         for c in corners:
-                            center[0] += c[0][0]
-                            center[1] += c[0][1]
+			    print "Corner is", c
+			    if type(c[0]) == tuple:
+				print "its a tuple"
+				center[0] += c[0][0]
+				center[1] += c[0][1]
+			    else:
+				center[0] += c[0]
+				center[1] += c[1]
                         center[0] /= float(len(corners))
                         center[0] = int(center[0])
                         center[1] /= float(len(corners))
                         center[1] = int(center[1])
                         cv2.circle(img, tuple(center), 4, (0,0,0), -1)
 
-                        for c in corners:
-                            if c[0][1] in  range(0, center[1]):
-                                if c[0][0] in range(0, center[0]) and len(topLeft) == 0:
-                                    print "Top Left", c
-                                    topLeft = c[1:]
-                                elif len(topRight) == 0:
-                                    topRight= c[1:]
-                            elif len(bot) == 0:
-                                bot = c[1:]
+			srcPoints = []
+			imgPoints = np.array([])
 
-                        if len(topLeft) != 0 and len(topRight) != 0 and len(bot) != 0:
-                            srcPoints = [(-8.5, -20.75,0), (-2.75, -20.75, 0), (-2.75, -13, 0), (-8.5, -13, 0), (2, -19.75, 0), (7.75, -19.75, 0), (7.75, -14.125, 0), (2, -14.125, 0), (-4.5, 13.25,0), (3.5, 13.25,0), (3.5, 21, 0), (-4.25, 21, 0)]
+                        for c in corners:
+			    if c[0][2] == 0:
+				    if c[0][1] in  range(0, center[1]):
+					if c[0][0] in range(0, center[0]) and len(topLeft) == 0:
+					    print "Top Left", c
+					    topLeft = c[1:]
+					    srcPoints = srcPoints + [(-8.5, -20.75,0), (-2.75, -20.75, 0), (-2.75, -13, 0), (-8.5, -13, 0)]
+					elif len(topRight) == 0:
+					    topRight= c[1:]
+					    srcPoints = srcPoints + [(2, -19.75, 0), (7.75, -19.75, 0), (7.75, -14.125, 0), (2, -14.125, 0)]
+				    elif len(bot) == 0:
+					    bot = c[1:]
+					    srcPoints = srcPoints + [(-4.5, 13.25,0), (3.5, 13.25,0), (3.5, 21, 0), (-4.25, 21, 0)]
+			    	    imgPoints = np.concatenate((imgPoints, c[1:]))
+			    elif c[0][2] in [1,2,3]:
+				if c[0][2] == 1:
+					srcPoints = srcPoints + [(7, -4)]
+				elif c[0][2] == 2:
+					srcPoints = srcPoints + [(-9, -4)]
+				elif c[0][2] == 3:
+					srcPoints = srcPoints + [(-3, -4)]
+			        imgPoints = np.concatenate((imgPoints, (c[0][0], c[0][1])))
+
+			if len(srcPoints) > 8:
                             srcPoints = np.array(srcPoints)
-                            imgPoints = np.concatenate((topLeft, topRight, bot))
                             '''imgPoints = imgPoints.tolist()
                             for i,v in enumerate(imgPoints):
                                 imgPoints[i] = (v[0], v[1])
@@ -349,7 +392,7 @@ class yoloSimplified:
 
                     self.getList.append(newDetections)
                     cv2.imshow("Vision", img)
-                    key = cv2.waitKey(-1)
+                    key = cv2.waitKey(1)
                     self.outputVideo.write(img)
                     if key == ord('q'):
                         self.running = False
