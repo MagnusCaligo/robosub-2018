@@ -226,8 +226,8 @@ class MovementController():
         '''
         yaw, pitch, roll = poseData[0], poseData[1], poseData[2]
         northPosition, eastPosition, upPosition = poseData[3], poseData[4], poseData[5]
-        maxPitch = 10
-        minPitch = -20
+        maxPitch = 50
+        minPitch = -50
         maxRoll = 20
         minRoll = -20
         maxDepth = 8

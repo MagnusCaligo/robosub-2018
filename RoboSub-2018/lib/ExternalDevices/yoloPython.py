@@ -25,6 +25,9 @@ class yoloComputerVision(QtCore.QThread):
 		self.weightFile = "/media/sub_data/weights/7_9_v2.weights"
 		self.cfgFile = "/media/sub_data/cfg/7_9_v2.cfg"
 
+		self.frontCamera = None
+		self.botCamera = None
+
 
 	        self.useVideo = False
             	self.videoPath = "/media/sub_data/example3.mp4"
@@ -53,18 +56,12 @@ class yoloComputerVision(QtCore.QThread):
 		self.running = True
 
         def useBottomCamera(self):
-            if self.activeCamera != None:
-                self.activeCamera.stopCapture()
-	    bus = pc2.BusManager()
-            self.activeCamera.connect(bus.getCameraFromIndex(1))
-            self.activeCamera.startCapture()
+	    if self.botCamera != None:
+		    self.activeCamera = self.botCamera
 
         def useFrontCamera(self):
-            if self.activeCamera != None:
-                self.activeCamera.stopCapture()
-	    bus = pc2.BusManager()
-            self.activeCamera.connect(bus.getCameraFromIndex(0))
-            self.activeCamera.startCapture()
+	    if self.frontCamera != None:
+		    self.activeCamera = self.frontCamera
 
 	def run(self):
 		if not onLinux:
@@ -100,10 +97,14 @@ class yoloComputerVision(QtCore.QThread):
 		else:
 			bus = pc2.BusManager()
 			self.activeCamera = pc2.Camera()
-			self.activeCamera.connect(bus.getCameraFromIndex(0))
-			self.activeCamera.startCapture()
-
-
+			self.frontCamera = pc2.Camera()
+			self.botCamera = pc2.Camera()
+			self.frontCamera.connect(bus.getCameraFromIndex(0))
+			self.frontCamera.startCapture()
+			time.sleep(1)
+			self.botCamera.connect(bus.getCameraFromIndex(1))
+			self.botCamera.startCapture()
+			self.activeCamera = self.frontCamera
 
 		while self.running == True:
                     if self.useVideo == False:

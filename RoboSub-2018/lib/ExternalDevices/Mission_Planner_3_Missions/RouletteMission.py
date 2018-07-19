@@ -24,12 +24,16 @@ class RouletteMission(AbstractMission):
 	USE_FRONTCAM = self.useFrontCamera;
 	'''
 	self.calculatedWaypoint = None
+	self.ACTIVE_CAM = "None";
+	self.COUNTING =0;
 	
 
 #       ********Roulette Detections********           
 	self.FrontCam_RouletteFound = False
 	self.BottomCam_RouletteFound= False;
-	self.ROULETTEBOARD = None
+	self.ROULETTEBOARD = [];
+	self.SOLVED_BOARD = [];
+	self.BOARDSOLVED = False;
 	
 #	********Roulette MiddlePosition****
 
@@ -60,9 +64,9 @@ class RouletteMission(AbstractMission):
                 self.rotateTimer = None
                 self.calculatedWaypoint = None
         if self.calculatedWaypoint == None:
-                posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position,0,2,0, 45, 0,0);#Overwritten Y axis
-		self.calculatedWaypoint = [n,e,self.finalWaypoint[2],yaw,0,0]#REMOVED PITCH AND ROLL
-	print("FINALWAYPOINT:"+str(self.finalWaypoint[2]));
+                posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position,0,2,0, 45, 20,0);#Overwritten Y axis
+		self.calculatedWaypoint = [self.finalWaypoint[0],self.finalWaypoint[1],self.finalWaypoint[2],yaw,self.generalWaypoint[4],0]#REMOVED PITCH AND ROLL
+	print("FOUND:"+str(self.FrontCam_RouletteFound));
 	self.moveToWaypoint(self.calculatedWaypoint);
 
 #-----------------------END------------------------#
@@ -77,37 +81,29 @@ class RouletteMission(AbstractMission):
 	self.Roulette_Waypoint = [n,e,self.finalWaypoint[2],y,0,0]
 	self.moveToWaypoint(self.Roulette_Waypoint)
 
+    def SOLVING_PNP(self):
+	for BRD in self.ROULETTEBOARD:
+		TOP_LEFT_CORNER = (BRD[1] - BRD[3]/2, BRD[2]- BRD[4]/2)
+		TOP_RIGHT_CORNER = (BRD[1] + BRD[3]/2/2,BRD[2] - BRD[4]/2/2)
+		BOTTOM_LEFT_CORNER = (BRD[1] - BRD[3]/2/2 , BRD[2] + BRD[4]/2/2 )
+		BOTTOM_RIGHT_CORNER = (BRD[1] + BRD[3]/2/2 ,BRD[2] + BRD[4]/2/2 )
+		self.img_pts = [TOP_LEFT_CORNER, TOP_RIGHT_CORNER, BOTTOM_LEFT_CORNER, BOTTOM_RIGHT_CORNER];
 
-    def Orient_Above_Board(self):
-
-	self.useBottomCamera()
-
-	print("Lining up with Board...")
-
-	TOP_LEFT_CORNER = (self.ROULETTEBOARD[1] - self.ROULETTEBOARD[3]/2, self.ROULETTEBOARD[2]- self.ROULETTEBOARD[4]/2)
-	TOP_RIGHT_CORNER = (self.ROULETTEBOARD[1] + self.ROULETTEBOARD[3]/2/2,self.ROULETTEBOARD[2] - self.ROULETTEBOARD[4]/2/2)
-	BOTTOM_LEFT_CORNER = (self.ROULETTEBOARD[1] - self.ROULETTEBOARD[3]/2/2 , self.ROULETTEBOARD[2] + self.ROULETTEBOARD[4]/2/2 )
-	BOTTOM_RIGHT_CORNER = (self.ROULETTEBOARD[1] + self.ROULETTEBOARD[3]/2/2 ,self.ROULETTEBOARD[2] + self.ROULETTEBOARD[4]/2/2 )
-
-	self.img_pts = [TOP_LEFT_CORNER, TOP_RIGHT_CORNER, BOTTOM_LEFT_CORNER, BOTTOM_RIGHT_CORNER];
-
-	rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(self.img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
-	p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, -tvec[0][0]/2, -tvec[2][0]/2, -tvec[1][0]/2, 0, 0, 0)
-	self.Roulette_Waypoint = [n,e,0,y,0,0]
-	print("NORTH:"+str(n)+" EAST:"+str(e))
-	print("X_MOVEMENT:"+str(tvec[0][0]/2));
-	print("Z_MOVEMENT:"+str(-tvec[1][0]/2));
-	self.moveToWaypoint(self.Roulette_Waypoint)
+		rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(self.img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
+		po, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, -tvec[0][0]/2, -tvec[2][0]/2, -tvec[1][0]/2, 0, 0, 0)
+		self.SOLVED_BOARD.append([n,e,u,y,p,r,math.sqrt( e**2 + n**2 )]); #MAKES a vector where the last index can be compared
 	
 	
 #-----------------------END------------------------#
     def UPDATE_VIZUALS(self):
 #	FRONT CAMERA VIZUALS
+	#if(self.ACTIVE_CAM != "Front"):
 	self.useFrontCamera()#  see top for function
+	#	self.ACTIVE_CAM = "Front";
 #	self.FrontCam_RouletteFound = False
 	for det in self.detectionData:
 		if det[0] == self.Roulette_ClassNumber:
-			self.ROULETTEBOARD = det;
+			self.ROULETTEBOARD.append(det);
 			self.FrontCam_RouletteFound = True
 	
 #	BOTTOM CAMERA VIZUALS
@@ -116,34 +112,34 @@ class RouletteMission(AbstractMission):
 #	self.BottomCam_RouletteFound = False
 	for det in self.detectionData:
 		if det[0] == self.Roulette_ClassNumber:
-			self.ROULETTEBOARD = det;
 			self.BottomCam_RouletteFound = True
-
+			self.ROULETTEBOARD.append(det);
+			
+#---------SPECIAL KEY FOR SORTIING----------#
+    def CHOOSE_SECOND_ELEMENT(self,elm):
+		return elm[6];
 
 #-----The UPDATE: Essentially the main-------#
 
     def update(self):
 	print("-------------------------------------NEW RUN--------------------------------------------------------")
 
-	self.useBottomCamera()
-	
+		
 	self.UPDATE_VIZUALS();
 
-	
-
-	print("FRONTCAM:" + str(self.FrontCam_RouletteFound))
-	print("BOTMCAM:"+str(self.BottomCam_RouletteFound))	
-
-	print("Vizuals updated...Beginning logic\n")
 	if( self.FrontCam_RouletteFound or self.BottomCam_RouletteFound ):
-	    if( self.BottomCam_RouletteFound ):
-		self.Orient_Above_Board();
-	    else:
-		self.Move_Above_Board();
-
+		print("...Holding Position");
+		if(self.COUNTING <= 30):
+			self.COUNTING += 1;
+			self.moveToWaypoint(self.calculatedWaypoint);
+		elif(self.COUNTING > 30 and self.BOARDSOLVED == False):
+			self.SOLVING_PNP()
+			self.BOARDSOLVED = False;
+			self.SOLVED_BOARD.sort(key=self.CHOOSE_SECOND_ELEMENT);
+		else:
+			self.moveToWaypoint(self.SOLVED_BOARD[15][:-1])
 	else:
-	    print("Target not found")
-	print("DETECTION DATA:"+str(self.detectionData))
+		self.Search_RouletteBoard()
 
 	print("------------------------------------END RUN---------------------------------------------------------\n\n")
 '''
