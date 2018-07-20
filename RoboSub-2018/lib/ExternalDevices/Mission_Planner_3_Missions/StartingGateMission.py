@@ -38,7 +38,7 @@ class StartingGateMission(AbstractMission):
         
         self.leftArmPosSum = []
         self.rightArmPosSum = []
-	self.movementDestination = None
+        self.movementDestination = None
         
         self.armClassNumber = 10
         self.topClassNumber = 11
