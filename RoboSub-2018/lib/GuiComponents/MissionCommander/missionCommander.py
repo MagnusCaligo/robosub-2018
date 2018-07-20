@@ -12,6 +12,8 @@ from lib.ExternalDevices.Mission_Planner_3_Missions.NavigationMission import Nav
 from lib.ExternalDevices.Mission_Planner_3_Missions.DiceMission import DiceMission 
 from lib.ExternalDevices.Mission_Planner_3_Missions.StartingGateMission import StartingGateMission
 from lib.ExternalDevices.Mission_Planner_3_Missions.RouletteMission import RouletteMission
+from lib.ExternalDevices.Mission_Planner_3_Missions.TorpedoMission import TorpedoMission
+
 
 class MissionCommander(QtCore.QObject):
     """

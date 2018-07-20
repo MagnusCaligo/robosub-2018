@@ -17,28 +17,29 @@ class TorpedoMission(AbstractMission):
         self.torpedoHoleClassNumber = 12
         self.minimumToSee = 3
 
+
+    def initalizeOnMissionStart(self):
+        AbstractMission.initalizeOnMissionStart(self)
+
         self.estimatedPoints = []
         self.estimatedTorpedoLocation = []
 
-        self.reachedFinalWaypoint = False
         self.calculatedWaypoint = None
         
     
         #Flags
+        self.reachedFinalWaypoint = False
         self.foundObstacles = False
+        self.reachedBoard = False
 
-        self.torpedoSrcPoints = [(0,0,0), (12,0,0), (5.5, -35.5, 0), (-.25, -.5, 0), (.5, -.5, 0), (1, -.5, 0)] 
-        self.cornerLocations = [(3, -5, 0), (3, 5, 0), (-3, 5, 0), (-3, 5, 0), (12, -3, 0), (12, 3, 0), (9, 3, 0), (9, -3,0), (9, -32, 0), (9, -39,0), (2, -39, 0), (2, -32,0)]
-        self.torpedoSrcPoints = self.torpedoSrcPoints + self.cornerLocations
         self.srcPoints = []
         self.imgPoints = []
         
         #Timing stuff
         self.rotateTimer = None
         self.rotateWaitTime = None
-
-    def initalizeOnMissionStart(self):
-        AbstractMission.initalizeOnMissionStart(self)
+        self.waitTimer = None
+        self.waitTime = 5
 
     def checkIfSeeObstacles(self):
         numWeSee = 0
@@ -49,59 +50,6 @@ class TorpedoMission(AbstractMission):
             return True
         return False
 
-    def isolateDetections(self):
-	    for detection in self.detectionData:
-		    if detection[0] in self.classNumbers:
-			if detection[0] != self.classNumbers[-1]:
-				self.imgPoints.append((detection[2][0], detection[2][1]))
-				self.srcPoints.append(self.torpedoSrcPoints[self.torpedoDictionary[detection[0]]])
-			elif detection[0] == self.classNumbers[-1]:
-				print "Found a corner"
-				pixelError = 20
-				'''cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (255,0,0), -1)
-				while True:
-					cv2.imshow("Vision", img)
-					if cv2.waitKey(1) == ord(" "):
-						break'''
-				for secondDet in detections:
-					'''cv2.rectangle(img, (int(secondDet[2][0] - (.5 * secondDet[2][2]) - pixelError ),int(secondDet[2][1] - (.5 * secondDet[2][3]) - pixelError)), (int(secondDet[2][0] - (.5 * secondDet[2][2]) + pixelError),int(secondDet[2][1] - (.5 * secondDet[2][3]) + pixelError)), (255, 0, 0), 3)
-					cv2.rectangle(img, (int(secondDet[2][0]-(.5 * secondDet[2][2])), int(secondDet[2][1]- (.5 * secondDet[2][3]))), (int(secondDet[2][0] + (.5*secondDet[2][2])), int(secondDet[2][1] + (.5*secondDet[2][3]))), (0,0,255))
-					while True:
-						cv2.imshow("Vision", img)
-						if cv2.waitKey(1) == ord(" "):
-							break'''
-					if secondDet[0] in self.torpedoDictionary:
-						index = None
-						if detection[2][0] >= secondDet[2][0] - (.5 * secondDet[2][2]) - pixelError and detection[2][0] <= secondDet[2][0] - (.5 * secondDet[2][2]) + pixelError:
-							if detection[2][1] <= secondDet[2][1] - (.5 * secondDet[2][3]) + pixelError and detection[2][1] > secondDet[2][1] - (.5 * secondDet[2][3]) - pixelError:
-								print "In top left corner of", secondDet[0]
-								cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (255,0,0), -1)
-								index = self.torpedoDictionary[secondDet[0]]
-								index += 6
-						elif detection[2][0] >= secondDet[2][0] + (.5 * secondDet[2][2]) - pixelError and detection[2][0] <= secondDet[2][0] + (.5 * secondDet[2][2]) + pixelError:
-							if detection[2][1] <= secondDet[2][1] - (.5 * secondDet[2][3]) + pixelError and detection[2][1] > secondDet[2][1] - (.5 * secondDet[2][3]) - pixelError:
-								print "In top right corner of", secondDet[0]
-								cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (0,255,0), -1)
-								index = self.torpedoDictionary[secondDet[0]]
-								index += 3
-						if detection[2][0] >= secondDet[2][0] - (.5 * secondDet[2][2]) - pixelError and detection[2][0] <= secondDet[2][0] - (.5 * secondDet[2][2]) + pixelError:
-							if detection[2][1] <= secondDet[2][1] + (.5 * secondDet[2][3]) + pixelError and detection[2][1] > secondDet[2][1] + (.5 * secondDet[2][3]) - pixelError:
-								print "In bottom left corner of", secondDet[0]
-								cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (0,0,255), -1)
-								index = self.torpedoDictionary[secondDet[0]]
-								index += 5
-						elif detection[2][0] >= secondDet[2][0] + (.5 * secondDet[2][2]) - pixelError and detection[2][0] <= secondDet[2][0] + (.5 * secondDet[2][2]) + pixelError:
-							if detection[2][1] <= secondDet[2][1] + (.5 * secondDet[2][3]) + pixelError and detection[2][1] > secondDet[2][1] + (.5 * secondDet[2][3]) - pixelError:
-								print "In bottom right corner of", secondDet[0]
-								cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (255,0,255), -1)
-								index = self.torpedoDictionary[secondDet[0]]
-								index += 4
-						if index == None:
-							pass
-						else:
-							index += 3
-							self.srcPoints.append(self.torpedoSrcPoints[index])
-							self.imgPoints.append((int(detection[2][0]), int(detection[2][1])))
 
     def update(self):
         #Move to waypoint or move on if you see the board
@@ -121,9 +69,9 @@ class TorpedoMission(AbstractMission):
                 posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position,0,self.position[2] - self.finalWaypoint[2],0, 45, 0,0);
                 self.calculatedWaypoint = [n,e,u,yaw,pitch,roll]
             self.moveToWaypoint(self.calculatedWaypoint);
+            if self.checkIfSeeObstacles() == True:
+                self.foundObstacles = True
             return -1
-        elif self.checkIfSeeObstacles():
-            self.foundObstacles = True
             
         if len(self.estimatedPoints) < int(self.parameters["minimumEstimatesRequired"]):
             if self.torpedoHoleClassNumber in [det[0] for det in self.detectionData]:
@@ -140,6 +88,43 @@ class TorpedoMission(AbstractMission):
             else:
                 pass #Move towards the torpedo board until we see a hole
                 det = [detection for detection in self.detectionData if detection[0] in self.classNumbers][0]
+                self.calculatedWaypoint = []
+                if det[1] < 808 / 3.0:
+                    p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,0, -1, 0, 0)
+                    self.calculatedWaypoint = [n,e,u,y,p,r]
+                elif det[1] >= 2 * 808 / 3.0:
+                    p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,0, 1, 0, 0)
+                    self.calculatedWaypoint = [n,e,u,y,p,r]
+                elif det[1] >= 808 / 3.0 and det[1] < 2 * 808 /3.0:
+                    p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,1, 0, 0, 0)
+                    self.calculatedWaypoint = [n,e,u,y,p,r]
+                self.moveToWaypoint(self.calculatedWaypoint)
+                return -1
+        if self.reachedBoard == False and len(self.estimatedPoints) >= int(self.parameters["minimumEstimatesRequired"]):
+                northEstimate = (([v[0] for v in self.estimatedPoints]).sort())[len(self.estimatedPoints)/2]
+                eastEstimate = (([v[1] for v in self.estimatedPoints]).sort())[len(self.estimatedPoints)/2]
+                upEstimate = (([v[2] for v in self.estimatedPoints]).sort())[len(self.estimatedPoints)/2]
+                
+                northEstimate -= float(self.parameters["getDistanceAway"]) * math.cos(math.radians(self.generalWaypoint[3]))
+                eastEstimate -= float(self.parameters["getDistanceAway"]) * math.sin(math.radians(self.generalWaypoint[3]))
+                self.calculatedWaypoint = [northEstimate, eastEstimate, upEstimate, self.generalWaypoint[3], 0,0]
+                if self.moveToWaypoint(self.calculatedWaypoint):
+                    self.reachedBoard = True
+                return -1
+
+        if self.reachedBoard == True:
+            if self.waitTimer == None:
+                self.waitTimer = time.time()
+            if self.waitTimer - time.time() >= self.waitTime:
+                print "Finished Mission"
+                return 1
+            self.moveToWaypoint(self.calculatedWaypoint)
+
+                
+
+
+
+
                     
             
         
