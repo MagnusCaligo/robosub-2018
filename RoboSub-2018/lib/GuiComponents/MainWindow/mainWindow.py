@@ -74,6 +74,7 @@ class MainWindow(QtGui.QMainWindow):
         self.dataGraphingClass = classes[6]
         self.controlSystemClass = classes[7]
         self.debugValuesClass = classes[8]
+        self.pneumaticsClass = classes[9]
         
         self.externalCommClass.connectSignals()
         filename = self.externalCommClass.previous_state_logging.getValue("previousWidgetConfig")
@@ -123,6 +124,7 @@ class MainWindow(QtGui.QMainWindow):
         self.subwin_mainWidget.loadConfigsButton.clicked.connect(lambda: self.loadConfigValues())
         self.subwin_mainWidget.loadMissionsButton.clicked.connect(lambda: self.loadMissions())
         self.subwin_mainWidget.resetButton.clicked.connect(self.resetButtonClicked)
+        self.subwin_mainWidget.pneumaticsButton.clicked.connect(self.add_pneumaticsWidget)
         self.systemOutput = self.subwin_mainWidget.plainTextEdit;
 
         
@@ -240,6 +242,8 @@ class MainWindow(QtGui.QMainWindow):
 	if self.externalCommClass.running == True:
 		self.stopPressed()
 		time.sleep(1)
+		if self.startedAuto == True:
+			return
 		self.startedAuto = True
 	self.resetButtonClicked()
         if self.subwin_mainWidget.debugCheck.isChecked():
@@ -254,7 +258,7 @@ class MainWindow(QtGui.QMainWindow):
             if self.externalCommClass.externalCommThread.dvlResponseThread != None:
 				pass#self.externalCommClass.externalCommThread.dvlResponseThread.clearDistanceTraveled()
         else:
-            time.sleep(1)
+            time.sleep(5)
             print "Starting"
             self.systemOutput.insertPlainText("Starting Vehicle\n")
             if self.externalCommClass.externalCommThread.dvlResponseThread != None:
@@ -288,7 +292,27 @@ class MainWindow(QtGui.QMainWindow):
             self.systemOutput.insertPlainText("Stopping Vehicle\n")
         self.startVehicle = False
         self.externalCommClass.running = False
-        self.externalCommClass.stopThread()
+        self.externalCommClass.stopThread()		
+	
+    @QtCore.pyqtSlot()
+    def add_pneumaticsWidget(self):
+        # Initialize widget
+        self.pneumaticsWidget= QtGui.QWidget()
+        self.pneumaticsClass.ui_Pneumatics.setupUi(self.pneumaticsWidget)
+        self.pneumaticsClass.connectSignals()
+
+
+        # Initialize subwindow
+        self.subwindow = QtGui.QMdiSubWindow(self.ui_MainWindow.mdiArea)
+        self.pneumaticsWidget.setParent(self.subwindow)
+        self.subwindow.setWidget(self.pneumaticsWidget)
+        self.subwindow.setWindowTitle('Pneumatics')
+
+        # Show new subwindow
+        self.ui_MainWindow.mdiArea.addSubWindow(self.subwindow)
+        self.pneumaticsWidget.show()
+        self.subwindow.show()
+        self.subwindow.widget().show()
 
     @QtCore.pyqtSlot()
     def add_debugValuesWidget(self):

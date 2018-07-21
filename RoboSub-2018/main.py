@@ -10,6 +10,7 @@ from lib.GuiComponents.MissionCommander.missionCommander import MissionCommander
 from lib.GuiComponents.DataGraphing.dataGraphing import DataGraphing
 from lib.GuiComponents.ControlSystemWidget.controlSystemWidget import ControlSystemWidget
 from lib.GuiComponents.DebugValues.debugValues import DebugValues
+from lib.GuiComponents.Pneumatics.pneumaticsWidget import PneumaticsWidget
 
 import sys
 
@@ -48,12 +49,13 @@ def main():
     dataGraphingClass = DataGraphing(externalCommClass)
     controlSystemClass = ControlSystemWidget(externalCommClass)
     debugValuesClass = DebugValues(externalCommClass)
+    pneumaticsClass = PneumaticsWidget(externalCommClass)
     
     #Passes the mission commander class into Mission Planner to connect signals
     externalCommClass.missionPlanner.setReferences(missionCommanderClass, controlSystemClass)
 
     window.setClasses([manualControlClass, computerVisionClass, mapClass, embeddedWidgetClass,
-                       externalCommClass, missionCommanderClass, dataGraphingClass, controlSystemClass, debugValuesClass])
+                       externalCommClass, missionCommanderClass, dataGraphingClass, controlSystemClass, debugValuesClass, pneumaticsClass])
     window.show()
     window.add_mainWidget()
     roboSubGui.aboutToQuit.connect(window.exitHandler)
