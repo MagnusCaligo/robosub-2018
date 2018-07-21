@@ -29,7 +29,7 @@ class RouletteMission(AbstractMission):
 	
 
 #       ********Roulette Detections********           
-	self.FrontCam_RouletteFound = False
+	self.FrontCam_RouletteFound = False;
 	self.BottomCam_RouletteFound= False;
 	self.ROULETTEBOARD = [];
 	self.SOLVED_BOARD = [];
@@ -76,7 +76,7 @@ class RouletteMission(AbstractMission):
 	
 	self.useFrontCamera()
 
-	print("Moving Forward...")
+	print("...Moving Forward");
 	p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, 2, -1, 0, 0, 0)
 	self.Roulette_Waypoint = [n,e,self.finalWaypoint[2],y,0,0]
 	self.moveToWaypoint(self.Roulette_Waypoint)
@@ -128,16 +128,19 @@ class RouletteMission(AbstractMission):
 	self.UPDATE_VIZUALS();
 
 	if( self.FrontCam_RouletteFound or self.BottomCam_RouletteFound ):
-		print("...Holding Position");
-		if(self.COUNTING <= 30):
+		
+		if(self.COUNTING <= 30 and self.FrontCam_RouletteFound == True):
 			self.COUNTING += 1;
 			self.moveToWaypoint(self.calculatedWaypoint);
-		elif(self.COUNTING > 30 and self.BOARDSOLVED == False):
-			self.SOLVING_PNP()
-			self.BOARDSOLVED = False;
-			self.SOLVED_BOARD.sort(key=self.CHOOSE_SECOND_ELEMENT);
+			print("...Collecting Data");
 		else:
+		
+			if(self.BOARDSOLVED == False):
+				self.SOLVING_PNP()
+				self.SOLVED_BOARD.sort(key=self.CHOOSE_SECOND_ELEMENT);
+				self.BOARDSOLVED = True;
 			self.moveToWaypoint(self.SOLVED_BOARD[15][:-1])
+			print("...Moving to Waypoint")
 	else:
 		self.Search_RouletteBoard()
 
