@@ -473,12 +473,13 @@ class motherBoardResponse(threading.Thread):
         self.runThread = False    
 
 if __name__ == "__main__":
-	back = serial.Serial("/dev/ttyUSB18", 9600)
+	back = serial.Serial("/dev/ttyUSB0", 9600)
 	motherboard = motherboardDataPackets(back)
 	motherResponseThread = motherBoardResponse(back)
-	motherboad.sendBackplaneCurrentRequest()
+	motherboard.sendWeaponCommand1()
 	
-	while True:
+	'''while True:
 		if motherResponseThread.inWaiting > 0:
 			print "Got something from backplane"
+	'''
 	 

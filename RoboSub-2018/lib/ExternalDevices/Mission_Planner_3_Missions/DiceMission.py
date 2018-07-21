@@ -110,7 +110,8 @@ class DiceMission(AbstractMission):
 
 
 			#These are the image points of the buoy in the image, this will be with the source points to get buoy depth
-			img_pts = [(detection[1], detection[2]), (detection[1] + detection[3], detection[2]), (detection[1] + detection[3], + detection[2] + detection[4]), (detection[1], detection[2] + detection[4])]
+			img_pts = [(detection[1] - (.5 * detection[3]), detection[2] - (.5* detection[4])),(detection[1] + (.5 * detection[3]), detection[2] - (.5* detection[4])),
+                                 (detection[1] + (.5 * detection[3]), detection[2] + (.5* detection[4])),(detection[1] - (.5 * detection[3]), detection[2] + (.5* detection[4]))]
 
 			#Fake camera matrix
 			cameraMatrix = [[808,     0, 404],

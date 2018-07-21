@@ -21,9 +21,9 @@ class yoloComputerVision(QtCore.QThread):
 		if not onLinux:
 			return
 
-		self.dataFile = "/media/sub_data/data/7_2.data"
-		self.weightFile = "/media/sub_data/weights/7_9_v2.weights"
-		self.cfgFile = "/media/sub_data/cfg/7_9_v2.cfg"
+		self.dataFile = "/media/sub_data/data/7_19.data"
+		self.weightFile = "/media/sub_data/weights/7_19_20000.weights"
+		self.cfgFile = "/media/sub_data/cfg/7_19.cfg"
 
 		self.frontCamera = None
 		self.botCamera = None
@@ -115,7 +115,7 @@ class yoloComputerVision(QtCore.QThread):
                     else:
 			t, img = self.activeCamera.read()
                     #yoloImage = dn.IMAGE()
-                    detections = dn.detect_np(self.net, self.meta, img, thresh=.1, hier_thresh = .1)
+                    detections = dn.detect_np(self.net, self.meta, img, thresh=.2, hier_thresh = .2)
                     newDetections = []
                     self.imgPoints = []
                     self.srcPoints = []

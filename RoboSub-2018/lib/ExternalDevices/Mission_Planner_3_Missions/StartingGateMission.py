@@ -40,8 +40,8 @@ class StartingGateMission(AbstractMission):
         self.rightArmPosSum = []
         self.movementDestination = None
         
-        self.armClassNumber = 10
-        self.topClassNumber = 11
+        self.armClassNumber = 13
+        self.topClassNumber = 14
 
         
         
@@ -172,14 +172,15 @@ class StartingGateMission(AbstractMission):
 		img_pts = (p1,p2,p3,p4)	
                 rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
                 tvec[0][0]-=.25 #Camera isn't centered with Percy, so move it over a bit
-                tvec[1][0]-=.5 #tvec is from top left corner, so we want to move a bit deeper
+                tvec[1][0]+=.5 #tvec is from top left corner, so we want to move a bit deeper
                 tvec[2][0] *= -1 #Z decreases towards the front of the sub, so if we want to move forward this needs to be negative
+		tvec[2][0] -= float(self.parameters["distanceThrough"])
 		print "Left Tvec is", tvec
                 nAvg = 0
                 eAvg = 0
                 uAvg = 0
 		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0] + 1, tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
-                self.rightArmPosSum.append([north,east,up])
+                self.leftArmPosSum.append([north,east,up])
                 for values in self.leftArmPosSum:
                     nAvg += values[0]
                     eAvg += values[1]
@@ -209,7 +210,7 @@ class StartingGateMission(AbstractMission):
                 tvec[0][0]-=.25 #Camera isn't centered with Percy, so move it over a bit
                 tvec[1][0]+=.5 #tvec is from top left corner, so we want to move a bit deeper
                 tvec[2][0] *= -1 #Z decreases towards the front of the sub, so if we want to move forward this needs to be negative
-		#tvec[2][0] -= float(self.parameters["distanceThrough"]
+		tvec[2][0] -= float(self.parameters["distanceThrough"])
 		print "Right Tvec is", tvec
 		
                 nMedian = []
@@ -231,7 +232,7 @@ class StartingGateMission(AbstractMission):
 
 
             
-            if self.parameters["Gate_Side"] in ["Left", "left", "l"]:
+            if self.parameters["Gate_Side"] in ["Right", "right", "r"]:
                 self.movementDestination = copy.copy(self.leftArmPosEst)
 		print "Using Left Arm"
             else:
@@ -273,10 +274,11 @@ class StartingGateMission(AbstractMission):
 	    else:
 		print "see one arm, but have destination info"
 		return self.moveToWaypoint(self.movementDestination)
-	elif self.movementDestination != None:
+        elif self.movementDestination != None:
 		    print "Calculated waypoint', Moving to it", self.movementDestination
 		    return self.moveToWaypoint(self.movementDestination)
-	else:
+        else:
+		    print "Holding position, don't know where to go"
 		    pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1, 0, 0, 0, 0)
 		    waypoint = [n,e,u, y, 0, 0]
 		    self.moveToWaypoint(waypoint)

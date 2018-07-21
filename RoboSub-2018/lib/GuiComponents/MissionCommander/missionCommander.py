@@ -115,6 +115,8 @@ class MissionCommander(QtCore.QObject):
             mission = StartingGateMission
 	elif missionType == "Roulette":
 	    mission = RouletteMission
+	elif missionType == "Torpedo":
+	    mission = TorpedoMission
             
         if hasattr(mission, "defaultParameters"):
             self.ui_missionCommander.parameterStringInputs.clear()
@@ -151,6 +153,9 @@ class MissionCommander(QtCore.QObject):
             self.ui_missionCommander.missionTypeCB.setCurrentIndex(3)
         elif isinstance(mission, RouletteMission):
             self.ui_missionCommander.missionTypeCB.setCurrentIndex(4)
+	elif isinstance(mission, TorpedoMission):
+            self.ui_missionCommander.missionTypeCB.setCurrentIndex(5)
+
 	
         
         #Modify the TextLine Edits
@@ -328,6 +333,8 @@ class MissionCommander(QtCore.QObject):
             mission = StartingGateMission(parameters)
         elif missionType == "Roulette":
             mission = RouletteMission(parameters)
+        elif missionType == "Torpedo":
+            mission = TorpedoMission(parameters)
             
         mission.parameters["missionType"] = missionType
         mission.name = str(parameters["name"])
@@ -419,6 +426,8 @@ class MissionCommander(QtCore.QObject):
                 mission = StartingGateMission(parameters)
             elif missionType == "Roulette":
                 mission = RouletteMission(parameters)
+            elif missionType == "Torpedo":
+                mission = TorpedoMission(parameters)
                 
             if mission == None:
                 print "Didn't load correctly: " + missionType
