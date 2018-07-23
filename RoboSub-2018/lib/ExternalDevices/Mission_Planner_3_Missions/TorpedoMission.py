@@ -6,7 +6,7 @@ import time
 
 class TorpedoMission(AbstractMission):
 
-    defaultParameters = AbstractMission.defaultParameters + "Torpedo Target = TL\ngetDistanceAway = 2\nminimumEstimatesRequired=20\n"
+    defaultParameters = AbstractMission.defaultParameters + "Torpedo Target = TL\ngetDistanceAway = 2\nminimumEstimatesRequired=200\npullArm=True"
 
     def __init__(self, parameters):
         AbstractMission.__init__(self, parameters)
@@ -25,12 +25,16 @@ class TorpedoMission(AbstractMission):
         self.estimatedTorpedoLocation = []
 
         self.calculatedWaypoint = None
+        self.armWaypoint = None
         
     
         #Flags
         self.reachedFinalWaypoint = False
         self.foundObstacles = False
         self.reachedBoard = False
+        self.pulledArm = False
+        self.aboveArm = False
+        self.finishedPulling = False
 
         self.srcPoints = []
         self.imgPoints = []
@@ -40,6 +44,8 @@ class TorpedoMission(AbstractMission):
         self.rotateWaitTime = None
         self.waitTimer = None
         self.waitTime = 5
+        self.waitArmPullTimer = None
+        self.armPullTime = 10
 
     def checkIfSeeObstacles(self):
         numWeSee = 0
@@ -49,6 +55,7 @@ class TorpedoMission(AbstractMission):
         if numWeSee >= self.minimumToSee:
             return True
         return False
+    
 
 
     def update(self):
@@ -61,7 +68,7 @@ class TorpedoMission(AbstractMission):
             self.reachedFinalWaypoint = True
 
         if self.reachedFinalWaypoint and not self.foundObstacles:
-	    print "At waypoint, looking for obstacle"
+            print "At waypoint, looking for obstacle"
             if self.rotateTimer == None:
                 self.rotateTimer = time.time()
             if time.time() - self.rotateTimer >= self.rotateWaitTime:
@@ -76,7 +83,7 @@ class TorpedoMission(AbstractMission):
             return -1
             
         if len(self.estimatedPoints) < int(self.parameters["minimumEstimatesRequired"]):
-	    print "Getting point estimates"
+            print "Getting point estimates"
             if self.torpedoHoleClassNumber in [det[0] for det in self.detectionData]:
                 #We see a hole, we need to check every hole and append the values to the estimated AbstractCollocationFinder
                 for det in [detection for detection in self.detectionData if detection[0] == self.torpedoHoleClassNumber]:
@@ -84,18 +91,17 @@ class TorpedoMission(AbstractMission):
                                  (det[1] + (.5 * det[3]), det[2] + (.5* det[4])),(det[1] - (.5 * det[3]), det[2] + (.5* det[4]))]
                     srcPoints = [(-.5,-.5,0),(.5,-.5,0),(.5,.5,0),(-.5,.5,0)]
                     rvec, tvec = cv2.solvePnP(np.array(srcPoints).astype('float32'), np.array(imgPoints).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
-		    print rvec, tvec
                     poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0], -tvec[2][0],0,0,0)
                     self.estimatedPoints.append([north/1.0, east/1.0, up, 0, 0,0])
                 self.moveToWaypoint(self.calculatedWaypoint)
                 return -1
             else:
-		print "Don't see targets, getting closer"
-		if len([det for det in self.detectionData if det[0] in self.classNumbers]) == 0:
-			print "Lost detections, searching again..."
-			self.foundObstacles = False
-			return -1
-                pass #Move towards the torpedo board until we see a hole
+                print "Don't see targets, getting closer"
+                if len([det for det in self.detectionData if det[0] in self.classNumbers]) == 0:
+                    print "Lost detections, searching again..."
+                    self.foundObstacles = False
+                    return -1
+                #Move towards the torpedo board until we see a hole
                 det = [detection for detection in self.detectionData if detection[0] in self.classNumbers][0]
                 self.calculatedWaypoint = []
                 if det[1] < 808 / 3.0:
@@ -110,33 +116,75 @@ class TorpedoMission(AbstractMission):
                 self.moveToWaypoint(self.calculatedWaypoint)
                 return -1
         if self.reachedBoard == False and len(self.estimatedPoints) >= int(self.parameters["minimumEstimatesRequired"]):
-		print "Got enought points, moving to board"
+                print "Got enought points, moving to board"
 
                 northEstimate = (sorted(([v[0] for v in self.estimatedPoints])))[len(self.estimatedPoints)/2]
                 eastEstimate = (sorted(([v[1] for v in self.estimatedPoints])))[len(self.estimatedPoints)/2]
                 upEstimate = (sorted(([v[2] for v in self.estimatedPoints])))[len(self.estimatedPoints)/2]
 
-		print northEstimate, eastEstimate
-		print "Distance:", math.sqrt(northEstimate**2 + eastEstimate**2)
                 
                 northEstimate -= float(self.parameters["getDistanceAway"]) * math.cos(math.radians(self.generalWaypoint[3]))
                 eastEstimate -= float(self.parameters["getDistanceAway"]) * math.sin(math.radians(self.generalWaypoint[3]))
                 self.calculatedWaypoint = [northEstimate, eastEstimate, 5, self.generalWaypoint[3], 0,0]
+                print "Goint to point:", self.calculatedWaypoint
+                print "Estimated Depth was:", upEstimate
                 if self.moveToWaypoint(self.calculatedWaypoint):
                     self.reachedBoard = True
+                    self.estimatedPoints = []
                 return -1
 
         if self.reachedBoard == True:
-	    print "Reached board, waiting"
-            if self.waitTimer == None:
-                self.waitTimer = time.time()
-            if self.waitTimer - time.time() >= self.waitTime:
-                print "Finished Mission"
-                return 1
-            self.moveToWaypoint(self.calculatedWaypoint)
+            return self.performExecution()
 
                 
 
+    def performExecution(self):
+        if self.paramaters["pullArm"] in ["True", "true", "t"] and not self.pulledArm:
+            self.pullArmFromCurrentLocation()
+            return -1
+            
+        if len(self.estimatedPoints) < int(self.parameters["minimumEstimatesRequired"]):
+            if self.torpedoHoleClassNumber in [det[0] for det in self.detectionData]:
+                #We see a hole, we need to check every hole and append the values to the estimated AbstractCollocationFinder
+                for det in [detection for detection in self.detectionData if detection[0] == self.torpedoHoleClassNumber]:
+                    self.torpedoIdentificationMethod1((det[1][0], det[1][1]))
+                    self.torpedoIdentificationMethod2((det[1][0], det[1][1]))
+                self.moveToWaypoint(self.calculatedWaypoint)
+                return -1
+
+
+    def pullArmFromCurrentLocation(self): #This code will be used to 'hard code' the arm pulling
+        if self.waitArmPullTimer == None:
+            self.waitArmPullTimer = time.time()
+        if time.time() - self.waitArmPullTimer >= self.armPullTime:
+            self.waitArmPullTimer = None
+            self.armWaypoint = None
+            if self.aboveArm == False:
+                self.aboveArm = True
+            elif self.finishedPulling == False:
+                self.finishedPulling = True
+            else:
+                self.pulledArm = True
+        if self.armWaypoint == None:
+            if self.aboveArm == False:
+                poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, 1, -2, -float(self.parameters["getDistanceAway"]), 0, 0,0)
+                self.armWaypoint = [north, east, up, yaw, pitch, roll]
+            elif self.finishedPulling == False:
+                poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, 0, 2, 0, 0, 0,0)
+                self.armWaypoint = [north, east, up, yaw, pitch, roll]
+            else:
+                self.armWaypoint = self.calculatedWaypoint
+                
+        self.moveToWaypoint(self.armWaypoint)
+
+        
+    def torpedoIdentificationMethod1(self, value):
+        pass
+
+    def torpedoIdentificationMethod2(self, value):
+        pass
+
+                
 
 
 

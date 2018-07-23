@@ -1,4 +1,4 @@
-onLinux = True
+onLinux = False
 if onLinux:
 	import darknet as dn
 	import PyCapture2 as pc2
@@ -128,7 +128,6 @@ class yoloComputerVision(QtCore.QThread):
 					self.imgPoints.append((detection[2][0], detection[2][1]))
 					self.srcPoints.append(self.torpedoSrcPoints[self.torpedoDictionary[detection[0]]])
 				elif detection[0] == "Corner":
-					print "Found a corner"
 					pixelError = 20
 					'''cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (255,0,0), -1)
 					while True:
@@ -146,25 +145,21 @@ class yoloComputerVision(QtCore.QThread):
 							index = None
 							if detection[2][0] >= secondDet[2][0] - (.5 * secondDet[2][2]) - pixelError and detection[2][0] <= secondDet[2][0] - (.5 * secondDet[2][2]) + pixelError:
 								if detection[2][1] <= secondDet[2][1] - (.5 * secondDet[2][3]) + pixelError and detection[2][1] > secondDet[2][1] - (.5 * secondDet[2][3]) - pixelError:
-									print "In top left corner of", secondDet[0]
 									cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (255,0,0), -1)
 									index = self.torpedoDictionary[secondDet[0]]
 									index += 9
 							elif detection[2][0] >= secondDet[2][0] + (.5 * secondDet[2][2]) - pixelError and detection[2][0] <= secondDet[2][0] + (.5 * secondDet[2][2]) + pixelError:
 								if detection[2][1] <= secondDet[2][1] - (.5 * secondDet[2][3]) + pixelError and detection[2][1] > secondDet[2][1] - (.5 * secondDet[2][3]) - pixelError:
-									print "In top right corner of", secondDet[0]
 									cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (0,255,0), -1)
 									index = self.torpedoDictionary[secondDet[0]]
 									index += 6
 							if detection[2][0] >= secondDet[2][0] - (.5 * secondDet[2][2]) - pixelError and detection[2][0] <= secondDet[2][0] - (.5 * secondDet[2][2]) + pixelError:
 								if detection[2][1] <= secondDet[2][1] + (.5 * secondDet[2][3]) + pixelError and detection[2][1] > secondDet[2][1] + (.5 * secondDet[2][3]) - pixelError:
-									print "In bottom left corner of", secondDet[0]
 									cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (0,0,255), -1)
 									index = self.torpedoDictionary[secondDet[0]]
 									index += 8
 							elif detection[2][0] >= secondDet[2][0] + (.5 * secondDet[2][2]) - pixelError and detection[2][0] <= secondDet[2][0] + (.5 * secondDet[2][2]) + pixelError:
 								if detection[2][1] <= secondDet[2][1] + (.5 * secondDet[2][3]) + pixelError and detection[2][1] > secondDet[2][1] + (.5 * secondDet[2][3]) - pixelError:
-									print "In bottom right corner of", secondDet[0]
 									cv2.circle(img, (int(detection[2][0]), int(detection[2][1])), 10, (255,0,255), -1)
 									index = self.torpedoDictionary[secondDet[0]]
 									index += 7
@@ -176,14 +171,11 @@ class yoloComputerVision(QtCore.QThread):
 					
 
                     if len(self.imgPoints) >= 4:
-				print "Solving..."
 				#print self.imgPoints, self.srcPoints
 				rvec, tvec = cv2.solvePnP(np.array(self.srcPoints).astype("float32"), np.array(self.imgPoints).astype("float32"), np.array(self.camMat).astype("float32"), np.zeros((4,1)))[-2:]
 				(pose1, jacobian) = cv2.projectPoints(np.array([(0.0,0.0,0.1)]), rvec, tvec, np.array(self.camMat).astype("float32"), None)
 				(pose, jacobian) = cv2.projectPoints(np.array([(0,0,12.0)]), rvec, tvec, np.array(self.camMat).astype("float32"), None)
 				cv2.line(img, (int(pose1[0][0][0]), int(pose1[0][0][1])), (int(pose[0][0][0]), int(pose[0][0][1])), (255,0,0), 2)
-				print "Rvec:", rvec ,"\n"
-				print "Tvec:", tvec
 
 		    for detection in detections:
 			    loc = detection[2]
