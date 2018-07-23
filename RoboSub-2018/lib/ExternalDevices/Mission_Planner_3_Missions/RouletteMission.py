@@ -26,6 +26,7 @@ class RouletteMission(AbstractMission):
 	self.calculatedWaypoint = None
 	self.ACTIVE_CAM = "None";
 	self.COUNTING =0;
+	self.NUMBER_OF_SAMPLES = 400;
 	
 
 #       ********Roulette Detections********           
@@ -128,8 +129,8 @@ class RouletteMission(AbstractMission):
 	self.UPDATE_VIZUALS();
 
 	if( self.FrontCam_RouletteFound or self.BottomCam_RouletteFound ):
-		
-		if(self.COUNTING <= 30 and self.FrontCam_RouletteFound == True):
+		Estimate = 
+		if(self.COUNTING <= self.NUMBER_OF_SAMPLES and self.FrontCam_RouletteFound == True):
 			self.COUNTING += 1;
 			self.moveToWaypoint(self.calculatedWaypoint);
 			print("...Collecting Data");
@@ -139,7 +140,7 @@ class RouletteMission(AbstractMission):
 				self.SOLVING_PNP()
 				self.SOLVED_BOARD.sort(key=self.CHOOSE_SECOND_ELEMENT);
 				self.BOARDSOLVED = True;
-			self.moveToWaypoint(self.SOLVED_BOARD[15][:-1])
+			self.moveToWaypoint(self.SOLVED_BOARD[int(self.NUMBER_OF_SAMPLES/2)][:-1])
 			print("...Moving to Waypoint")
 	else:
 		self.Search_RouletteBoard()
