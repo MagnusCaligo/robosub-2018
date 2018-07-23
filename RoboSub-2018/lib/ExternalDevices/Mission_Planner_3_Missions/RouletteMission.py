@@ -129,7 +129,6 @@ class RouletteMission(AbstractMission):
 	self.UPDATE_VIZUALS();
 
 	if( self.FrontCam_RouletteFound or self.BottomCam_RouletteFound ):
-		Estimate = 
 		if(self.COUNTING <= self.NUMBER_OF_SAMPLES and self.FrontCam_RouletteFound == True):
 			self.COUNTING += 1;
 			self.moveToWaypoint(self.calculatedWaypoint);
