@@ -6,7 +6,7 @@ import time
 
 class TorpedoMission(AbstractMission):
 
-    defaultParameters = AbstractMission.defaultParameters + "Torpedo Target = TL\ngetDistanceAway = 2\nminimumEstimatesRequired=200\npullArm=True"
+    defaultParameters = AbstractMission.defaultParameters + "Torpedo Target = TL\ngetDistanceAway = 2\nminimumEstimatesRequired=200\npullArm=True\ntorpedoThreshold = 60"
 
     def __init__(self, parameters):
         AbstractMission.__init__(self, parameters)
@@ -38,6 +38,9 @@ class TorpedoMission(AbstractMission):
 
         self.srcPoints = []
         self.imgPoints = []
+        
+        #Algorithm Stuff
+        self.algorithm1Data = np.array([])
         
         #Timing stuff
         self.rotateTimer = None
@@ -143,12 +146,13 @@ class TorpedoMission(AbstractMission):
             self.pullArmFromCurrentLocation()
             return -1
             
+        target = []
         if len(self.estimatedPoints) < int(self.parameters["minimumEstimatesRequired"]):
             if self.torpedoHoleClassNumber in [det[0] for det in self.detectionData]:
                 #We see a hole, we need to check every hole and append the values to the estimated AbstractCollocationFinder
                 for det in [detection for detection in self.detectionData if detection[0] == self.torpedoHoleClassNumber]:
-                    self.torpedoIdentificationMethod1((det[1][0], det[1][1]))
-                    self.torpedoIdentificationMethod2((det[1][0], det[1][1]))
+                    target = self.torpedoIdentificationMethod1((det[1][0], det[1][1]))
+                    #target = self.torpedoIdentificationMethod2((det[1][0], det[1][1]))
                 self.moveToWaypoint(self.calculatedWaypoint)
                 return -1
 
@@ -179,7 +183,17 @@ class TorpedoMission(AbstractMission):
 
         
     def torpedoIdentificationMethod1(self, value):
-        pass
+        thresh = float(self.parameters["torpedoThreshold"])
+        for target in self.algorithm1Data:
+            meanX = np.mean([t[0] for t in target])
+            meanY = np.mean([t[1] for t in target])
+            if math.sqrt((meanX - value[0]) ** 2 + (meanY - value[1]) ** 2) <= thresh:
+                target = np.append(value, target)
+                return self.algorithm1Data[0]
+            
+        self.algorithm1Data = np.append(np.array([value]), self.algorithm1Data)
+        return self.algorithm1Data[0]
+
 
     def torpedoIdentificationMethod2(self, value):
         pass
