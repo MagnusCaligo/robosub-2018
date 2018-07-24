@@ -26,7 +26,7 @@ class RouletteMission(AbstractMission):
 	self.calculatedWaypoint = None
 	self.ACTIVE_CAM = "None";
 	self.COUNTING =0;
-	self.NUMBER_OF_SAMPLES = 400;
+	self.NUMBER_OF_SAMPLES = 175;
 	
 
 #       ********Roulette Detections********           
@@ -38,7 +38,7 @@ class RouletteMission(AbstractMission):
 	
 #	********Roulette MiddlePosition****
 
-	self.Roulette_ClassNumber = 2;
+	self.Roulette_ClassNumber = 7;
 	self.src_pts = [(0,0,0),(0,3.25,0),(3.25,3.25,0),(0,0,3.25)]
 	self.img_pts = None
 
@@ -91,8 +91,11 @@ class RouletteMission(AbstractMission):
 		self.img_pts = [TOP_LEFT_CORNER, TOP_RIGHT_CORNER, BOTTOM_LEFT_CORNER, BOTTOM_RIGHT_CORNER];
 
 		rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(self.img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
-		po, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, -tvec[0][0]/2, -tvec[2][0]/2, -tvec[1][0]/2, 0, 0, 0)
-		self.SOLVED_BOARD.append([n,e,u,y,p,r,math.sqrt( e**2 + n**2 )]); #MAKES a vector where the last index can be compared
+		print("TVEC:"+str(tvec))
+		
+		po, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0][0]/2, tvec[2][0]/2, -tvec[1][0]/2, 0, 0, 0)
+		print("DISTANCE:"+str(math.sqrt(e**2 + n**2)))
+		self.SOLVED_BOARD.append([n,e,u,0,0,0,math.sqrt( e**2 + n**2 )]); #MAKES a vector where the last index can be compared
 	
 	
 #-----------------------END------------------------#
@@ -104,17 +107,18 @@ class RouletteMission(AbstractMission):
 #	self.FrontCam_RouletteFound = False
 	for det in self.detectionData:
 		if det[0] == self.Roulette_ClassNumber:
+			self.COUNTING += 1;
 			self.ROULETTEBOARD.append(det);
 			self.FrontCam_RouletteFound = True
 	
 #	BOTTOM CAMERA VIZUALS
-	self.useBottomCamera()#  see top for function
+	#self.useBottomCamera()#  see top for function
 
 #	self.BottomCam_RouletteFound = False
-	for det in self.detectionData:
-		if det[0] == self.Roulette_ClassNumber:
-			self.BottomCam_RouletteFound = True
-			self.ROULETTEBOARD.append(det);
+	#for det in self.detectionData:
+	#	if det[0] == self.Roulette_ClassNumber:
+	#		self.BottomCam_RouletteFound = True
+	#		self.ROULETTEBOARD.append(det);
 			
 #---------SPECIAL KEY FOR SORTIING----------#
     def CHOOSE_SECOND_ELEMENT(self,elm):
@@ -129,18 +133,19 @@ class RouletteMission(AbstractMission):
 	self.UPDATE_VIZUALS();
 
 	if( self.FrontCam_RouletteFound or self.BottomCam_RouletteFound ):
-		if(self.COUNTING <= self.NUMBER_OF_SAMPLES and self.FrontCam_RouletteFound == True):
-			self.COUNTING += 1;
+		if( self.COUNTING <= self.NUMBER_OF_SAMPLES and self.FrontCam_RouletteFound == True):
 			self.moveToWaypoint(self.calculatedWaypoint);
 			print("...Collecting Data");
+			print("COUNT:"+str(self.COUNTING))
 		else:
 		
 			if(self.BOARDSOLVED == False):
 				self.SOLVING_PNP()
 				self.SOLVED_BOARD.sort(key=self.CHOOSE_SECOND_ELEMENT);
 				self.BOARDSOLVED = True;
-			self.moveToWaypoint(self.SOLVED_BOARD[int(self.NUMBER_OF_SAMPLES/2)][:-1])
-			print("...Moving to Waypoint")
+				#int(self.NUMBER_OF_SAMPLES/2)
+			self.moveToWaypoint(self.SOLVED_BOARD[ (self.NUMBER_OF_SAMPLES/2) ][:-1])
+			print("...Moving to Waypoint" + str(self.SOLVED_BOARD[ (self.NUMBER_OF_SAMPLES/2) ][:-1]))
 	else:
 		self.Search_RouletteBoard()
 

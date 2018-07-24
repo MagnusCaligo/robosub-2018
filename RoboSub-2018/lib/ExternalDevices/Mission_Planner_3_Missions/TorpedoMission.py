@@ -15,7 +15,7 @@ class TorpedoMission(AbstractMission):
         #self.classNumbers = [7, 8, 6,9,3,4,5,13]
         self.classNumbers = [8,9,10,11,12]
         self.torpedoHoleClassNumber = 12
-        self.minimumToSee = 3
+        self.minimumToSee = 2
 
 
     def initalizeOnMissionStart(self):
@@ -46,7 +46,7 @@ class TorpedoMission(AbstractMission):
         self.rotateTimer = None
         self.rotateWaitTime = None
         self.waitTimer = None
-        self.waitTime = 5
+        self.waitTime = 10
         self.waitArmPullTimer = None
         self.armPullTime = 10
 
@@ -78,8 +78,9 @@ class TorpedoMission(AbstractMission):
                 self.rotateTimer = None
                 self.calculatedWaypoint = None
             if self.calculatedWaypoint == None:
-                posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position,0,self.position[2] - self.finalWaypoint[2],0, 45, 0,0);
-                self.calculatedWaypoint = [self.finalWaypoint[0],self.finalWaypoint[1],self.finalWaypoint[2],yaw,pitch,roll]
+                posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position,0,self.finalWaypoint[2] -self.position[2],0, 45, 0,0);
+                self.calculatedWaypoint = [n,e,u,yaw,0,0]
+		print "Depth is", u
             self.moveToWaypoint(self.calculatedWaypoint);
             if self.checkIfSeeObstacles() == True:
                 self.foundObstacles = True
@@ -102,7 +103,10 @@ class TorpedoMission(AbstractMission):
                 print "Don't see targets, getting closer"
                 if len([det for det in self.detectionData if det[0] in self.classNumbers]) == 0:
                     print "Lost detections, searching again..."
+		    self.finalWaypoint[2] = self.position[2]
                     self.foundObstacles = False
+		    self.calculatedWaypoint = False
+		    self.estimatedPoints = []
                     return -1
                 #Move towards the torpedo board until we see a hole
                 det = [detection for detection in self.detectionData if detection[0] in self.classNumbers][0]
@@ -110,12 +114,15 @@ class TorpedoMission(AbstractMission):
                 if det[1] < 808 / 3.0:
                     p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,0, -1, 0, 0)
                     self.calculatedWaypoint = [n,e,u,y,p,r]
+		    print "Moving Left"
                 elif det[1] >= 2 * 808 / 3.0:
                     p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,0, 1, 0, 0)
                     self.calculatedWaypoint = [n,e,u,y,p,r]
+		    print "moving Right"
                 elif det[1] >= 808 / 3.0 and det[1] < 2 * 808 /3.0:
                     p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,1, 0, 0, 0)
                     self.calculatedWaypoint = [n,e,u,y,p,r]
+		    print "moving forward"
                 self.moveToWaypoint(self.calculatedWaypoint)
                 return -1
         if self.reachedBoard == False and len(self.estimatedPoints) >= int(self.parameters["minimumEstimatesRequired"]):
@@ -128,7 +135,7 @@ class TorpedoMission(AbstractMission):
                 
                 northEstimate -= float(self.parameters["getDistanceAway"]) * math.cos(math.radians(self.generalWaypoint[3]))
                 eastEstimate -= float(self.parameters["getDistanceAway"]) * math.sin(math.radians(self.generalWaypoint[3]))
-                self.calculatedWaypoint = [northEstimate, eastEstimate, 5, self.generalWaypoint[3], 0,0]
+                self.calculatedWaypoint = [northEstimate, eastEstimate, upEstimate, self.generalWaypoint[3], 0,0]
                 print "Goint to point:", self.calculatedWaypoint
                 print "Estimated Depth was:", upEstimate
                 if self.moveToWaypoint(self.calculatedWaypoint):
@@ -137,12 +144,14 @@ class TorpedoMission(AbstractMission):
                 return -1
 
         if self.reachedBoard == True:
+	    print "Reached board, performing execution"
             return self.performExecution()
 
                 
 
     def performExecution(self):
-        if self.paramaters["pullArm"] in ["True", "true", "t"] and not self.pulledArm:
+        if self.parameters["pullArm"] in ["True", "true", "t"] and not self.pulledArm:
+	    print "Pulling arm"
             self.pullArmFromCurrentLocation()
             return -1
             

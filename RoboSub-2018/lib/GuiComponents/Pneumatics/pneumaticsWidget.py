@@ -32,7 +32,15 @@ class PneumaticsWidget(QtCore.QObject):
 			print "Motherboard isn't defined yet"
 		
 	def fireDropper1(self):
-		print "This button doesn't do anything yet"
+		mother = getattr(self.externalComm.externalCommThread, "motherPackets", None)
+		if mother != None:
+			mother.sendWeapon11Command()
+		else:
+			print "Motherboard isn't defined yet"
 		
 	def fireDropper2(self):
-		print "This button doesn't do anything yet"
+		mother = getattr(self.externalComm.externalCommThread, "motherPackets", None)
+		if mother != None:
+			mother.sendWeapon10Command()
+		else:
+			print "Motherboard isn't defined yet"

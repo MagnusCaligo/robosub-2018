@@ -1,4 +1,4 @@
-onLinux = False
+onLinux = True
 if onLinux:
 	import darknet as dn
 	import PyCapture2 as pc2
