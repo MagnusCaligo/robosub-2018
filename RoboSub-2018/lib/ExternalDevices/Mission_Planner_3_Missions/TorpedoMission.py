@@ -6,7 +6,7 @@ import time
 
 class TorpedoMission(AbstractMission):
 
-    defaultParameters = AbstractMission.defaultParameters + "Torpedo Target = TL\ngetDistanceAway = 2\nminimumEstimatesRequired=200\npullArm=True"
+    defaultParameters = AbstractMission.defaultParameters + "Torpedo Target = TL\ngetDistanceAway = 2\nminimumEstimatesRequired=200\npullArm=True\ntorpedoThreshold = 60"
 
     def __init__(self, parameters):
         AbstractMission.__init__(self, parameters)
@@ -15,7 +15,7 @@ class TorpedoMission(AbstractMission):
         #self.classNumbers = [7, 8, 6,9,3,4,5,13]
         self.classNumbers = [8,9,10,11,12]
         self.torpedoHoleClassNumber = 12
-        self.minimumToSee = 3
+        self.minimumToSee = 2
 
 
     def initalizeOnMissionStart(self):
@@ -42,11 +42,14 @@ class TorpedoMission(AbstractMission):
         self.srcPoints = []
         self.imgPoints = []
         
+        #Algorithm Stuff
+        self.algorithm1Data = np.array([])
+        
         #Timing stuff
         self.rotateTimer = None
         self.rotateWaitTime = None
         self.waitTimer = None
-        self.waitTime = 5
+        self.waitTime = 10
         self.waitArmPullTimer = None
         self.armPullTime = 10
 
@@ -62,6 +65,11 @@ class TorpedoMission(AbstractMission):
 
 
     def update(self):
+        if not self.pulledArm:
+            self.pullArmFromCurrentLocation()
+            return -1
+        else:
+            return 1
         #Move to waypoint or move on if you see the board
         if not self.reachedFinalWaypoint and not self.checkIfSeeObstacles:
             self.reachedFinalWaypoint = self.moveToWaypoint(self.finalWaypoint)
@@ -78,8 +86,9 @@ class TorpedoMission(AbstractMission):
                 self.rotateTimer = None
                 self.calculatedWaypoint = None
             if self.calculatedWaypoint == None:
-                posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position,0,self.position[2] - self.finalWaypoint[2],0, 45, 0,0);
-                self.calculatedWaypoint = [self.finalWaypoint[0],self.finalWaypoint[1],self.finalWaypoint[2],yaw,pitch,roll]
+                posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position,0,self.finalWaypoint[2] -self.position[2],0, 45, 0,0);
+                self.calculatedWaypoint = [n,e,u,yaw,0,0]
+		print "Depth is", u
             self.moveToWaypoint(self.calculatedWaypoint);
             if self.checkIfSeeObstacles() == True:
                 self.foundObstacles = True
@@ -102,7 +111,10 @@ class TorpedoMission(AbstractMission):
                 print "Don't see targets, getting closer"
                 if len([det for det in self.detectionData if det[0] in self.classNumbers]) == 0:
                     print "Lost detections, searching again..."
+		    self.finalWaypoint[2] = self.position[2]
                     self.foundObstacles = False
+		    self.calculatedWaypoint = False
+		    self.estimatedPoints = []
                     return -1
                 #Move towards the torpedo board until we see a hole
                 det = [detection for detection in self.detectionData if detection[0] in self.classNumbers][0]
@@ -110,12 +122,15 @@ class TorpedoMission(AbstractMission):
                 if det[1] < 808 / 3.0:
                     p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,0, -1, 0, 0)
                     self.calculatedWaypoint = [n,e,u,y,p,r]
+		    print "Moving Left"
                 elif det[1] >= 2 * 808 / 3.0:
                     p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,0, 1, 0, 0)
                     self.calculatedWaypoint = [n,e,u,y,p,r]
+		    print "moving Right"
                 elif det[1] >= 808 / 3.0 and det[1] < 2 * 808 /3.0:
                     p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,1, 0, 0, 0)
                     self.calculatedWaypoint = [n,e,u,y,p,r]
+		    print "moving forward"
                 self.moveToWaypoint(self.calculatedWaypoint)
                 return -1
         if self.reachedBoard == False and len(self.estimatedPoints) >= int(self.parameters["minimumEstimatesRequired"]):
@@ -128,7 +143,7 @@ class TorpedoMission(AbstractMission):
                 
                 northEstimate -= float(self.parameters["getDistanceAway"]) * math.cos(math.radians(self.generalWaypoint[3]))
                 eastEstimate -= float(self.parameters["getDistanceAway"]) * math.sin(math.radians(self.generalWaypoint[3]))
-                self.calculatedWaypoint = [northEstimate, eastEstimate, 5, self.generalWaypoint[3], 0,0]
+                self.calculatedWaypoint = [northEstimate, eastEstimate, upEstimate, self.generalWaypoint[3], 0,0]
                 print "Goint to point:", self.calculatedWaypoint
                 print "Estimated Depth was:", upEstimate
                 if self.moveToWaypoint(self.calculatedWaypoint):
@@ -137,21 +152,24 @@ class TorpedoMission(AbstractMission):
                 return -1
 
         if self.reachedBoard == True:
+	    print "Reached board, performing execution"
             return self.performExecution()
 
                 
 
     def performExecution(self):
-        if self.paramaters["pullArm"] in ["True", "true", "t"] and not self.pulledArm:
+        if self.parameters["pullArm"] in ["True", "true", "t"] and not self.pulledArm:
+	    print "Pulling arm"
             self.pullArmFromCurrentLocation()
             return -1
             
+        target = []
         if len(self.estimatedPoints) < int(self.parameters["minimumEstimatesRequired"]):
             if self.torpedoHoleClassNumber in [det[0] for det in self.detectionData]:
                 #We see a hole, we need to check every hole and append the values to the estimated AbstractCollocationFinder
                 for det in [detection for detection in self.detectionData if detection[0] == self.torpedoHoleClassNumber]:
-                    self.torpedoIdentificationMethod1((det[1][0], det[1][1]))
-                    self.torpedoIdentificationMethod2((det[1][0], det[1][1]))
+                    target = self.torpedoIdentificationMethod1((det[1][0], det[1][1]))
+                    #target = self.torpedoIdentificationMethod2((det[1][0], det[1][1]))
                 self.moveToWaypoint(self.calculatedWaypoint)
                 return -1
 
@@ -182,7 +200,17 @@ class TorpedoMission(AbstractMission):
 
         
     def torpedoIdentificationMethod1(self, value):
-        pass
+        thresh = float(self.parameters["torpedoThreshold"])
+        for target in self.algorithm1Data:
+            meanX = np.mean([t[0] for t in target])
+            meanY = np.mean([t[1] for t in target])
+            if math.sqrt((meanX - value[0]) ** 2 + (meanY - value[1]) ** 2) <= thresh:
+                target = np.append(value, target)
+                return self.algorithm1Data[0]
+            
+        self.algorithm1Data = np.append(np.array([value]), self.algorithm1Data)
+        return self.algorithm1Data[0]
+
 
     def torpedoIdentificationMethod2(self, value): #value comes in as touple(xPixel,yPixel)
         self.SAMPLE_DATA.append(value);
