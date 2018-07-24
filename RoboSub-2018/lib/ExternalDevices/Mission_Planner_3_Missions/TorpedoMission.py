@@ -26,6 +26,9 @@ class TorpedoMission(AbstractMission):
 
         self.calculatedWaypoint = None
         self.armWaypoint = None
+
+	#Data Handling Algorithm2:
+	self.SAMPLE_DATA = [];
         
     
         #Flags
@@ -181,8 +184,9 @@ class TorpedoMission(AbstractMission):
     def torpedoIdentificationMethod1(self, value):
         pass
 
-    def torpedoIdentificationMethod2(self, value):
-        pass
+    def torpedoIdentificationMethod2(self, value): #value comes in as touple(xPixel,yPixel)
+        self.SAMPLE_DATA.append(value);
+	self.SAMPLE_DATA
 
                 
 
