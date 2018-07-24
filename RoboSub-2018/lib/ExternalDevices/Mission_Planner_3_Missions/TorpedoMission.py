@@ -84,8 +84,8 @@ class TorpedoMission(AbstractMission):
                 self.calculatedWaypoint = None
             if self.calculatedWaypoint == None:
                 posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position,0,self.finalWaypoint[2] -self.position[2],0, 45, 0,0);
-                self.calculatedWaypoint = [n,e,u,yaw,0,0]
-		print "Depth is", u
+                self.calculatedWaypoint = [n,e,self.finalWaypoint[2],yaw,0,0]
+                print "Depth is", u
             self.moveToWaypoint(self.calculatedWaypoint);
             if self.checkIfSeeObstacles() == True:
                 self.foundObstacles = True
@@ -108,10 +108,10 @@ class TorpedoMission(AbstractMission):
                 print "Don't see targets, getting closer"
                 if len([det for det in self.detectionData if det[0] in self.classNumbers]) == 0:
                     print "Lost detections, searching again..."
-		    self.finalWaypoint[2] = self.position[2]
+                    self.finalWaypoint[2] = self.position[2]
                     self.foundObstacles = False
-		    self.calculatedWaypoint = False
-		    self.estimatedPoints = []
+                    self.calculatedWaypoint = False
+                    self.estimatedPoints = []
                     return -1
                 #Move towards the torpedo board until we see a hole
                 det = [detection for detection in self.detectionData if detection[0] in self.classNumbers][0]
@@ -119,15 +119,15 @@ class TorpedoMission(AbstractMission):
                 if det[1] < 808 / 3.0:
                     p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,0, -1, 0, 0)
                     self.calculatedWaypoint = [n,e,u,y,p,r]
-		    print "Moving Left"
+                    print "Moving Left"
                 elif det[1] >= 2 * 808 / 3.0:
                     p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,0, 1, 0, 0)
                     self.calculatedWaypoint = [n,e,u,y,p,r]
-		    print "moving Right"
+                    print "moving Right"
                 elif det[1] >= 808 / 3.0 and det[1] < 2 * 808 /3.0:
                     p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,1, 0, 0, 0)
                     self.calculatedWaypoint = [n,e,u,y,p,r]
-		    print "moving forward"
+                    print "moving forward"
                 self.moveToWaypoint(self.calculatedWaypoint)
                 return -1
         if self.reachedBoard == False and len(self.estimatedPoints) >= int(self.parameters["minimumEstimatesRequired"]):
@@ -149,14 +149,14 @@ class TorpedoMission(AbstractMission):
                 return -1
 
         if self.reachedBoard == True:
-	    print "Reached board, performing execution"
+            print "Reached board, performing execution"
             return self.performExecution()
 
                 
 
     def performExecution(self):
         if self.parameters["pullArm"] in ["True", "true", "t"] and not self.pulledArm:
-	    print "Pulling arm"
+            print "Pulling arm"
             self.pullArmFromCurrentLocation()
             return -1
             
