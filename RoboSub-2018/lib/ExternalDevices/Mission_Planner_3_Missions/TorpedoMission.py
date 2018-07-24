@@ -62,6 +62,11 @@ class TorpedoMission(AbstractMission):
 
 
     def update(self):
+        if not self.pulledArm:
+            self.pullArmFromCurrentLocation()
+            return -1
+        else:
+            return 1
         #Move to waypoint or move on if you see the board
         if not self.reachedFinalWaypoint and not self.checkIfSeeObstacles:
             self.reachedFinalWaypoint = self.moveToWaypoint(self.finalWaypoint)
