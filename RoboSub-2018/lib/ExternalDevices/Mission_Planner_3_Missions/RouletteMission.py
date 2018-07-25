@@ -25,7 +25,7 @@ class RouletteMission(AbstractMission):
 	'''
 	self.calculatedWaypoint = None
 	self.ACTIVE_CAM = "None";
-	self.COUNTING =0;
+	self.COUNTING = 0;
 	self.NUMBER_OF_SAMPLES = 175;
 	
 
@@ -34,7 +34,8 @@ class RouletteMission(AbstractMission):
 	self.BottomCam_RouletteFound= False;
 	self.ROULETTEBOARD = [];
 	self.SOLVED_BOARD = [];
-	self.BOARDSOLVED = False;
+	self.BOARDSOLVED_FRONT = False;
+	self.BOARDSOLVED_BACK  = False; 
 	
 #	********Roulette MiddlePosition****
 
@@ -93,11 +94,17 @@ class RouletteMission(AbstractMission):
 		rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(self.img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
 		print("TVEC:"+str(tvec))
 		
-		po, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0][0]/2, tvec[2][0]/2, -tvec[1][0]/2, 0, 0, 0)
+
+		po, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0][0]*math.sin(90 - self.generalWaypoint[4]), tvec[2][0], 0, 0, 0, 0)
 		print("DISTANCE:"+str(math.sqrt(e**2 + n**2)))
-		self.SOLVED_BOARD.append([n,e,u,0,0,0,math.sqrt( e**2 + n**2 )]); #MAKES a vector where the last index can be compared
-	
-	
+
+		self.SOLVED_BOARD.append([n,e,0,0,0,0,math.sqrt( e**2 + n**2 )]); #MAKES a vector where the last index can be compared
+
+#-----------------------END------------------------#
+		
+#    def FREQUENCY_UPDATE(self):
+#	for BRD in SOLVED_BOARD:
+
 #-----------------------END------------------------#
     def UPDATE_VIZUALS(self):
 #	FRONT CAMERA VIZUALS
@@ -105,14 +112,25 @@ class RouletteMission(AbstractMission):
 	self.useFrontCamera()#  see top for function
 	#	self.ACTIVE_CAM = "Front";
 #	self.FrontCam_RouletteFound = False
-	for det in self.detectionData:
-		if det[0] == self.Roulette_ClassNumber:
-			self.COUNTING += 1;
-			self.ROULETTEBOARD.append(det);
-			self.FrontCam_RouletteFound = True
+	if( self.BOARDSOLVED_FRONT = False):
+
+		for det in self.detectionData:
+			if det[0] == self.Roulette_ClassNumber:
+				if(self.COUNTING < self.NUMBER_OF_SAMPLES)
+				self.COUNTING += 1;
+				self.ROULETTEBOARD.append(det);
+				self.FrontCam_RouletteFound = True
 	
-#	BOTTOM CAMERA VIZUALS
-	#self.useBottomCamera()#  see top for function
+	else:
+			
+		self.useBottomCamera()#  see top for function
+		#self.BottomCam_RouletteFound = False
+		for det in self.detectionData:
+			if det[0] == self.Roulette_ClassNumber:
+				self.BottomCam_RouletteFound = True
+				self.ROULETTEBOARD.append(det);	
+
+#	self.useBottomCamera()#  see top for function
 
 #	self.BottomCam_RouletteFound = False
 	#for det in self.detectionData:
@@ -135,15 +153,29 @@ class RouletteMission(AbstractMission):
 	if( self.FrontCam_RouletteFound or self.BottomCam_RouletteFound ):
 		if( self.COUNTING <= self.NUMBER_OF_SAMPLES and self.FrontCam_RouletteFound == True):
 			self.moveToWaypoint(self.calculatedWaypoint);
-			print("...Collecting Data");
+			print("...Collecting Data for Front");
+			print("COUNT:"+str(self.COUNTING))
+		elif( self.COUNTING <= self.NUMBER_OF_SAMPLES and self.BottomCam_RouletteFound == True):
+			self.moveToWaypoint(self.calculatedWaypoint);
+			print("...Collecting Data for Bottom");
 			print("COUNT:"+str(self.COUNTING))
 		else:
 		
-			if(self.BOARDSOLVED == False):
+			if(self.BOARDSOLVED_FRONT == False and self.BOARDSOLVED_BACK == False):
 				self.SOLVING_PNP()
 				self.SOLVED_BOARD.sort(key=self.CHOOSE_SECOND_ELEMENT);
-				self.BOARDSOLVED = True;
-				#int(self.NUMBER_OF_SAMPLES/2)
+				self.FREQUENCY_UPDATE();
+				self.BOARDSOLVED_FRONT = True;
+
+			if( self.BOARDSOLVED_FRONT == True and self.BOARDSOLVED_BACK == False ):
+				self.SOLVED_BOARD = [];
+				self.ROULETTEBOARD = [];
+				self.COUNTING = 0;
+				self.SOLVING_PNP()
+				self.SOLVED_BOARD.sort(key=self.CHOOSE_SECOND_ELEMENT);
+				self.FREQUENCY_UPDATE();
+				self.BOARDSOLVED_BACK = True;
+
 			self.moveToWaypoint(self.SOLVED_BOARD[ (self.NUMBER_OF_SAMPLES/2) ][:-1])
 			print("...Moving to Waypoint" + str(self.SOLVED_BOARD[ (self.NUMBER_OF_SAMPLES/2) ][:-1]))
 	else:
