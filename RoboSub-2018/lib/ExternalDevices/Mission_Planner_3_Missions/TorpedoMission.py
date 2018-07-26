@@ -14,6 +14,7 @@ class TorpedoMission(AbstractMission):
         #Top Left, Top Right, Full Board, Bottom Hole, Cherry, Grape, Banana, Corner
         #self.classNumbers = [7, 8, 6,9,3,4,5,13]
         self.classNumbers = [8,9,10,11,12]
+	self.fruitClassNumbers = [8,9,10]
         self.torpedoHoleClassNumber = 12
         self.minimumToSee = 2
 
@@ -65,11 +66,13 @@ class TorpedoMission(AbstractMission):
 
 
     def update(self):
+	'''
         if not self.pulledArm:
             self.pullArmFromCurrentLocation()
             return -1
         else:
             return 1
+	'''
         #Move to waypoint or move on if you see the board
         if not self.reachedFinalWaypoint and not self.checkIfSeeObstacles():
             self.reachedFinalWaypoint = self.moveToWaypoint(self.finalWaypoint)
@@ -88,7 +91,7 @@ class TorpedoMission(AbstractMission):
             if self.calculatedWaypoint == None:
                 posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position,0,self.finalWaypoint[2] -self.position[2],0, 45, 0,0);
                 self.calculatedWaypoint = [n,e,self.finalWaypoint[2],yaw,0,0]
-                print "Depth is", u
+                print "Depth is", self.finalWaypoint[2]
             self.moveToWaypoint(self.calculatedWaypoint);
             if self.checkIfSeeObstacles() == True:
                 self.foundObstacles = True
@@ -98,12 +101,12 @@ class TorpedoMission(AbstractMission):
             print "Getting point estimates"
             if self.torpedoHoleClassNumber in [det[0] for det in self.detectionData]:
                 #We see a hole, we need to check every hole and append the values to the estimated AbstractCollocationFinder
-                for det in [detection for detection in self.detectionData if detection[0] == self.torpedoHoleClassNumber]:
+                for det in [detection for detection in self.detectionData if detection[0] == self.torpedoHoleClassNumber or detection[0] in self.fruitClassNumbers]:
                     imgPoints = [(det[1] - (.5 * det[3]), det[2] - (.5* det[4])),(det[1] + (.5 * det[3]), det[2] - (.5* det[4])),
                                  (det[1] + (.5 * det[3]), det[2] + (.5* det[4])),(det[1] - (.5 * det[3]), det[2] + (.5* det[4]))]
                     srcPoints = [(-.5,-.5,0),(.5,-.5,0),(.5,.5,0),(-.5,.5,0)]
                     rvec, tvec = cv2.solvePnP(np.array(srcPoints).astype('float32'), np.array(imgPoints).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
-                    poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0], -tvec[2][0],0,0,0)
+                    poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0] + 3, tvec[1][0] + 4, -tvec[2][0],0,0,0)
                     self.estimatedPoints.append([north/1.0, east/1.0, up, 0, 0,0])
                 self.moveToWaypoint(self.calculatedWaypoint)
                 return -1
@@ -114,22 +117,21 @@ class TorpedoMission(AbstractMission):
                     self.finalWaypoint[2] = self.position[2]
                     self.foundObstacles = False
                     self.calculatedWaypoint = False
-                    self.estimatedPoints = []
                     return -1
                 #Move towards the torpedo board until we see a hole
                 det = [detection for detection in self.detectionData if detection[0] in self.classNumbers][0]
                 self.calculatedWaypoint = []
                 if det[1] < 808 / 3.0:
                     p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,0, -1, 0, 0)
-                    self.calculatedWaypoint = [n,e,u,y,p,r]
+                    self.calculatedWaypoint = [n,e,u,y,0,0]
                     print "Moving Left"
                 elif det[1] >= 2 * 808 / 3.0:
                     p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,0, 1, 0, 0)
-                    self.calculatedWaypoint = [n,e,u,y,p,r]
+                    self.calculatedWaypoint = [n,e,u,y,0,0]
                     print "moving Right"
                 elif det[1] >= 808 / 3.0 and det[1] < 2 * 808 /3.0:
                     p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,1, 0, 0, 0)
-                    self.calculatedWaypoint = [n,e,u,y,p,r]
+                    self.calculatedWaypoint = [n,e,u,y,0,0]
                     print "moving forward"
                 self.moveToWaypoint(self.calculatedWaypoint)
                 return -1
@@ -148,7 +150,6 @@ class TorpedoMission(AbstractMission):
                 print "Estimated Depth was:", upEstimate
                 if self.moveToWaypoint(self.calculatedWaypoint):
                     self.reachedBoard = True
-                    self.estimatedPoints = []
                 return -1
 
         if self.reachedBoard == True:
@@ -163,7 +164,11 @@ class TorpedoMission(AbstractMission):
             self.pullArmFromCurrentLocation()
             return -1
             
+	print "Made it past arm pull"
+	print "Calculated Waypoint:", self.calculatedWaypoint
         target = []
+	self.moveToWaypoint(self.calculatedWaypoint)
+	return -1
         if len(self.estimatedPoints) < int(self.parameters["minimumEstimatesRequired"]):
             if self.torpedoHoleClassNumber in [det[0] for det in self.detectionData]:
                 #We see a hole, we need to check every hole and append the values to the estimated AbstractCollocationFinder
@@ -175,6 +180,7 @@ class TorpedoMission(AbstractMission):
 
 
     def pullArmFromCurrentLocation(self): #This code will be used to 'hard code' the arm pulling
+	print "Pulled Arm", self.pulledArm, "Above Arm", self.aboveArm, "Finished Pulling", self.finishedPulling
         if self.waitArmPullTimer == None:
             self.waitArmPullTimer = time.time()
         if time.time() - self.waitArmPullTimer >= self.armPullTime:
@@ -188,11 +194,11 @@ class TorpedoMission(AbstractMission):
                 self.pulledArm = True
         if self.armWaypoint == None:
             if self.aboveArm == False:
-                poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, 1, -2, -float(self.parameters["getDistanceAway"]), 0, 0,0)
-                self.armWaypoint = [north, east, up, yaw, pitch, roll]
+                poseData, north, east, up, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation+self.position, 3, -4, -float(self.parameters["getDistanceAway"]), 0, 0,0)
+                self.armWaypoint = [north, east, up, yaw, 0, 0]
             elif self.finishedPulling == False:
-                poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, 0, 2, 0, 0, 0,0)
-                self.armWaypoint = [north, east, up, yaw, pitch, roll]
+                poseData, north, east, up, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation+self.position, 0, 4, 0, 0, 0,0)
+                self.armWaypoint = [north, east, up, yaw, 0, 0]
             else:
                 self.armWaypoint = self.calculatedWaypoint
                 

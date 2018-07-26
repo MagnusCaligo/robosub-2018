@@ -134,12 +134,7 @@ class DiceMission(AbstractMission):
                 self.depthAtRelativeMove = self.position[2]
             #self.movementController.advancedMove(poseData, north, east, up, 0, yaw, 0)
             self.moveToWaypoint(self.diceWaypoint)
-
-
             
         
         
         
-
-
-

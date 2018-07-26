@@ -211,7 +211,6 @@ class MissionCommander(QtCore.QObject):
 		return None
             return o.__dict__
 
-            return o.__dict__
         with open(filename, "w") as outfile:
             outfile.write(json.dumps(self.externalComm.guiDataToSend["missionList"], default=jdefault))
         
