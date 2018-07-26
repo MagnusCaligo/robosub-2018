@@ -17,6 +17,14 @@ class RouletteMission(AbstractMission):
     def initalizeOnMissionStart(self):
 	AbstractMission.initalizeOnMissionStart(self)
 
+# ------------EXPERIMENT-------------- #
+
+	self.NUMPY_ARRAY = np.arange(10);
+
+# ---------END EXPERIMENT------------- #
+
+
+
 #	Camera Type to Use
 
 	'''
@@ -112,14 +120,14 @@ class RouletteMission(AbstractMission):
 	self.useFrontCamera()#  see top for function
 	#	self.ACTIVE_CAM = "Front";
 #	self.FrontCam_RouletteFound = False
-	if( self.BOARDSOLVED_FRONT = False):
+	if( self.BOARDSOLVED_FRONT == False):
 
 		for det in self.detectionData:
 			if det[0] == self.Roulette_ClassNumber:
-				if(self.COUNTING < self.NUMBER_OF_SAMPLES)
-				self.COUNTING += 1;
-				self.ROULETTEBOARD.append(det);
-				self.FrontCam_RouletteFound = True
+				if(self.COUNTING < self.NUMBER_OF_SAMPLES):
+					self.COUNTING += 1;
+					self.ROULETTEBOARD.append(det);
+					self.FrontCam_RouletteFound = True
 	
 	else:
 			
