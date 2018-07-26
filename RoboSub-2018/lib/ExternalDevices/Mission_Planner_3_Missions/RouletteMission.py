@@ -93,11 +93,17 @@ class RouletteMission(AbstractMission):
 		rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(self.img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
 		print("TVEC:"+str(tvec))
 		
-		po, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0][0]/2, tvec[2][0]/2, -tvec[1][0]/2, 0, 0, 0)
+
+		po, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0][0]*math.sin(90 - self.generalWaypoint[4]), tvec[2][0], 0, 0, 0, 0)
 		print("DISTANCE:"+str(math.sqrt(e**2 + n**2)))
-		self.SOLVED_BOARD.append([n,e,u,0,0,0,math.sqrt( e**2 + n**2 )]); #MAKES a vector where the last index can be compared
-	
-	
+
+		self.SOLVED_BOARD.append([n,e,0,0,0,0,math.sqrt( e**2 + n**2 )]); #MAKES a vector where the last index can be compared
+
+#-----------------------END------------------------#
+		
+#    def FREQUENCY_UPDATE(self):
+#	for BRD in SOLVED_BOARD:
+
 #-----------------------END------------------------#
     def UPDATE_VIZUALS(self):
 #	FRONT CAMERA VIZUALS
@@ -142,6 +148,7 @@ class RouletteMission(AbstractMission):
 			if(self.BOARDSOLVED == False):
 				self.SOLVING_PNP()
 				self.SOLVED_BOARD.sort(key=self.CHOOSE_SECOND_ELEMENT);
+				self.FREQUENCY_UPDATE();
 				self.BOARDSOLVED = True;
 				#int(self.NUMBER_OF_SAMPLES/2)
 			self.moveToWaypoint(self.SOLVED_BOARD[ (self.NUMBER_OF_SAMPLES/2) ][:-1])

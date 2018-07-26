@@ -5,6 +5,7 @@ from Ui_MissionCommander.ui_updateMissionDialog import Ui_Ui_UpdateMissionDialog
 import lib.ExternalDevices.Missions as Missions
 import json
 import os
+import numpy as np
 from pprint import pprint
 from lib.Utils.SlideEdit import SlideEdit
 from lib.ExternalDevices.movement import MovementController, JoystickMovementController
@@ -206,7 +207,7 @@ class MissionCommander(QtCore.QObject):
         
         def jdefault(o):
             _dict = o.__dict__
-            if isinstance(o, MovementController) or isinstance(0, JoystickMovementController):
+            if isinstance(o, MovementController) or isinstance(o, JoystickMovementController) or isinstance(o, np.ndarray):
 		return None
             return _dict
 

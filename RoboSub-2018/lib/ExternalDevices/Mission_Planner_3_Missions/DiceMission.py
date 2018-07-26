@@ -30,6 +30,9 @@ class DiceMission(AbstractMission):
 	self.hitBuoy = False
 	self.movingForward = True
 
+	self.rotateTimer = None
+	self.calculatedWaypoint = None
+	self.rotateWaitTime = 8 
 	self.atBuoyTimer = None
 	self.lookingForObstaclesTimer = None
 	self.hitBuoyTimer = None
@@ -83,21 +86,17 @@ class DiceMission(AbstractMission):
 	if self.hitBuoy == False:
 		if self.atWaypoint == True:
 		    if not self.checkIfFoundObstacles():
-			print "looking for buoy"
-			self.sentMessage3 = False
-			if self.sentMessage2 == False:
-			    self.writeDebugMessage("Couldn't Find Obstacles")
-			    self.sentMessage2 = True
-			if self.lookingForObstaclesTimer == None:
-				self.lookingForObstaclesTimer = time.time()
-				self.lookingAngle += self.lookingDifference
-				print "Incrementing Angle"
-			if time.time() - self.lookingForObstaclesTimer >= self.lookingMaxTime:
-				self.lookingForObstaclesTimer = None
-			waypoint = self.position + self.orientation
-			waypoint[3] += self.lookingAngle
-			waypoint[2] = self.lastKnownDepth
-			self.moveToWaypoint(waypoint)
+			print "At waypoint, looking for obstacle"
+			if self.rotateTimer == None:
+			   self.rotateTimer = time.time()
+			if time.time() - self.rotateTimer >= self.rotateWaitTime:
+			    self.rotateTimer = None
+			    self.calculatedWaypoint = None
+			if self.calculatedWaypoint == None:
+		            posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position,0,self.finalWaypoint[2] -self.position[2],0, 45, 0,0);
+                            self.calculatedWaypoint = [n,e,self.finalWaypoint[2],yaw,0,0]
+			    print "Final waypoint", self.finalWaypoint[2]
+			self.moveToWaypoint(self.calculatedWaypoint);
 		    else:
 			self.sentMessage2 = False
 			if self.sentMessage3 == False:
@@ -156,7 +155,7 @@ class DiceMission(AbstractMission):
 
 			#self.movementController.relativeMoveXYZ(self.orientation+self.position, 0, tvec[1][0], 1,0,0,0)
 			#print "Errors were", north, east, up, yaw, pitch, roll
-			self.moveToWaypoint([north, east, up, yaw, pitch, roll])
+			self.moveToWaypoint([north, east, up, yaw, 0, 0])
 			#self.movementController.advancedMove(poseData, north, east, up, 0, yaw, 0)
 
 	elif self.hitBuoy == True:
