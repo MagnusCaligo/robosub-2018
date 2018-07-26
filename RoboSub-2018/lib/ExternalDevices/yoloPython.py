@@ -1,4 +1,4 @@
-onLinux = True
+onLinux = False
 if onLinux:
 	import darknet as dn
 	import PyCapture2 as pc2
@@ -18,8 +18,7 @@ class yoloComputerVision(QtCore.QThread):
 
 	def __init__(self):
 		QtCore.QThread.__init__(self)
-		if not onLinux:
-			return
+		self.getList = []
 
 		self.dataFile = "/media/sub_data/data/7_19.data"
 		self.weightFile = "/media/sub_data/weights/7_19_20000.weights"
@@ -29,8 +28,8 @@ class yoloComputerVision(QtCore.QThread):
 		self.botCamera = None
 
 
-	        self.useVideo = False
-            	self.videoPath = "/media/sub_data/example3.mp4"
+		self.useVideo = False
+		self.videoPath = "/media/sub_data/example3.mp4"
 
 		self.srcPoints = [(0,0,0), (1,0,0), (2,0,0), (1, -.5, 0)]
 		#Top left hole, TR hole, Bottom Hole, cherry, banana, grape, TLH TRC, TLH BRC, TLH BLC, TLH TLC, ....
@@ -47,21 +46,22 @@ class yoloComputerVision(QtCore.QThread):
 		self.camMat = [[808, 0, 408],
 			       [0, 608, 304],
 			       [0,   0, 1]]
+		if not onLinux:
+			return
 
 		dn.set_gpu(0)
 
 		self.detectionDictionary = {}
 
-		self.getList = []
 		self.running = True
 
-        def useBottomCamera(self):
-	    if self.botCamera != None:
-		    self.activeCamera = self.botCamera
+	def useBottomCamera(self):
+		if self.botCamera != None:
+			self.activeCamera = self.botCamera
 
-        def useFrontCamera(self):
-	    if self.frontCamera != None:
-		    self.activeCamera = self.frontCamera
+	def useFrontCamera(self):
+		if self.frontCamera != None:
+			self.activeCamera = self.frontCamera
 
 	def run(self):
 		if not onLinux:

@@ -68,7 +68,7 @@ class TorpedoMission(AbstractMission):
         else:
             return 1
         #Move to waypoint or move on if you see the board
-        if not self.reachedFinalWaypoint and not self.checkIfSeeObstacles:
+        if not self.reachedFinalWaypoint and not self.checkIfSeeObstacles():
             self.reachedFinalWaypoint = self.moveToWaypoint(self.finalWaypoint)
 	    print "Moving to waypoint"
             return -1

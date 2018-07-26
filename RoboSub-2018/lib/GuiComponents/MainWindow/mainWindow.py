@@ -258,7 +258,7 @@ class MainWindow(QtGui.QMainWindow):
             if self.externalCommClass.externalCommThread.dvlResponseThread != None:
 				pass#self.externalCommClass.externalCommThread.dvlResponseThread.clearDistanceTraveled()
         else:
-            time.sleep(5)
+            time.sleep(2)
             print "Starting"
             self.systemOutput.insertPlainText("Starting Vehicle\n")
             if self.externalCommClass.externalCommThread.dvlResponseThread != None:
