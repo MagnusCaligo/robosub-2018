@@ -204,7 +204,7 @@ class MovementController():
         return thrusterPWMs
             
     def advancedMove(self, poseData, northTranslateDesired, eastTranslateDesired, upTranslateDesired,  xRotateDesired, yRotateDesired,
-                     zRotateDesired, *userVariables): #Translation in feet with respect to NSEW, rotation in degrees with respect to NSEW
+                     zRotateDesired, lockOrientation=False,*userVariables): #Translation in feet with respect to NSEW, rotation in degrees with respect to NSEW
         '''
         Moves the Sub based on desired NESW coordinates and desired yaw, pitch, and roll.
         
@@ -312,7 +312,7 @@ class MovementController():
         
         #FACE IN WAYPOINT DIRECTION
         corectOrientationBubble = 3.5 #feet
-        if abs(northError) > corectOrientationBubble or abs(eastError) > corectOrientationBubble:
+        if lockOrientation == False and (abs(northError) > corectOrientationBubble or abs(eastError) > corectOrientationBubble):
             yRotateDesired = (math.atan2(eastError, northError)*(180/3.14159265))%360 #Yaw to facing at waypoint
            
         #USER VARIABLE 

@@ -502,7 +502,7 @@ class ExternalCommThread(QtCore.QThread):
         # DVL initialization
         try:
 			
-            DVLComPort = serial.Serial("/dev/ttyUSB1", 115200)
+            DVLComPort = serial.Serial("/dev/ttyUSB5", 115200)
             self.dvlDataPackets = dvl.DVLDataPackets(DVLComPort)
             self.dvlResponseThread = dvl.DVLResponse(DVLComPort)
             self.dvlResponseThread.start()
@@ -518,7 +518,7 @@ class ExternalCommThread(QtCore.QThread):
         try:
             # AHRS initializing
             # Need to put the correct comm ports in 
-            self.spartonResponseThread1 = sparton_ahrs.SpartonAhrsResponse("/dev/ttyUSB3")
+            self.spartonResponseThread1 = sparton_ahrs.SpartonAhrsResponse("/dev/ttyUSB2")
             self.spartonResponseThread1.start()
             
         except:

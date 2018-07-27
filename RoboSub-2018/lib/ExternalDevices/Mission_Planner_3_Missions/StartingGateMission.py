@@ -179,7 +179,7 @@ class StartingGateMission(AbstractMission):
                 nAvg = 0
                 eAvg = 0
                 uAvg = 0
-		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0] + 1, tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
+		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0] + .5, tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
                 self.leftArmPosSum.append([north,east,up])
                 for values in self.leftArmPosSum:
                     nAvg += values[0]
@@ -216,7 +216,7 @@ class StartingGateMission(AbstractMission):
                 nMedian = []
                 eMedian = []
                 uMedian = []
-		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0] - 1, tvec[1][0]-10, tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
+		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0] - .5, tvec[1][0]-10, tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
 		print "Single position calculation", north, east, up
                 self.rightArmPosSum.append([north,east,up])
 		
@@ -232,7 +232,7 @@ class StartingGateMission(AbstractMission):
 
 
             
-            if self.parameters["Gate_Side"] in ["Right", "right", "r"]:
+            if self.parameters["Gate_Side"] in ["Left", "left", "l"]: #["Right", "right", "r"]:
                 self.movementDestination = copy.copy(self.leftArmPosEst)
 		print "Using Left Arm"
             else:
@@ -242,7 +242,7 @@ class StartingGateMission(AbstractMission):
 	    print "Arm Locations", self.leftArmPosEst, self.rightArmPosEst
 	    if self.movementDestination == None:
 		pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,0,0,0,0)
-		waypoint = [n,e,u,y,0,0]
+		waypoint = [n,e,self.finalWaypoint[2],y,0,0]
 		self.moveToWaypoint(waypoint)
 		return -1
 		
@@ -253,6 +253,11 @@ class StartingGateMission(AbstractMission):
         elif len(detections) == 1: #We only see one arm, so move towards it
 	    print "Only see one arm"
 	    if self.movementDestination == None:
+		    pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, 0, 0, 0, 0, 0)
+		    waypoint = [n,e,u, y, 0, 0]
+		    self.moveToWaypoint(waypoint)
+		    return -1
+			
 		    '''pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,0,0,0,0)
 		    waypoint = [n,00,u, y, 0, 0]
 		    '''
@@ -268,7 +273,7 @@ class StartingGateMission(AbstractMission):
 		    tvec[2][0] *= -1 #Z decreases towards the front of the sub, so if we want to move forward this needs to be negative
 		    rotationDifference = math.degrees(math.atan2(tvec[0], tvec[2]))
 		    pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0][0], tvec[1][0], tvec[2][0], rotationDifference, 0, 0)
-		    waypoint = [n,e,u, y, 0, 0]
+		    waypoint = [n,e,self.finalWaypoint[2], y, 0, 0]
 		    print "Only see one arm: moving to this waypoint", waypoint
 		    self.moveToWaypoint(waypoint)
 	    else:
@@ -280,7 +285,7 @@ class StartingGateMission(AbstractMission):
         else:
 		    print "Holding position, don't know where to go"
 		    pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1, 0, 0, 0, 0)
-		    waypoint = [n,e,u, y, 0, 0]
+		    waypoint = [n,e,self.finalWaypoint[2], y, 0, 0]
 		    self.moveToWaypoint(waypoint)
 
 

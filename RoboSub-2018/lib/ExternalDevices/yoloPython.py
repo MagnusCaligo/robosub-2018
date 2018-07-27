@@ -1,4 +1,4 @@
-onLinux = False
+onLinux = True
 if onLinux:
 	import darknet as dn
 	import PyCapture2 as pc2
@@ -99,10 +99,10 @@ class yoloComputerVision(QtCore.QThread):
 			self.activeCamera = pc2.Camera()
 			self.frontCamera = pc2.Camera()
 			self.botCamera = pc2.Camera()
-			self.frontCamera.connect(bus.getCameraFromIndex(0))
+			self.frontCamera.connect(bus.getCameraFromIndex(1))
 			self.frontCamera.startCapture()
 			time.sleep(1)
-			self.botCamera.connect(bus.getCameraFromIndex(1))
+			self.botCamera.connect(bus.getCameraFromIndex(0))
 			self.botCamera.startCapture()
 			self.activeCamera = self.frontCamera
 

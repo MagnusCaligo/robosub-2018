@@ -81,7 +81,7 @@ class AbstractMission(QtCore.QObject):
             pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, self.generalWaypoint[1],self.generalWaypoint[2],self.generalWaypoint[0],
 				self.generalWaypoint[3],self.generalWaypoint[4],self.generalWaypoint[5])
 
-            self.finalWaypoint = [n,e,u,y,p,r]
+            self.finalWaypoint = [n,e,u,y,0,0]
 			
             self.writeDebugMessage("Waypoint is " + str(self.finalWaypoint))
 
@@ -89,7 +89,7 @@ class AbstractMission(QtCore.QObject):
             pose, n, e, u, p, y, r = self.movementController.relativeMoveNEU(self.orientation + self.position, self.generalWaypoint[0],self.generalWaypoint[1],self.generalWaypoint[2],
 				self.generalWaypoint[3],self.generalWaypoint[4],self.generalWaypoint[5])
 
-            self.finalWaypoint = [n,e,u, y,p,r]
+            self.finalWaypoint = [n,e,u, y,0,0]
             self.writeDebugMessage("Waypoint is " + str(self.finalWaypoint))
         else:
             self.finalWaypoint = self.generalWaypoint #If not using any relativity, then we can assume that the waypoint is absolute coordinate
@@ -102,9 +102,9 @@ class AbstractMission(QtCore.QObject):
     def writeDebugMessage(self, string):
         self.emit(QtCore.SIGNAL("debugMessage(PyQt_PyObject)"), string)
 
-    def moveToWaypoint(self, waypoint):
+    def moveToWaypoint(self, waypoint, lockOrientation=False):
         self.waypointError = self.movementController.advancedMove(self.orientation+self.position, waypoint[0], waypoint[1], waypoint[2], 
-                      waypoint[4], waypoint[3], waypoint[5])[1]
+                      waypoint[4], waypoint[3], waypoint[5], lockOrientation=lockOrientation)[1]
 	#print "Waypoint Error:", self.waypointError
         
         reachedWaypoint = True #Assume we reached the waypoint, check the math to see if we are within the error
