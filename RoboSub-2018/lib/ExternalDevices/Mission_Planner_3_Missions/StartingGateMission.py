@@ -8,7 +8,7 @@ import copy
  
 class StartingGateMission(AbstractMission):
     
-    defaultParameters = AbstractMission.defaultParameters + "Gate_Side = Left\n" + "Gate_Color = Red\n distanceThrough = 10\n"#"Test = False\n" + "sColor = UNSPEC"; # Add Any Necessary Parameters
+    defaultParameters = AbstractMission.defaultParameters + "Gate_Side = Left\n" + "distanceThrough = 10\namountToTheSide = 1"# Add Any Necessary Parameters
 
     def __init__(self, parameters): #Waypoint Handling of events
         AbstractMission.__init__(self, parameters)
@@ -26,6 +26,8 @@ class StartingGateMission(AbstractMission):
         self.Gate_Color= "Red";
         self.Arms_In_Sight = False;
         self.UNORDERED_GATE_COMPONENTS = ["EMPTY","EMPTY","EMPTY"];
+
+	self.medianMaxSize = 2000
 
         self.src_pts = [(0,0,0),(1,0,0),(1,5.5,0),(0,5.5,0)]
         
@@ -165,22 +167,24 @@ class StartingGateMission(AbstractMission):
                 
             if leftArmDetection[2] + (.5 * leftArmDetection[4]) < 608 - self.pixelError and leftArmDetection[3] > self.pixelError: #We need to check that we can see the entire post; if not then we can't use solvePnP
                 #img_pts = [(leftArmDetection[1], leftArmDetection[2]), (detection[1] + detection[3], detection[2]), (detection[1] + detection[3], + detection[2] + detection[4]), (detection[1], detection[2] + detection[4])]
-		p1 = (leftArmDetection[1] - (.5* leftArmDetection[3]), leftArmDetection[2]- (.5* leftArmDetection[4]))
+		p1 = (leftArmDetection[1] - (.5 * leftArmDetection[3]), leftArmDetection[2] - (.5 * leftArmDetection[4]))
 		p2 = (leftArmDetection[1] + (.5 * leftArmDetection[3]), leftArmDetection[2] - (.5 * leftArmDetection[4]))
 		p3 = (leftArmDetection[1] + (.5 * leftArmDetection[3]), leftArmDetection[2] + (.5 * leftArmDetection[4]))
 		p4 = (leftArmDetection[1] - (.5 * leftArmDetection[3]), leftArmDetection[2] + (.5 * leftArmDetection[4]))
 		img_pts = (p1,p2,p3,p4)	
                 rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
-                tvec[0][0]-=.25 #Camera isn't centered with Percy, so move it over a bit
-                tvec[1][0]+=.5 #tvec is from top left corner, so we want to move a bit deeper
+                tvec[0][0] -= .25 #Camera isn't centered with Percy, so move it over a bit
+                tvec[1][0] += .5 #tvec is from top left corner, so we want to move a bit deeper
                 tvec[2][0] *= -1 #Z decreases towards the front of the sub, so if we want to move forward this needs to be negative
 		tvec[2][0] -= float(self.parameters["distanceThrough"])
 		print "Left Tvec is", tvec
                 nAvg = 0
                 eAvg = 0
                 uAvg = 0
-		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0] + .5, tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
+		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0]+ float(self.parameters["amountToTheSide"]), tvec[1][0] , tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
                 self.leftArmPosSum.append([north,east,up])
+		while len(self.leftArmPosSum) >= self.medianMaxSize:
+			self.leftArmPosSum.pop()
                 for values in self.leftArmPosSum:
                     nAvg += values[0]
                     eAvg += values[1]
@@ -199,7 +203,7 @@ class StartingGateMission(AbstractMission):
 		p1 = (rightArmDetection[1] - (.5 * rightArmDetection[3]), rightArmDetection[2] - (.5* rightArmDetection[4]))
 		p2 = (rightArmDetection[1] + (.5 * rightArmDetection[3]), rightArmDetection[2] - (.5* rightArmDetection[4]))
 		p3 = (rightArmDetection[1] + (.5 * rightArmDetection[3]), rightArmDetection[2] + (.5* rightArmDetection[4]))
-		p4 = (rightArmDetection[1] - (.5 * rightArmDetection[3]), rightArmDetection[2] - (.5* rightArmDetection[4]))
+		p4 = (rightArmDetection[1] - (.5 * rightArmDetection[3]), rightArmDetection[2] + (.5* rightArmDetection[4]))
 		'''p1 = (rightArmDetection[1], rightArmDetection[2])
 		p2 = (rightArmDetection[1] + rightArmDetection[3], rightArmDetection[2])
 		p3 = (rightArmDetection[1] + rightArmDetection[3], rightArmDetection[2] + rightArmDetection[4])
@@ -207,18 +211,31 @@ class StartingGateMission(AbstractMission):
 		'''
 		img_pts = (p1,p2,p3,p4)	
                 rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
-                tvec[0][0]-=.25 #Camera isn't centered with Percy, so move it over a bit
-                tvec[1][0]+=.5 #tvec is from top left corner, so we want to move a bit deeper
+                tvec[0][0] -= .25 #Camera isn't centered with Percy, so move it over a bit
+                tvec[1][0] += .5 #tvec is from top left corner, so we want to move a bit deeper
                 tvec[2][0] *= -1 #Z decreases towards the front of the sub, so if we want to move forward this needs to be negative
 		tvec[2][0] -= float(self.parameters["distanceThrough"])
 		print "Right Tvec is", tvec
+                for values in self.rightArmPosSum:
+                    nAvg += values[0]
+                    eAvg += values[1]
+                    uAvg += values[2]
+		if len(self.rightArmPosSum) == 0:
+			pass
+		else:
+			nAvg /= len(self.rightArmPosSum)
+			eAvg /= len(self.rightArmPosSum)
+			uAvg /= len(self.rightArmPosSum)
+			self.rightArmPosEst = [nAvg, eAvg, uAvg]
 		
-                nMedian = []
+                '''nMedian = []
                 eMedian = []
                 uMedian = []
-		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0] - .5, tvec[1][0]-10, tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
+		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0] - float(self.parameters["amountToTheSide"]), tvec[1][0], tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
 		print "Single position calculation", north, east, up
                 self.rightArmPosSum.append([north,east,up])
+		while len(self.rightArmPosSum) >= self.medianMaxSize:
+			self.rightArmPosSum.pop()
 		
                 for values in self.rightArmPosSum:
 			nMedian.append(values[0])
@@ -229,32 +246,38 @@ class StartingGateMission(AbstractMission):
 		uMedian = np.median(uMedian)
 		self.rightArmPosEst = [nMedian, eMedian, uMedian]
 		#self.rightArmPosEst = [north, east, up]
+		'''
 
 
             
-            if self.parameters["Gate_Side"] in ["Left", "left", "l"]: #["Right", "right", "r"]:
+            if self.parameters["Gate_Side"] in ["Right", "right", "r"]:
                 self.movementDestination = copy.copy(self.leftArmPosEst)
 		print "Using Left Arm"
             else:
                 self.movementDestination = copy.copy(self.rightArmPosEst)
 		print "Using Right Arm"
-	    print "Waypoints", self.movementDestination, self.finalWaypoint
 	    print "Arm Locations", self.leftArmPosEst, self.rightArmPosEst
 	    if self.movementDestination == None:
+		print "Movement destination is none, holding position"
 		pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1,0,0,0,0)
-		waypoint = [n,e,self.finalWaypoint[2],y,0,0]
+		waypoint = [n,e,self.finalWaypoint[2],self.finalWaypoint[3],0,0]
+		print "1", waypoint
 		self.moveToWaypoint(waypoint)
 		return -1
 		
+	    self.movementDestination[2] = self.finalWaypoint[2]
             self.movementDestination.append(self.finalWaypoint[3])
             self.movementDestination.append(0)
             self.movementDestination.append(0)
+	    print "Waypoints2", self.movementDestination, self.finalWaypoint
+	    print "Current waypoint", self.position
             return self.moveToWaypoint(self.movementDestination)
         elif len(detections) == 1: #We only see one arm, so move towards it
 	    print "Only see one arm"
 	    if self.movementDestination == None:
 		    pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, 0, 0, 0, 0, 0)
-		    waypoint = [n,e,u, y, 0, 0]
+		    waypoint = [n,e,u, self.finalWaypoint[3], 0, 0]
+		    print "3", waypoint
 		    self.moveToWaypoint(waypoint)
 		    return -1
 			
@@ -275,17 +298,20 @@ class StartingGateMission(AbstractMission):
 		    pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0][0], tvec[1][0], tvec[2][0], rotationDifference, 0, 0)
 		    waypoint = [n,e,self.finalWaypoint[2], y, 0, 0]
 		    print "Only see one arm: moving to this waypoint", waypoint
+		    print "4", waypoint
 		    self.moveToWaypoint(waypoint)
 	    else:
 		print "see one arm, but have destination info"
+		print "5", self.movementDestination
 		return self.moveToWaypoint(self.movementDestination)
         elif self.movementDestination != None:
-		    print "Calculated waypoint', Moving to it", self.movementDestination
+		    print "6Calculated waypoint', Moving to it", self.movementDestination
 		    return self.moveToWaypoint(self.movementDestination)
         else:
 		    print "Holding position, don't know where to go"
 		    pose, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0,1, 0, 0, 0, 0)
 		    waypoint = [n,e,self.finalWaypoint[2], y, 0, 0]
+		    print "7", waypoint
 		    self.moveToWaypoint(waypoint)
 
 
@@ -323,6 +349,7 @@ class StartingGateMission(AbstractMission):
 
         if( (self.Gate_In_Sight is False) and (self.Waypoint_Reached is True) ):
             #REORIENT (*spin*)
+	    print "ROTATING SHOULDNT BE HERE))"
             if self.rotateTimer == None:
                 self.rotateTimer = time.time()
             if time.time() - self.rotateTimer >= self.rotateWaitTime:
@@ -331,6 +358,7 @@ class StartingGateMission(AbstractMission):
             if self.calculatedWaypoint == None:
                 posedata, n,e,u, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation + self.position,0,self.position[2] - self.finalWaypoint[2],0, 45, 0,0);
                 self.calculatedWaypoint = [n,e,u,yaw,pitch,roll]
+	    print "12", self.calculatedWaypoint
             self.moveToWaypoint(self.calculatedWaypoint);
 
         if( (self.Gate_In_Sight is True) and (self.Waypoint_Reached is True) ):
@@ -338,6 +366,8 @@ class StartingGateMission(AbstractMission):
             #self.Christians_Method(self.Gate_Side); """Who needs naming conventions anyway..."""
             self.algorithm2()
             #METHOD INPUT-----END:
+	else:
+	    print "NOT DOING ANYTHING ))"
 
 #----------------------END----------------------------#		
 		

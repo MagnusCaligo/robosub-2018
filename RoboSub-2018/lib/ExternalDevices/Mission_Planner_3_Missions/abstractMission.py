@@ -103,6 +103,7 @@ class AbstractMission(QtCore.QObject):
         self.emit(QtCore.SIGNAL("debugMessage(PyQt_PyObject)"), string)
 
     def moveToWaypoint(self, waypoint, lockOrientation=False):
+	print "WAYPOINT IS", waypoint, "======"
         self.waypointError = self.movementController.advancedMove(self.orientation+self.position, waypoint[0], waypoint[1], waypoint[2], 
                       waypoint[4], waypoint[3], waypoint[5], lockOrientation=lockOrientation)[1]
 	#print "Waypoint Error:", self.waypointError

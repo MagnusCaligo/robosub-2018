@@ -6,7 +6,7 @@ import time
 
 class DiceMission(AbstractMission):
 
-    defaultParameters = AbstractMission.defaultParameters + "dice# = 0\ngetDistanceAway = 2\nminimumEstimates=100\n"
+    defaultParameters = AbstractMission.defaultParameters + "dice# = 0\ngetDistanceAway = 2\nminimumEstimates=25\n"
 
     def __init__(self, parameters):
         AbstractMission.__init__(self, parameters)
@@ -17,6 +17,7 @@ class DiceMission(AbstractMission):
         self.reachedFinalWaypoint = False
         self.detectionData = None
         self.lastKnownDepth = self.finalWaypoint[2]
+	self.calculatedWaypoint = None
 
         self.foundObstacles = False
         self.diceClassNumber = int(self.parameters["dice#"])
@@ -57,14 +58,17 @@ class DiceMission(AbstractMission):
             return False
         for i,v in enumerate(self.detectionData):
             if v[0] == int(self.parameters["dice#"]):
-		if v[1] >= 808 /3.0 and v[1] <=2 * 808 / 3.0:
+		#if v[1] >= 808 /3.0 and v[1] <=2 * 808 / 3.0:
 		    return True
+		#else:
+		    #print "Found obstacle, but its not centered"
+		    #print v[1] >= 808 /3.0, v[i] <= 2 * 808/3.0, v[i]
         return False
 
     def sortThroughDetections(self):
         detections = []
         if self.detectionData != None:
-            print "Detection Data is", self.detectionData
+            #print "Detection Data is", self.detectionData
             for det in self.detectionData:
                 if det[0] == int(self.parameters["dice#"]):
                     detections.append(det)
@@ -78,14 +82,12 @@ class DiceMission(AbstractMission):
             return -1
         else:
             self.reachedFinalWaypoint = True
-            self.calculatedWaypoint = self.finalWaypoint
 
         if self.reachedFinalWaypoint and not self.checkIfFoundObstacles() and len(self.positionEstimates) == 0:
             print "At waypoint, looking for obstacle"
             if self.rotateTimer == None:
                 self.rotateTimer = time.time()
             if time.time() - self.rotateTimer >= self.rotateWaitTime:
-		print "Incrementing Rotation ======================================="
                 self.rotateTimer = None
                 self.calculatedWaypoint = None
             if self.calculatedWaypoint == None:
@@ -112,6 +114,8 @@ class DiceMission(AbstractMission):
         #Hold position while getting data points
         if len(self.positionEstimates) <= int(self.parameters["minimumEstimates"]):
 	    print "See dice, holding position"
+	    if self.calculatedWaypoint == None:
+		self.calculatedWaypoint = self.finalWaypoint
             self.moveToWaypoint(self.calculatedWaypoint)
         #Else if we have enough points start moving to the obstacle
         elif len(self.positionEstimates) >= int(self.parameters["minimumEstimates"]) and not self.inFrontOfBuoy:
@@ -138,9 +142,10 @@ class DiceMission(AbstractMission):
 		    position = [northEstimate, eastEstimate, upEstimate]
 		    rotationDifference = math.degrees(math.atan2(position[1] - self.position[1], position[0] - self.position[0]))
 		    self.calculatedWaypoint = self.position + self.orientation
-		    self.calculatedWaypoint[3] = rotationDifference
+		    self.calculatedWaypoint[3] = rotationDifference + 180
 		    self.calculatedLineUp = True
 		self.linedUpWithBuoy = self.moveToWaypoint(self.calculatedWaypoint)
+		print "Lining up with buoy..."
 		return -1
 	
 		    

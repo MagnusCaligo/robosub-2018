@@ -121,6 +121,7 @@ class yoloComputerVision(QtCore.QThread):
                     self.srcPoints = []
                     for detection in detections:
                             fixedClassNumber = self.detectionDictionary[detection[0]]
+			    cv2.putText(img, detection[0], (int(detection[2][0] - (.5 * detection[2][2])), int(detection[2][1] - (.5 * detection[2][3]))), cv2.FONT_HERSHEY_SIMPLEX, .5, (0,0,255), 2)
                             newDetections.append([fixedClassNumber, detection[1], detection[2]])
                             if detection[0] in self.torpedoDictionary or detection[0] == "Corner":
 				if detection[0] != "Corner":

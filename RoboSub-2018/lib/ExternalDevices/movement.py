@@ -314,6 +314,12 @@ class MovementController():
         corectOrientationBubble = 3.5 #feet
         if lockOrientation == False and (abs(northError) > corectOrientationBubble or abs(eastError) > corectOrientationBubble):
             yRotateDesired = (math.atan2(eastError, northError)*(180/3.14159265))%360 #Yaw to facing at waypoint
+
+	if lockOrientation == False:
+	    print "ORIENTATION IS NOT LOCKED"
+	else:
+	    print "ORIENTATION IS LOCKED"
+
            
         #USER VARIABLE 
         if drivingMode == 1:
