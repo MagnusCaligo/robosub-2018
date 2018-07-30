@@ -97,16 +97,17 @@ class RouletteMission(AbstractMission):
 		TOP_RIGHT_CORNER = (BRD[1] + BRD[3]/2/2,BRD[2] - BRD[4]/2/2)
 		BOTTOM_LEFT_CORNER = (BRD[1] - BRD[3]/2/2 , BRD[2] + BRD[4]/2/2 )
 		BOTTOM_RIGHT_CORNER = (BRD[1] + BRD[3]/2/2 ,BRD[2] + BRD[4]/2/2 )
-		self.img_pts = [TOP_LEFT_CORNER, TOP_RIGHT_CORNER, BOTTOM_LEFT_CORNER, BOTTOM_RIGHT_CORNER];
+		self.img_pts = [TOP_LEFT_CORNER, BOTTOM_LEFT_CORNER, BOTTROM_RIGHT_CORNER, TOP_RIGHT_CORNER];
+
 
 		rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(self.img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
 		print("TVEC:"+str(tvec))
 		
 
-		po, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0][0]*math.sin(90 - self.generalWaypoint[4]), -tvec[2][0], 0, 0, 0, 0)
+		po, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0][0], 0, -tvec[2][0]*math.sin(90 - self.generalWaypoint[4]), 0, 0, 0)
 		print("DISTANCE:"+str(math.sqrt(e**2 + n**2)))
 
-		self.SOLVED_BOARD.append([n,-e,0,0,0,0,math.sqrt( e**2 + n**2 )]); #MAKES a vector where the last index can be compared
+		self.SOLVED_BOARD.append([n,e,self.finalWaypoint[2],self.calculatedWaypoint[3],0,0,math.sqrt( e**2 + n**2 )]); #MAKES a vector where the last index can be compared
 
 #-----------------------END------------------------#
 		
