@@ -204,11 +204,7 @@ class StartingGateMission(AbstractMission):
 		p2 = (rightArmDetection[1] + (.5 * rightArmDetection[3]), rightArmDetection[2] - (.5* rightArmDetection[4]))
 		p3 = (rightArmDetection[1] + (.5 * rightArmDetection[3]), rightArmDetection[2] + (.5* rightArmDetection[4]))
 		p4 = (rightArmDetection[1] - (.5 * rightArmDetection[3]), rightArmDetection[2] + (.5* rightArmDetection[4]))
-		'''p1 = (rightArmDetection[1], rightArmDetection[2])
-		p2 = (rightArmDetection[1] + rightArmDetection[3], rightArmDetection[2])
-		p3 = (rightArmDetection[1] + rightArmDetection[3], rightArmDetection[2] + rightArmDetection[4])
-		p4 = (rightArmDetection[1], rightArmDetection[2] + rightArmDetection[4])
-		'''
+
 		img_pts = (p1,p2,p3,p4)	
                 rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(img_pts).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
                 tvec[0][0] -= .25 #Camera isn't centered with Percy, so move it over a bit
@@ -216,6 +212,13 @@ class StartingGateMission(AbstractMission):
                 tvec[2][0] *= -1 #Z decreases towards the front of the sub, so if we want to move forward this needs to be negative
 		tvec[2][0] -= float(self.parameters["distanceThrough"])
 		print "Right Tvec is", tvec
+                nAvg = 0
+                eAvg = 0
+                uAvg = 0
+		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0]+ float(self.parameters["amountToTheSide"]), tvec[1][0] , tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
+                self.rightArmPosSum.append([north,east,up])
+		while len(self.rightArmPosSum) >= self.medianMaxSize:
+			self.rightArmPosSum.pop()
                 for values in self.rightArmPosSum:
                     nAvg += values[0]
                     eAvg += values[1]
@@ -228,27 +231,6 @@ class StartingGateMission(AbstractMission):
 			uAvg /= len(self.rightArmPosSum)
 			self.rightArmPosEst = [nAvg, eAvg, uAvg]
 		
-                '''nMedian = []
-                eMedian = []
-                uMedian = []
-		poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0] - float(self.parameters["amountToTheSide"]), tvec[1][0], tvec[2][0] - float(self.parameters["distanceThrough"]),0,0,0)
-		print "Single position calculation", north, east, up
-                self.rightArmPosSum.append([north,east,up])
-		while len(self.rightArmPosSum) >= self.medianMaxSize:
-			self.rightArmPosSum.pop()
-		
-                for values in self.rightArmPosSum:
-			nMedian.append(values[0])
-			eMedian.append(values[1])
-			uMedian.append(values[2])
-		nMedian = np.median(nMedian)
-		eMedian = np.median(eMedian)
-		uMedian = np.median(uMedian)
-		self.rightArmPosEst = [nMedian, eMedian, uMedian]
-		#self.rightArmPosEst = [north, east, up]
-		'''
-
-
             
             if self.parameters["Gate_Side"] in ["Right", "right", "r"]:
                 self.movementDestination = copy.copy(self.leftArmPosEst)

@@ -6,7 +6,7 @@ import time
 
 class DiceMission(AbstractMission):
 
-    defaultParameters = AbstractMission.defaultParameters + "dice# = 0\ngetDistanceAway = 2\nminimumEstimates=25\n"
+    defaultParameters = AbstractMission.defaultParameters + "dice# = 0\ngetDistanceAway = 2\nminimumEstimates=10\nmaxEstimates=100"
 
     def __init__(self, parameters):
         AbstractMission.__init__(self, parameters)
@@ -21,7 +21,7 @@ class DiceMission(AbstractMission):
 
         self.foundObstacles = False
         self.diceClassNumber = int(self.parameters["dice#"])
-	self.maxPositionEstimates= 50
+	self.maxPositionEstimates= 25
         self.positionEstimates = []
 
         self.sentMessage1 = False
@@ -41,7 +41,7 @@ class DiceMission(AbstractMission):
         self.hitBuoyTimer = None
         
         self.rotateTimer = None
-        self.rotateWaitTime = 8
+        self.rotateWaitTime = 5
 
         self.depthAtRelativeMove = None
         self.lookingMaxTime = 10
@@ -64,17 +64,6 @@ class DiceMission(AbstractMission):
 		    #print "Found obstacle, but its not centered"
 		    #print v[1] >= 808 /3.0, v[i] <= 2 * 808/3.0, v[i]
         return False
-
-    def sortThroughDetections(self):
-        detections = []
-        if self.detectionData != None:
-            #print "Detection Data is", self.detectionData
-            for det in self.detectionData:
-                if det[0] == int(self.parameters["dice#"]):
-                    detections.append(det)
-            return detections
-        else:
-            return None
 
     def update(self):
         if not self.reachedFinalWaypoint and not self.checkIfFoundObstacles():
@@ -100,15 +89,27 @@ class DiceMission(AbstractMission):
             return -1
         
         for det in [detection for detection in self.detectionData if detection[0] == int(self.parameters["dice#"])]:
+	    if det[1] < 2 * 808 / 5.0 and len(self.positionEstimates) <= int(self.parameters["minimumEstimates"]):
+		poseData, north, east, up, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation+self.position, 0, 0, 0,-10,0,0)
+		waypoint = [north,east,self.finalWaypoint[2],yaw,0,0]
+		self.moveToWaypoint(waypoint)
+		return -1
+	    elif det[1] > 3 * 808 / 5.0 and len(self.positionEstimates) <= int(self.parameters["minimumEstimates"]):
+		poseData, north, east, up, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation+self.position, 0, 0, 0,10,0,0)
+		waypoint = [north,east,self.finalWaypoint[2],yaw,0,0]
+		self.moveToWaypoint(waypoint)
+		return -1
             imgPoints = [(det[1] - (.5 * det[3]), det[2] - (.5* det[4])),(det[1] + (.5 * det[3]), det[2] - (.5* det[4])),
                          (det[1] + (.5 * det[3]), det[2] + (.5* det[4])),(det[1] - (.5 * det[3]), det[2] + (.5* det[4]))]
             rvec, tvec = cv2.solvePnP(np.array(self.src_pts).astype('float32'), np.array(imgPoints).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
-            poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0], -tvec[2][0],0,0,0)
+            poseData, north, east, up, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0], tvec[1][0], -tvec[2][0],0,0,0)
+	    if tvec[2][0] - .5< float(self.parameters["getDistanceAway"]):
+		self.inFrontOfBuoy = True
 	    print "Data:", tvec, north, east
             self.positionEstimates.append([north/1.0, east/1.0, up, 0, 0,0])
 
 	while len(self.positionEstimates) > self.maxPositionEstimates:
-		self.positionEstimates.pop()
+		self.positionEstimates.pop(0)
 	print "Number of estimates", len(self.positionEstimates)
 
         #Hold position while getting data points
@@ -127,33 +128,45 @@ class DiceMission(AbstractMission):
             position = [northEstimate, eastEstimate, upEstimate]
             rotationDifference = math.degrees(math.atan2(position[1] - self.finalWaypoint[1], position[0] - self.finalWaypoint[0]))
             poseData, north, east, up, pitch, yaw, roll = self.movementController.relativeMoveXYZ(self.orientation+position, 0, 0, int(self.parameters["getDistanceAway"]),0,0,0)
+	    for det in [detection for detection in self.detectionData if detection[0] == int(self.parameters["dice#"])]:
+	        if det[1] < 2 * 808 / 5.0 and len(self.positionEstimates) <= int(self.parameters["minimumEstimates"]):
+			rotationDifference = -10 + self.orientation[0]
+	        elif det[1] > 3 * 808 / 5.0 and len(self.positionEstimates) <= int(self.parameters["minimumEstimates"]):
+			rotationDifference = 10 + self.orientation[0]
             self.calculatedWaypoint = [north, east, up, rotationDifference, 0, 0]
 	    print "Going to waypoint", self.calculatedWaypoint
             self.inFrontOfBuoy = self.moveToWaypoint(self.calculatedWaypoint)
             
         elif self.inFrontOfBuoy:
 	    if self.linedUpWithBuoy == False:
-		if self.calculatedLineUp == False:
-		    print "Trying to lineup with buoy"
-		    northEstimate = np.median(np.array([p[0] for p in self.positionEstimates]))
-		    eastEstimate = np.median(np.array([p[1] for p in self.positionEstimates]))
-		    upEstimate = np.median(np.array([p[2] for p in self.positionEstimates]))
-		    
-		    position = [northEstimate, eastEstimate, upEstimate]
-		    rotationDifference = math.degrees(math.atan2(position[1] - self.position[1], position[0] - self.position[0]))
-		    self.calculatedWaypoint = self.position + self.orientation
-		    self.calculatedWaypoint[3] = rotationDifference + 180
-		    self.calculatedLineUp = True
-		self.linedUpWithBuoy = self.moveToWaypoint(self.calculatedWaypoint)
-		print "Lining up with buoy..."
-		return -1
+		print "Lining up with buoy"
+		if len([detection for detection in self.detectionData if detection[0] == int(self.parameters["dice#"])]) == 0:
+			print "Lost detection"
+			self.inFrontOfBuoy = False
+			self.positionEstimates = []
+			self.foundObstacles = False
+	        for det in [detection for detection in self.detectionData if detection[0] == int(self.parameters["dice#"])]:
+	            if det[1] < 2 * 808 / 5.0 and len(self.positionEstimates) <= int(self.parameters["minimumEstimates"]):
+		    	rotationDifference = -10 + self.orientation[0]
+		    	self.calculatedWaypoint[3] = rotationDifference	
+			self.moveToWaypoint(self.calculatedWaypoint)
+			return -1
+	            elif det[1] > 3 * 808 / 5.0 and len(self.positionEstimates) <= int(self.parameters["minimumEstimates"]):
+			rotationDifference = 10 + self.orientation[0]
+			self.calculatedWaypoint[3] = rotationDifference	
+			self.moveToWaypoint(self.calculatedWaypoint)
+			return -1
+		    else:
+			self.linedUpWithBuoy = True
+			print "Lining up with buoy..."
+			return -1
 	
 		    
             print "Trying to hit buoy"
             if self.hitBuoyTimer == None:
                 self.hitBuoyTimer = time.time()
                 self.writeDebugMessage("Moving Forward...")
-                p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, 0, -abs(int(self.parameters["getDistanceAway"]))-1, 0, 0, 0)
+                p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, 0, -abs(int(self.parameters["getDistanceAway"]))-2, 0, 0, 0)
                 self.diceWaypoint = [n,e,u,y,0,0]
             if time.time() - self.hitBuoyTimer >= self.hitBuoyMaxTime:
                 if self.movingForward == False:
