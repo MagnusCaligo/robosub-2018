@@ -1,4 +1,4 @@
-onLinux = True
+onLinux = False 
 if onLinux:
 	import darknet as dn
 	import PyCapture2 as pc2
@@ -115,7 +115,7 @@ class yoloComputerVision(QtCore.QThread):
                     else:
 			t, img = self.activeCamera.read()
                     #yoloImage = dn.IMAGE()
-                    detections = dn.detect_np(self.net, self.meta, img, thresh=.15, hier_thresh = .15)
+                    detections = dn.detect_np(self.net, self.meta, img, thresh=.05, hier_thresh = .05)
                     newDetections = []
                     self.imgPoints = []
                     self.srcPoints = []
