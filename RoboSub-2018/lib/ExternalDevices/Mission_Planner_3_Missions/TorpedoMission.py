@@ -16,7 +16,7 @@ class TorpedoMission(AbstractMission):
         self.classNumbers = [8,9,10,11,12]
 	self.fruitClassNumbers = [8,9,10]
         self.torpedoHoleClassNumber = 12
-        self.minimumToSee = 2
+        self.minimumToSee = 1
 
 
     def initalizeOnMissionStart(self):
@@ -39,6 +39,7 @@ class TorpedoMission(AbstractMission):
         self.pulledArm = False
         self.aboveArm = False
         self.finishedPulling = False
+	self.timesAttempted = 0
 
         self.srcPoints = []
         self.imgPoints = []
@@ -83,6 +84,9 @@ class TorpedoMission(AbstractMission):
 
         if self.reachedFinalWaypoint and not self.foundObstacles:
             print "At waypoint, looking for obstacle"
+            if self.checkIfSeeObstacles() == True:
+                self.foundObstacles = True
+		return -1
             if self.rotateTimer == None:
                 self.rotateTimer = time.time()
             if time.time() - self.rotateTimer >= self.rotateWaitTime:
@@ -93,8 +97,6 @@ class TorpedoMission(AbstractMission):
                 self.calculatedWaypoint = [n,e,self.finalWaypoint[2],yaw,0,0]
                 print "Depth is", self.finalWaypoint[2]
             self.moveToWaypoint(self.calculatedWaypoint);
-            if self.checkIfSeeObstacles() == True:
-                self.foundObstacles = True
             return -1
             
         if len(self.estimatedPoints) < int(self.parameters["minimumEstimatesRequired"]):
@@ -108,6 +110,8 @@ class TorpedoMission(AbstractMission):
                     rvec, tvec = cv2.solvePnP(np.array(srcPoints).astype('float32'), np.array(imgPoints).astype('float32'),np.array(self.cameraMatrix).astype('float32'), None)[-2:]
                     poseData, north, east, up, pitch, yaw, roll =	self.movementController.relativeMoveXYZ(self.orientation+self.position, tvec[0][0] + 3, tvec[1][0] + 4, -tvec[2][0],0,0,0)
                     self.estimatedPoints.append([north/1.0, east/1.0, up, 0, 0,0])
+		if self.calculatedWaypoint == None:
+			self.calculatedWaypoint = self.position + self.orientation
                 self.moveToWaypoint(self.calculatedWaypoint)
                 return -1
             else:
@@ -145,11 +149,18 @@ class TorpedoMission(AbstractMission):
                 
                 northEstimate -= float(self.parameters["getDistanceAway"]) * math.cos(math.radians(self.generalWaypoint[3]))
                 eastEstimate -= float(self.parameters["getDistanceAway"]) * math.sin(math.radians(self.generalWaypoint[3]))
-                self.calculatedWaypoint = [northEstimate, eastEstimate, upEstimate, self.generalWaypoint[3], 0,0]
+                self.calculatedWaypoint = [northEstimate, eastEstimate, self.finalWaypoint[2], self.generalWaypoint[3], 0,0]
                 print "Goint to point:", self.calculatedWaypoint
                 print "Estimated Depth was:", upEstimate
                 if self.moveToWaypoint(self.calculatedWaypoint):
-                    self.reachedBoard = True
+		    if self.timesAttempted < 3:
+			self.foundObstacles = False
+			self.estimatedPoints = []
+			self.timesAttempted += 1
+			self.writeDebugMessage("Finished attempt: " + str(self.timesAttempted))
+			return -1
+		    else:
+			self.reachedBoard = True
                 return -1
 
         if self.reachedBoard == True:

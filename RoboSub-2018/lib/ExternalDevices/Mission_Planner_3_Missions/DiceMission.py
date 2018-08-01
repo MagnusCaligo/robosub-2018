@@ -106,7 +106,7 @@ class DiceMission(AbstractMission):
 	    if tvec[2][0] - .5< float(self.parameters["getDistanceAway"]):
 		self.inFrontOfBuoy = True
 	    print "Data:", tvec, north, east
-            self.positionEstimates.append([north/1.0, east/1.0, up, 0, 0,0])
+            self.positionEstimates.append([north/1.0, east/1.0, up + .5, 0, 0,0])
 
 	while len(self.positionEstimates) > self.maxPositionEstimates:
 		self.positionEstimates.pop(0)

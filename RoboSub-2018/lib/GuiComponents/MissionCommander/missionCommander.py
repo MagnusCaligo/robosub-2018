@@ -289,7 +289,7 @@ class MissionCommander(QtCore.QObject):
         parameters["name"] = missionName
         if self.ui_missionCommander.maxTimeLineEdit.text() == "":
             return
-        parameters["maxTime"] = int(self.ui_missionCommander.maxTimeLineEdit.text())
+        parameters["maxTime"] = float(self.ui_missionCommander.maxTimeLineEdit.text())
         if self.ui_missionCommander.useGeneralWaypoint.text() == "":
             parameters["useGeneralWaypoint"] = None
         else:

@@ -258,8 +258,12 @@ class MainWindow(QtGui.QMainWindow):
             if self.externalCommClass.externalCommThread.dvlResponseThread != None:
 				pass#self.externalCommClass.externalCommThread.dvlResponseThread.clearDistanceTraveled()
         else:
-            time.sleep(2)
             print "Starting"
+            self.externalCommClass.running = True
+            self.externalCommClass.externalCommThread.guiData = self.externalCommClass.guiDataToSend
+            self.externalCommClass.externalCommThread.isRunning = True
+            self.externalCommClass.externalCommThread.start()
+            time.sleep(2)
             self.systemOutput.insertPlainText("Starting Vehicle\n")
             if self.externalCommClass.externalCommThread.dvlResponseThread != None:
                 self.externalCommClass.externalCommThread.dvlResponseThread.clearDistanceTraveled()
@@ -270,10 +274,6 @@ class MainWindow(QtGui.QMainWindow):
             self.startVehicle = True
             self.externalCommClass.externalCommThread.isDebug = False
             #self.systemOutput.insertPlainText("Starting vehicle\n")
-            self.externalCommClass.running = True
-            self.externalCommClass.externalCommThread.guiData = self.externalCommClass.guiDataToSend
-            self.externalCommClass.externalCommThread.isRunning = True
-            self.externalCommClass.externalCommThread.start()
             self.externalCommClass.missionPlanner.startAutonomousRun(False)
             #if self.externalCommClass.externalCommThread.dvlResponseThread != None:
 			#	self.externalCommClass.externalCommThread.dvlResponseThread.clearDistanceTraveled()
