@@ -106,7 +106,7 @@ class HydrasResponse(data_packet_generator.DataPacket, threading.Thread):
         self.HYDRASCom = serialObject
 
         self.hydrasDataPackets = HydrasDataPackets(self.HYDRASCom)
-
+        self.counter = 0
         if len(debug):
             if debug[0].pop() == True:
                 self.debug = True
@@ -165,14 +165,16 @@ class HydrasResponse(data_packet_generator.DataPacket, threading.Thread):
         '''
         try:
             if self.HYDRASCom.inWaiting() != 0:
+                print("Packet #{}".format(self.counter))
+                self.counter += 1
                 self.dataPacketIn = []
                 self.dataPacketIn.append(ord(self.HYDRASCom.read()))
                 print(self.dataPacketIn)
-                if self.dataPacketIn[0] >= 6 and self.dataPacketIn[
-                    0] <= 16:  # If the byte count is between 6 and 16 (this is the min and max range of bytes in a data packet that we have...this could change in the future)
-                    for x in range(1, self.dataPacketIn[0]):
-                        self.dataPacketIn.append(ord(self.HYDRASCom.read()))
+                if self.dataPacketIn[0] == 0xee:  # If the byte is the start byte for the message, 0xEE
+                    for x in range(2, 6):
+                        self.dataPacketIn.append(ord(self.HYDRASCom.read()))#
                     self.dataPacketIn = self.calcCRC32In(self.dataPacketIn)
+                    print(self.dataPacketIn)
                     return self.dataPacketIn
         except Exception as msg:
             print "Can't receive data from HYDRAS:", msg
