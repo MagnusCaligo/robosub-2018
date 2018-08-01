@@ -4,8 +4,8 @@ Copyright 2018, Jared Guerrero, All rights reserved.
 .. module:: microcontroller_hydras
    :synopsis: Handles communication with HYDRAS.
 
-:Author: Austin Owens <sdsumechatronics@gmail.com>
-:Date: Created on Jul 14, 2015
+:Author: Jared Guerrero <felipejaredgm@gmail.com>
+:Date: Created on Jul 31, 2018
 :Description: Sends and receives data packets to the Hydrophone Direction Analysis System.
 '''
 import serial
@@ -167,6 +167,7 @@ class HydrasResponse(data_packet_generator.DataPacket, threading.Thread):
             if self.HYDRASCom.inWaiting() != 0:
                 self.dataPacketIn = []
                 self.dataPacketIn.append(ord(self.HYDRASCom.read()))
+                print(self.dataPacketIn)
                 if self.dataPacketIn[0] >= 6 and self.dataPacketIn[
                     0] <= 16:  # If the byte count is between 6 and 16 (this is the min and max range of bytes in a data packet that we have...this could change in the future)
                     for x in range(1, self.dataPacketIn[0]):
@@ -207,7 +208,6 @@ class DataExtractor():
         '''
         while len(self.hydrasResponseThread.getList) > 0:
             hydrasGetDataPacket = self.hydrasResponseThread.getList.pop(0)
-
             if hydrasGetDataPacket[1] == 96:
                 self.heading1 = hydrasGetDataPacket[3] << 8 | hydrasGetDataPacket[2]
                 self.aoi1 = hydrasGetDataPacket[5] << 8 | hydrasGetDataPacket[4]
