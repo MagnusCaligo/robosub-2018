@@ -384,7 +384,7 @@ class ExternalCommThread(QtCore.QThread):
         self.hydrasAltitude = None
         self.heading1, self.aoi1, self.confidence1 = 0, 0, 0
         self.heading2, self.aoi2, self.confidence2 = 0, 0, 0
-        self.hydrasPingerData = [[0, 0, 0], [0, 0, 0]]
+        self.hydrasPingerData = [0, 0]
 
         # For Joystick Controller
         self.joystickGuiData = [None] * 9
@@ -554,7 +554,7 @@ class ExternalCommThread(QtCore.QThread):
         #Heading
         try:
             pass
-            self.hydrasSerial2 = serial.Serial("/dev/ttyUSB7", 115200)
+            self.hydrasSerial2 = serial.Serial("/dev/ttyACM2", 115200)
             self.hydrasResponseThread2 = hydrasBoard.hydrasBoardResponseThread(self.hydrasSerial2)
             self.hydrasResponseThread2.start()
         except:    	
@@ -900,6 +900,8 @@ class ExternalCommThread(QtCore.QThread):
                     self.hydrasHeading = hydrasData2[1]
                 else:
                     self.hydrasAltitude = hydrasData2[1]
+                    self.hydrasHeading = hydrasData2[1]
+                self.hydrasPingerData[0] = self.hydrasHeading
         #print "Hydras Data: ", self.hydrasHeading     
         		
         if self.dvlResponseThread != None:
