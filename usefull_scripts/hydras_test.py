@@ -5,15 +5,15 @@ Copyright 2018, Jared Guerrero, All rights reserved.
    :synopsis: Handles communication with HYDRAS.
 
 :Author: Jared Guerrero <felipejaredgm@gmail.com>
-:Date: Created on Jul 14, 2015
+:Date: Created on Jul 31, 2018
 :Description: Sends and receives data packets to the Hydrophone Direction Analysis System.
 '''
 import serial
 
-import data_packet_generator as data_packet_generator
+import lib.ExternalDevices.data_packet_generator as data_packet_generator
 import threading
 import time, sys
-import utilities as utilities
+import lib.Utils.utilities as utilities
 import struct
 
 reqestTimer = utilities.Timer()
@@ -164,24 +164,23 @@ class HydrasResponse(data_packet_generator.DataPacket, threading.Thread):
         * **self.dataPacketIn** - The raw data transmission.\n
         '''
         try:
-            if self.HYDRASCom.in_waiting > 0:
-                print(self.counter)
+            if self.HYDRASCom.inWaiting() != 0:
                 self.counter += 1
                 self.dataPacketIn = []
                 self.dataPacketIn.append(ord(self.HYDRASCom.read()))
-                #print(int(self.HYDRASCom.read()))
-                #print(self.dataPacketIn)
-                if self.dataPacketIn[0] == 238:
-                    loop = True 
-                    while(loop):
-                        self.dataPacketIn.append(ord(self.HYDRASCom.read()))
-                        if self.dataPacketIn[-1] == 13:
-                            loop = False
-                    #self.dataPacketIn = self.calcCRC32In(self.dataPacketIn)
+                print(self.counter)
+                if self.dataPacketIn[0] == 238:  # If the byte is the start byte, 238
+                    self.dataPacketIn.append(ord(self.HYDRASCom.read()))#Get Pitch Value
+                    self.dataPacketIn.append(ord(self.HYDRASCom.read()))#Get Error Code. 2 means only one hydrophone got response.
+                    timeDifference = self.HYDRASCom.read(2)
+                    timeDifference = struct.unpack('>h', timeDifference)[0]
+                    self.dataPacketIn.append(timeDifference)
+                    self.dataPacketIn.append(ord(self.HYDRASCom.read()))#Ending Byte
                     print(self.dataPacketIn)
-                    return self.dataPacketIn
-                else:
-                    self.HYDRASCom.flush()
+                    if self.dataPacketIn[-1] == 13:#If the byte is the end byte, 13
+                        return self.dataPacketIn
+                    else:
+                        return []
         except Exception as msg:
             print "Can't receive data from HYDRAS:", msg
 
@@ -216,7 +215,6 @@ class DataExtractor():
         '''
         while len(self.hydrasResponseThread.getList) > 0:
             hydrasGetDataPacket = self.hydrasResponseThread.getList.pop(0)
-            
             if hydrasGetDataPacket[1] == 96:
                 self.heading1 = hydrasGetDataPacket[3] << 8 | hydrasGetDataPacket[2]
                 self.aoi1 = hydrasGetDataPacket[5] << 8 | hydrasGetDataPacket[4]
@@ -233,12 +231,10 @@ class DataExtractor():
 
 
 if __name__ == "__main__":
-    hydrasPort = "/dev/ttyACM3"
+    hydrasPort = "/dev/ttyACM0"
     HYDRASComPort = serial.Serial(hydrasPort, 115200)
     hydrasResponseThread = HydrasResponse(HYDRASComPort)
     hydrasResponseThread.start()
 
     extractor = DataExtractor(hydrasResponseThread)
 
-    while True:
-        hydrasPingerData = extractor.hydrasData()
