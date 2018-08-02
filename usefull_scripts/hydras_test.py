@@ -165,15 +165,15 @@ class HydrasResponse(data_packet_generator.DataPacket, threading.Thread):
         '''
         try:
             if self.HYDRASCom.inWaiting() != 0:
-                print("Packet #{}".format(self.counter))
                 self.counter += 1
                 self.dataPacketIn = []
-                self.dataPacketIn.append(ord(self.HYDRASCom.read()))
-                print(self.dataPacketIn)
-                if self.dataPacketIn[0] == 0xee:  # If the byte is the start byte for the message, 0xEE
-                    for x in range(2, 6):
-                        self.dataPacketIn.append(ord(self.HYDRASCom.read()))#
-                    self.dataPacketIn = self.calcCRC32In(self.dataPacketIn)
+                #self.dataPacketIn.append(ord(self.HYDRASCom.read()))
+                if self.dataPacketIn[0] == 0xee:  # If the byte is the start byte, 238
+                    loop = True
+                    while(loop):
+                        self.dataPacketIn.append(ord(self.HYDRASCom.read()))
+                        if self.dataPacketIn[-1] == 0x0d:#If the byte is the end byte, 13
+                            loop = False
                     print(self.dataPacketIn)
                     return self.dataPacketIn
         except Exception as msg:
