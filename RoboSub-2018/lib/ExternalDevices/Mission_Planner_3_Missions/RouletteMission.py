@@ -36,16 +36,21 @@ class RouletteMission(AbstractMission):
 	self.COUNT_FRONT = 0;
 	self.COUNT_BACK  = 0;
 	self.NUMBER_OF_SAMPLES = 175;
-	
+	self.CALCULATED_WAYPOINT = None;	
 
-#       ********Roulette Detections********           
-	self.FrontCam_RouletteFound = False;
-	self.BottomCam_RouletteFound= False;
+#       ********Roulette Detections*********          
+	self.FrontCam_RouletteFound  = False;
+	self.BottomCam_RouletteFound = False;
+#	************************************
+
+
 	self.ROULETTEBOARD = [];
 	self.SOLVED_BOARD = [];
 	self.BOARDSOLVED_FRONT = False;
 	self.BOARDSOLVED_BACK  = False; 
 	self.END_FIRST = None;
+
+	self.NE_COMPONENT = None
 	
 #	********Roulette MiddlePosition****
 
@@ -80,18 +85,39 @@ class RouletteMission(AbstractMission):
 		self.calculatedWaypoint = [self.finalWaypoint[0],self.finalWaypoint[1],self.finalWaypoint[2],yaw,self.generalWaypoint[4],0]#REMOVED PITCH AND ROLL
 	print("FOUND:"+str(self.FrontCam_RouletteFound));
 	self.moveToWaypoint(self.calculatedWaypoint);
+#-------------------------END-------------------------#
+    def EUCLIDIAN_MEDIAN(self,GUESS, Comparison_Array):
+	Comparison_Array.pop(0);
+	dy_new = GUESS;
+	y_old = (10,10); #some Random Values
+	tol = .005
+	L1 = [];
+	L2 = [];
+	while( tol < abs(y_new[0] - y_old[0]) and tol < abs(y_new[1] - y_old[1]) ):
+		for x in Comparison_Array:
+			x_y = (x[0] - y_new[0], x[1] - y_new[1]);
+
+			print("THIS IS THE VECTOR: "+str(x_y))
+			
+			NORM = math.sqrt(x_y[0]**2 + x_y[1]**2);
+			
+			print("THIS IS THE NORM: "+str(NORM))
+			if(NORM == 0):
+				NORM = 1;
+			
+			L1.append( (x[0]/NORM, x[1]/NORM) )
+			L2.append( 1/NORM )
+
+		TOP    = [ sum(x) for x in zip(*L1) ]
+		print(TOP)
+		BOTTOM = sum(L2)
+		y_old  = y_new;
+		y_new  = (TOP[0]/BOTTOM,TOP[1]/BOTTOM)
+		L1 = [];
+		L2 = [];
+	return y_new[0],y_new[1],y_new[2]
 
 #-----------------------END------------------------#
-
-
-    def Move_Above_Board(self):
-	
-	self.useFrontCamera()
-
-	print("...Moving Forward");
-	p, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, 0, 2, -1, 0, 0, 0)
-	self.Roulette_Waypoint = [n,e,self.finalWaypoint[2],y,0,0]
-	self.moveToWaypoint(self.Roulette_Waypoint)
 
     def SOLVING_PNP(self):
 	SOLVED_BOARD = [];
@@ -110,7 +136,7 @@ class RouletteMission(AbstractMission):
 		po, n, e, u, p, y, r = self.movementController.relativeMoveXYZ(self.orientation + self.position, tvec[0][0], 0, -tvec[2][0], 0, 0, 0)
 		print("DISTANCE:"+str(math.sqrt(e**2 + n**2)))
 
-		self.SOLVED_BOARD.append([n,e,self.finalWaypoint[2],self.calculatedWaypoint[3],0,0,math.sqrt( e**2 + n**2 )]); #MAKES a vector where the last index can be compared
+		self.SOLVED_BOARD.append([n,e,self.finalWaypoint[2],self.calculatedWaypoint[3],0,0]); #MAKES a vector where the last index can be compared
 
 #-----------------------END------------------------#
 		
@@ -118,30 +144,52 @@ class RouletteMission(AbstractMission):
 #	for BRD in SOLVED_BOARD:
 
 #-----------------------END------------------------#
+    def LINED_UP_WITH_CENTER(self,det):
+	if(  808*2/5 < det[1] and det[1] < 808*3/5 and 608*2/5 < det[2] and det[2] < 608*3/5):
+		pass;
+		print("Done...");
+		return True;
+	else:
+		print("Lining up pitch and yaw...")
+		if( det[1] < 808*2/5  ):
+			self.moveToWaypoint([self.position[0], self.position[1], self.position[2], self.orientation[0] - .5, self.orientation[1], self.orientation[2]]);
+
+		else:
+			self.moveToWaypoint([self.position[0], self.position[1], self.position[2], self.orientation[0] + .5, self.orientation[1], self.orientation[2]]);
+		if( det[2] < 608*2/5  ):
+			self.moveToWaypoint([self.position[0], self.position[1], self.position[2], self.orientation[0], self.orientation[1] + .2, self.orientation[2]]);
+		else:
+			self.moveToWaypoint([self.position[0], self.position[1], self.position[2], self.orientation[0], self.orientation[1] - .2, self.orientation[2]]);
+
+		return False;
+
+#-----------------------END------------------------#
     def UPDATE_VIZUALS(self):
-#	FRONT CAMERA VIZUALS
-	#if(self.ACTIVE_CAM != "Front"):
+
 	self.useFrontCamera()#  see top for function
-	#	self.ACTIVE_CAM = "Front";
-#	self.FrontCam_RouletteFound = False
+
 	if( self.BOARDSOLVED_FRONT == False):
 
 		for det in self.detectionData:
 			if det[0] == self.Roulette_ClassNumber:
-				if(self.COUNT_FRONT < self.NUMBER_OF_SAMPLES):
+				if(self.COUNT_FRONT < self.NUMBER_OF_SAMPLES and self.LINED_UP_WITH_CENTER(det)):
 					self.COUNT_FRONT += 1;
 					self.ROULETTEBOARD.append(det);
 					self.FrontCam_RouletteFound = True
 					return -1;
-	
-	if( self.BOARDSOLVED_FRONT == True ):	
-		self.useBottomCamera()#  see top for function
-		#self.BottomCam_RouletteFound = False
-		for det in self.detectionData:
-			if det[0] == self.Roulette_ClassNumber:
-				self.COUNT_BACK += 1;
-				self.BottomCam_RouletteFound = True
-				self.ROULETTEBOARD.append(det);	
+
+#------------------------------------------------------------------------------#	
+#	if( self.BOARDSOLVED_FRONT == True ):	
+#		self.useBottomCamera()#  see top for function
+#		#self.BottomCam_RouletteFound = False
+#		for det in self.detectionData:
+#			if det[0] == self.Roulette_ClassNumber:
+#				self.COUNT_BACK += 1;
+#				self.BottomCam_RouletteFound = True
+#				self.ROULETTEBOARD.append(det);	
+#------------------------------------------------------------------------------#
+
+
 
 #	self.useBottomCamera()#  see top for function
 
@@ -161,57 +209,50 @@ class RouletteMission(AbstractMission):
 	print("-------------------------------------NEW RUN--------------------------------------------------------")
 
 		
-	self.UPDATE_VIZUALS();
+	self.UPDATE_VIZUALS(); #ALWAYS RUNNING
 
-	if( self.FrontCam_RouletteFound or self.BottomCam_RouletteFound ):
-		if( self.COUNT_FRONT < self.NUMBER_OF_SAMPLES and self.FrontCam_RouletteFound == True):
+
+	if( self.FrontCam_RouletteFound or self.BottomCam_RouletteFound ): # HAS BEEN SEEN ONCE
+		if( self.COUNT_FRONT < self.NUMBER_OF_SAMPLES and self.FrontCam_RouletteFound == True): #Case for Top
 			self.moveToWaypoint(self.calculatedWaypoint);
 			print("...Collecting Data for Front");
 			print("COUNT:"+str(self.COUNT_FRONT))
-		elif( self.COUNT_BACK < self.NUMBER_OF_SAMPLES and self.BottomCam_RouletteFound == True):
+
+		elif( self.COUNT_BACK < self.NUMBER_OF_SAMPLES and self.BottomCam_RouletteFound == True):#Case for Bottom
 			self.moveToWaypoint(self.calculatedWaypoint);
 			print("...Collecting Data for Bottom");
 			print("COUNT:"+str(self.COUNT_BACK))
 		else:
 		
-			if(self.BOARDSOLVED_FRONT == False and self.BOARDSOLVED_BACK == False):
-				self.SOLVING_PNP()
-				self.SOLVED_BOARD.sort(key=self.CHOOSE_SECOND_ELEMENT);
-			#	self.FREQUENCY_UPDATE();
-				self.ROULETTEBOARD = [];
-				self.BOARDSOLVED_FRONT = True;
-			
-			if( self.END_FIRST == False and BOARDSOLVED_FRONT == True and self.BOARDSOLVED_BACK == False ):
-				self.SOLVING_PNP()
-				self.SOLVED_BOARD.sort(key=self.CHOOSE_SECOND_ELEMENT);
-			#	self.FREQUENCY_UPDATE();
-				self.BOARDSOLVED_BACK = True;
+			if(self.BOARDSOLVED_FRONT == False):# and self.BOARDSOLVED_BACK == False):
 
-			if(self.BOARDSOLVED_FRONT == True):
-				self.END_FIRST = False; 
-			self.moveToWaypoint(self.SOLVED_BOARD[ (self.NUMBER_OF_SAMPLES/2) ][:-1])
-			print("...Moving to Waypoint" + str(self.SOLVED_BOARD[ (self.NUMBER_OF_SAMPLES/2) ][:-1]))
+				self.SOLVING_PNP()
+				self.SOLVED_BOARD.sort(key=self.CHOOSE_SECOND_ELEMENT);
+
+				self.NE_COMPONENT = self.EUCLIDIAN_MEDIAN( (10,10) , [(Components[0],Components[1]) for Components in self.SOLVED_BOARD] )
+
+				self.ROULETTEBOARD = [];
+				self.BOARDSOLVED_FRONT = True
+
+		#--------------------------------------------------------------------------------------------------------#
+		#	elif( self.BOARDSOLVED_BACK == False ):
+		#		self.SET_IN_CENTER();
+		#		self.SOLVING_PNP()
+		#		self.SOLVED_BOARD.sort(key=self.CHOOSE_SECOND_ELEMENT);
+		#		self.FREQUENCY_UPDATE();
+		#		self.BOARDSOLVED_BACK = True;
+		#
+		#	if(self.BOARDSOLVED_FRONT == True):
+		#		self.END_FIRST = False; 
+		#--------------------------------------------------------------------------------------------------------#
+
+			self.movetToWaypoint(self.NE_COMPONENT[0], self.NE_COMPONENT[1], self.finalWaypoint[2], self.calculatedWaypoint[3],0,0)
+			print("...Moving to Waypoint" + str([self.NE_COMPONENT[0], self.NE_COMPONENT[1], self.position[2], self.calculatedWaypoint[3],0,0]))
+
 	else:
 		self.Search_RouletteBoard()
 
 	print("------------------------------------END RUN---------------------------------------------------------\n\n")
-'''
-	print("-------------------------------------NEW RUN--------------------------------------------------------")
-	self.UPDATE_VIZUALS();
-	print("Vizuals updated...Beginning logic\n")
-	if( self.FrontCam_RouletteFound or self.BottomCam_RouletteFound ):
-	    if( self.BottomCam_RouletteFound ):
-		self.Orient_Above_Board();
-	    else:
-		self.Move_Above_Board();
-
-	else:
-	    print("Target not found...spinning")
-	    self.Search_RouletteBoard()
-	print("------------------------------------END RUN---------------------------------------------------------\n\n")
-'''
 	
-
-
 
 

@@ -63,6 +63,9 @@ class AbstractMission(QtCore.QObject):
     def useBottomCamera(self):
 	self.emit(QtCore.SIGNAL("useBottomCamera"))
 
+    def fireTorpedo1(self):
+	self.emit(QtCore.SIGNAL("fireTorpedo1"))
+
     def updateDetectionData(self, detections):
         self.detectionData = detections
 

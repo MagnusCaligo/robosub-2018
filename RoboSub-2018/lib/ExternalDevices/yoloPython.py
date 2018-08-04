@@ -20,9 +20,9 @@ class yoloComputerVision(QtCore.QThread):
 		QtCore.QThread.__init__(self)
 		self.getList = []
 
-		self.dataFile = "/media/sub_data/data/7_22.data"
-		self.weightFile = "/media/sub_data/weights/7_22_20000.weights"
-		self.cfgFile = "/media/sub_data/cfg/7_22.cfg"
+		self.dataFile = "/media/sub_data/data/8_1.data"
+		self.weightFile = "/media/sub_data/weights/8_1.weights"
+		self.cfgFile = "/media/sub_data/cfg/8_1.cfg"
 
 		self.frontCamera = None
 		self.botCamera = None

@@ -477,7 +477,7 @@ class ExternalCommThread(QtCore.QThread):
                         maestroPort = port[0]
             self.maestroSerial = serial.Serial(maestroPort, 9600)
         except:
-            self.maestroSerial = serial.Serial("/dev/ttyACM0", 9600)			                						     																		    
+            self.maestroSerial = serial.Serial("/dev/ttyACM2", 9600)			                						     																		    
             print "Maestro was not found"
             
         if False:
@@ -554,7 +554,7 @@ class ExternalCommThread(QtCore.QThread):
         #Heading
         try:
             pass
-            self.hydrasSerial2 = serial.Serial("/dev/ttyACM2", 115200)
+            self.hydrasSerial2 = serial.Serial("/dev/ttyACM0", 115200)
             self.hydrasResponseThread2 = hydrasBoard.hydrasBoardResponseThread(self.hydrasSerial2)
             self.hydrasResponseThread2.start()
         except:    	
@@ -887,6 +887,7 @@ class ExternalCommThread(QtCore.QThread):
 
         if self.hydrasResponseThread1 != None:
             while len(self.hydrasResponseThread1.getList):
+		print "Getting Hydras Data"
                 hydrasData1 = self.hydrasResponseThread1.getList.pop(0)
                 if hydrasData1[0] == 1:
                     self.hydrasHeading = hydrasData1[1]
@@ -895,6 +896,7 @@ class ExternalCommThread(QtCore.QThread):
                 
         if self.hydrasResponseThread2 != None:
             while len(self.hydrasResponseThread2.getList):
+		print "Getting Hydras Data"
                 hydrasData2 = self.hydrasResponseThread2.getList.pop(0)
                 if hydrasData2[0] == 1:
                     self.hydrasHeading = hydrasData2[1]
@@ -902,7 +904,7 @@ class ExternalCommThread(QtCore.QThread):
                     self.hydrasAltitude = hydrasData2[1]
                     self.hydrasHeading = hydrasData2[1]
                 self.hydrasPingerData[0] = self.hydrasHeading
-        #print "Hydras Data: ", self.hydrasHeading     
+	print "Hydras Data: ", self.hydrasHeading     
         		
         if self.dvlResponseThread != None:
             fakeData = [self.ahrsData[0], self.ahrsData[1], self.ahrsData[2]]
